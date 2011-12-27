@@ -24,7 +24,7 @@
   (require "xl-winhttp/ffi/winapi")
   )
 
-(in-package :winhttp.ffi)
+(in-package :xl-winhttp.ffi)
 
 (c:*define INTERNET_MAX_HOST_NAME_LENGTH   256)
 (c:*define INTERNET_MAX_USER_NAME_LENGTH   128)

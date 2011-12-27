@@ -29,7 +29,7 @@
   (require "xl-winhttp/package")
   )
 
-(in-package :winhttp.ffi)
+(in-package :xl-winhttp.ffi)
 
 (c:*define NULL 0)
 

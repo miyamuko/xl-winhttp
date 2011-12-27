@@ -1,4 +1,4 @@
-; -*- mode: lisp; package: winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
 
 ;;; xl-winhttp/version.l
 ;;
@@ -29,7 +29,7 @@
   (require "xl-winhttp/package")
   )
 
-(in-package :winhttp)
+(in-package :xl-winhttp)
 
 (export '(xl-winhttp-version
           ))

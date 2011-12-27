@@ -23,7 +23,7 @@
   (require "xl-winhttp/ffi/winapi")
   )
 
-(in-package :winhttp.ffi)
+(in-package :xl-winhttp.ffi)
 
 (defparameter *winhttp-dll* "winhttp.dll")
 

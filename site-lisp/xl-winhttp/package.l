@@ -29,19 +29,21 @@
   (require "foreign")
   (require "wip/winapi")
 
-  (unless (find-package :winhttp.ffi)
-    (defpackage :winhttp.ffi
+  (unless (find-package :xl-winhttp.ffi)
+    (defpackage :xl-winhttp.ffi
+      (:nicknames :winhttp.ffi)
       (:use
        :lisp
        :editor
        :winapi
        )))
-  (unless (find-package :winhttp)
-    (defpackage :winhttp
+  (unless (find-package :xl-winhttp)
+    (defpackage :xl-winhttp
+      (:nicknames :winhttp)
       (:use
        :lisp
        :editor
-       :winhttp.ffi
+       :xl-winhttp.ffi
        )
       (:shadow
        open

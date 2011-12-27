@@ -1,4 +1,4 @@
-; -*- mode: lisp; package: winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
 
 ;;; xl-winhttp/types.l
 ;;
@@ -29,39 +29,44 @@
   (require "xl-winhttp/package")
   )
 
-(in-package :winhttp)
+(in-package :xl-winhttp)
 
-(defstruct handle
+(defstruct hinternet
   handle closed-p)
 
 (defstruct (session
-            (:include handle)))
+            (:include hinternet)))
 
 (defstruct (connection
-            (:include handle)))
+            (:include hinternet)))
 
 (defstruct (request
-            (:include handle)))
+            (:include hinternet)))
 
-(defmacro define-handle-wrapper (type)
+(defmacro define-hinternet-wrapper (type)
   (let ((func (intern (format nil "wrap-~A" type)))
-        (ctor (intern (format nil "make-~A" type)))
-        (handle (gensym)))
-    `(defmacro ,func (&body body)
-       `(let ((,',handle (progn ,@body)))
-          (when (zerop ,',handle)
-            (error (format nil "~A failed" ',(caar body))))
-          (,',ctor :handle ,',handle)))))
+        (ctor (intern (format nil "make-~A" type))))
+    `(defmacro ,func ((api &rest args))
+       (let (($args (gensym))
+             ($handle (gensym)))
+         `(let ((,$args (list ,@args)))
+            (let ((,$handle (apply ',api ,$args)))
+              (when (zerop ,$handle)
+                (error (format nil "~A failed" ',api)))
+              (gc-guard ,$handle ,$args)
+              (,',ctor :handle ,$handle)
+              ))))))
 
-(define-handle-wrapper session)
-(define-handle-wrapper connection)
-(define-handle-wrapper request)
+(define-hinternet-wrapper session)
+(define-hinternet-wrapper connection)
+(define-hinternet-wrapper request)
 
 
-(defun assert-handle (handle)
-  (check-type handle handle)
-  (when (handle-closed-p handle)
-    (error "Closed handle: ~S" handle)))
+(defmacro check-valid-handle (hinternet typespec)
+  `(progn
+     (check-type ,hinternet ,typespec)
+     (when (hinternet-closed-p ,hinternet)
+       (error "Closed HINTERNET handle: ~S" ,hinternet))))
 
 
 (provide "xl-winhttp/types")
