@@ -31,7 +31,10 @@
 
 (in-package :winhttp.ffi)
 
-(export '(make-WSTR
+(export '(nullp
+          gc-guard
+
+          make-WSTR
           unpack-WSTR
           WSTR-length
           zero-memory
@@ -41,11 +44,24 @@
           assert-BOOL
           ))
 
+(defvar *gc-gard* nil
+  "GC ‚É‚æ‚è chunk ‚ª‰ğ•ú‚³‚ê‚È‚¢‚æ‚¤‚ÉQÆ‚ğ•Û‚·‚é
+
+'((<owner1> . (#<chunk1> #<chunk2>))
+  (<owner2> . (#<chunk3)))")
+
 (defparameter *size-of-wstr* 2)
 
 (defun nullp (v)
   (or (not v)
       (zerop v)))
+
+(defun gc-guard (owner chunk)
+  (let ((alist (assoc owner *gc-gard*)))
+    (if alist
+        (push chunk (cdr alist))
+      (setf *gc-gard* (acons owner (list chunk) *gc-gard*)))
+    *gc-gard*))
 
 (defun make-WSTR (str)
   (if (nullp str)
