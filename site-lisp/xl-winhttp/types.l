@@ -1,6 +1,6 @@
 ; -*- mode: lisp; package: winhttp; encoding: shift_jis -*-
 
-;;; xl-winhttp/version.l
+;;; xl-winhttp/types.l
 ;;
 ;; Copyright (c) 2011 MIYAMUKO Katsuyuki.
 ;;
@@ -31,15 +31,39 @@
 
 (in-package :winhttp)
 
-(export '(xl-winhttp-version
-          ))
+(defstruct handle
+  handle closed-p)
 
-(defconstant +xl-winhttp-version+ "0.0.1")
+(defstruct (session
+            (:include handle)))
 
-(defun xl-winhttp-version ()
-  +xl-winhttp-version+)
+(defstruct (connection
+            (:include handle)))
+
+(defstruct (request
+            (:include handle)))
+
+(defmacro define-handle-wrapper (type)
+  (let ((func (intern (format nil "wrap-~A" type)))
+        (ctor (intern (format nil "make-~A" type)))
+        (handle (gensym)))
+    `(defmacro ,func (&body body)
+       `(let ((,',handle (progn ,@body)))
+          (when (zerop ,',handle)
+            (error (format nil "~A failed" ',(caar body))))
+          (,',ctor :handle ,',handle)))))
+
+(define-handle-wrapper session)
+(define-handle-wrapper connection)
+(define-handle-wrapper request)
 
 
-(provide "xl-winhttp/version")
+(defun assert-handle (handle)
+  (check-type handle handle)
+  (when (handle-closed-p handle)
+    (error "Closed handle: ~S" handle)))
+
+
+(provide "xl-winhttp/types")
 
 ;;; End

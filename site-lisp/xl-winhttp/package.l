@@ -26,18 +26,26 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (unless (find-package :xl-winhttp.ffi)
-    (defpackage :xl-winhttp.ffi
+  (require "foreign")
+  (require "wip/winapi")
+
+  (unless (find-package :winhttp.ffi)
+    (defpackage :winhttp.ffi
       (:use
        :lisp
        :editor
+       :winapi
        )))
-  (unless (find-package :xl-winhttp)
-    (defpackage :xl-winhttp
+  (unless (find-package :winhttp)
+    (defpackage :winhttp
       (:use
        :lisp
        :editor
-       :xl-winhttp.ffi
+       :winhttp.ffi
+       )
+      (:shadow
+       open
+       connect
        )))
   )
 

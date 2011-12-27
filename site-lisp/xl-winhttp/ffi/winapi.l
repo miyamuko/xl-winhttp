@@ -1,6 +1,6 @@
-; -*- mode: lisp; package: winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.ffi; encoding: shift_jis -*-
 
-;;; xl-winhttp/version.l
+;;; xl-winhttp/ffi/winapi.l
 ;;
 ;; Copyright (c) 2011 MIYAMUKO Katsuyuki.
 ;;
@@ -29,17 +29,16 @@
   (require "xl-winhttp/package")
   )
 
-(in-package :winhttp)
+(in-package :winhttp.ffi)
 
-(export '(xl-winhttp-version
-          ))
+(c:*define NULL 0)
 
-(defconstant +xl-winhttp-version+ "0.0.1")
+(c:*define-c-type (c:void *) LPCWSTR)
+(c:*define-c-type (c:void *) LPCVOID)
+(c:*define-c-type (DWORD *) LPDWORD)
+(c:*define-c-type (DWORD *) DWORD_PTR)
 
-(defun xl-winhttp-version ()
-  +xl-winhttp-version+)
 
-
-(provide "xl-winhttp/version")
+(provide "xl-winhttp/ffi/winapi")
 
 ;;; End

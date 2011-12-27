@@ -1,6 +1,6 @@
-; -*- mode: lisp; package: winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: user; encoding: shift_jis -*-
 
-;;; xl-winhttp/version.l
+;;; xl-winhttp/ffi.l
 ;;
 ;; Copyright (c) 2011 MIYAMUKO Katsuyuki.
 ;;
@@ -25,21 +25,12 @@
 
 ;;; Code:
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
-  )
+(in-package :user)
 
-(in-package :winhttp)
+(require "xl-winhttp/ffi/winapi")
+(require "xl-winhttp/ffi/winhttp")
+(require "xl-winhttp/ffi/utils")
 
-(export '(xl-winhttp-version
-          ))
-
-(defconstant +xl-winhttp-version+ "0.0.1")
-
-(defun xl-winhttp-version ()
-  +xl-winhttp-version+)
-
-
-(provide "xl-winhttp/version")
+(provide "xl-winhttp")
 
 ;;; End

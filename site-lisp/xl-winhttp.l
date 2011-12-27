@@ -28,6 +28,7 @@
 (in-package :user)
 
 (require "xl-winhttp/version")
+(require "xl-winhttp/api")
 
 
 (provide "xl-winhttp")
