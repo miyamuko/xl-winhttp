@@ -40,7 +40,7 @@
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384257(v=VS.85).aspx
 
-(defun open (user-agent &optional access-type proxy-name proxy-bypass flags)
+(defun open (user-agent &key access-type proxy-name proxy-bypass flags)
   "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098(v=VS.85).aspx
 HINTERNET WINAPI WinHttpOpen(
   __in_opt  LPCWSTR pwszUserAgent,
@@ -69,7 +69,40 @@ HINTERNET WINAPI WinHttpConnect(
   (wrap-connection
    (WinHttpConnect (session-handle session) (make-WSTR server) port 0)))
 
-(defun crack-url (url &optional flags)
+(defun open-request (connection verb object-name &key version referrer accept-types flags)
+  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384099(v=VS.85).aspx
+HINTERNET WINAPI WinHttpOpenRequest(
+  __in  HINTERNET hConnect,
+  __in  LPCWSTR pwszVerb,
+  __in  LPCWSTR pwszObjectName,
+  __in  LPCWSTR pwszVersion,
+  __in  LPCWSTR pwszReferrer,
+  __in  LPCWSTR *ppwszAcceptTypes,
+  __in  DWORD dwFlags
+);
+"
+  (wrap-connection
+   (WinHttpOpenRequest (connection-handle connect)
+                       (make-WSTR verb)
+                       (make-WSTR object-name)
+                       (or (make-WSTR version) NULL)
+                       (or (make-WSTR referrer) NULL)
+                       (or accept-types NULL) ;; TODO array of string
+                       (or flags 0))))
+
+(defun close-handle (handle)
+  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384090(v=VS.85).aspx
+BOOL WINAPI WinHttpCloseHandle(
+  __in  HINTERNET hInternet
+);
+"
+  (check-type handle handle)
+  (unless (handle-closed-p handle)
+    (assert-BOOL
+     (WinHttpCloseHandle (handle-handle handle)))
+    (setf (handle-closed-p handle) t)))
+
+(defun crack-url (url &key flags)
   "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384092(v=VS.85).aspx
 BOOL WINAPI WinHttpCrackUrl(
   __in     LPCWSTR pwszUrl,

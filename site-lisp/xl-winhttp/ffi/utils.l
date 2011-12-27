@@ -48,8 +48,11 @@
       (zerop v)))
 
 (defun make-WSTR (str)
-  (check-type str string)
-  (si:make-string-chunk (internal-to-utf16 str)))
+  (if (nullp str)
+      NULL
+    (progn
+      (check-type str string)
+      (si:make-string-chunk (internal-to-utf16 str)))))
 
 (defun unpack-WSTR (chunk &optional offset wstr-len)
   (if (and (nullp chunk) (nullp offset))
