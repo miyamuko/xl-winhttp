@@ -23,16 +23,8 @@ xl-winhttp は xyzzy から...
 1. [NetInstaller](http://www7a.biglobe.ne.jp/~hat/xyzzy/ni.html)
    で xl-winhttp, foo, bar をインストールします。
 
-2. ni-autoload を利用していない場合は、
-   ~/.xyzzy または site-lisp/siteinit.l に以下のコードを追加します。
-
-     (require "xl-winhttp")
-
-   ※ ni-autoload を利用している場合は設定は不要です。
-
-3. 設定を反映させるため xyzzy を再起動してください。
-
-   ※siteinit.l に記述した場合には再ダンプが必要です。
+2. xl-winhttp はライブラリであるため自動的にロードはされません。
+   必要な時点で require してください。
 
 
 ## TODO
