@@ -1,0 +1,20 @@
+package: xl-winhttp
+version: 0.0.1
+
+sources:
+  include:
+    - site-lisp/xl-winhttp/**/*.l
+  exclude:
+    - site-lisp/xl-winhttp/**/tests/*.l
+
+document:
+  - README.rdoc
+
+files:
+  include:
+    - site-lisp/**/*.l
+    - site-lisp/**/*.lc
+    - site-lisp/xl-winhttp/lib/*.dll
+    - site-lisp/xl-winhttp/src/**/*.*
+    - site-lisp/xl-winhttp/examples/**/*.*
+    - site-lisp/xl-winhttp/tests/*.*
