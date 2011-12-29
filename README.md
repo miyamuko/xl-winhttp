@@ -42,7 +42,7 @@
 "
 ("HTTP/1.1 200 OK" "Cache-Control: no-cache" "Connection: Keep-Alive" ...)
 
-;; charset なし (xhr だと化ける)
+;; Shift_JIS (charset なし) (xhr だと化ける)
 (alexandria:write-string-into-file
  (http-get "http://miyamuko.s56.xrea.com/xyzzy/package.l") "package.l")
 
@@ -82,12 +82,13 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 
 * 非同期
 * 足りない API の追加
+* リファレンス
 * オプションをキーワードで指定できるようにする
+
   ```lisp
   (winhttp:with-open-request (req conn "GET" "/") :flags :secure)
     ...)
   ```
-* リファレンス
 
 
 ## KNOWN BUGS
