@@ -53,18 +53,16 @@
           with-open-request
           ))
 
-;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384257.aspx
-
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098.aspx
+;; HINTERNET WINAPI WinHttpOpen(
+;;   __in_opt  LPCWSTR pwszUserAgent,
+;;   __in      DWORD dwAccessType,
+;;   __in      LPCWSTR pwszProxyName,
+;;   __in      LPCWSTR pwszProxyBypass,
+;;   __in      DWORD dwFlags
+;; );
 (defun open (user-agent &key access-type proxy-name proxy-bypass flags)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098.aspx
-HINTERNET WINAPI WinHttpOpen(
-  __in_opt  LPCWSTR pwszUserAgent,
-  __in      DWORD dwAccessType,
-  __in      LPCWSTR pwszProxyName,
-  __in      LPCWSTR pwszProxyBypass,
-  __in      DWORD dwFlags
-);
-"
+  "Initializes, for an application, the use of WinHTTP functions and returns a WinHTTP-session handle."
   (wrap-session
    (WinHttpOpen (make-WSTR user-agent)
                 (or access-type WINHTTP_ACCESS_TYPE_DEFAULT_PROXY)
@@ -72,15 +70,16 @@ HINTERNET WINAPI WinHttpOpen(
                 (make-WSTR proxy-bypass :default WINHTTP_NO_PROXY_BYPASS)
                 (or flags 0))))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384091.aspx
+;; HINTERNET WINAPI WinHttpConnect(
+;;   __in        HINTERNET hSession,
+;;   __in        LPCWSTR pswzServerName,
+;;   __in        INTERNET_PORT nServerPort,
+;;   __reserved  DWORD dwReserved
+;; );
 (defun connect (session server port)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384091.aspx
-HINTERNET WINAPI WinHttpConnect(
-  __in        HINTERNET hSession,
-  __in        LPCWSTR pswzServerName,
-  __in        INTERNET_PORT nServerPort,
-  __reserved  DWORD dwReserved
-);
-"
+  "Specifies the initial target server of an HTTP request and returns
+an HINTERNET connection handle to an HTTP session for that initial target."
   (check-valid-handle session session)
   (wrap-connection
    (WinHttpConnect (session-handle session)
@@ -88,18 +87,18 @@ HINTERNET WINAPI WinHttpConnect(
                    port
                    0)))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384099.aspx
+;; HINTERNET WINAPI WinHttpOpenRequest(
+;;   __in  HINTERNET hConnect,
+;;   __in  LPCWSTR pwszVerb,
+;;   __in  LPCWSTR pwszObjectName,
+;;   __in  LPCWSTR pwszVersion,
+;;   __in  LPCWSTR pwszReferrer,
+;;   __in  LPCWSTR *ppwszAcceptTypes,
+;;   __in  DWORD dwFlags
+;; );
 (defun open-request (connection verb object-name &key version referrer accept-types flags)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384099.aspx
-HINTERNET WINAPI WinHttpOpenRequest(
-  __in  HINTERNET hConnect,
-  __in  LPCWSTR pwszVerb,
-  __in  LPCWSTR pwszObjectName,
-  __in  LPCWSTR pwszVersion,
-  __in  LPCWSTR pwszReferrer,
-  __in  LPCWSTR *ppwszAcceptTypes,
-  __in  DWORD dwFlags
-);
-"
+  "Creates an HTTP request handle."
   (check-valid-handle connection connection)
   (wrap-request
    (WinHttpOpenRequest (connection-handle connection)
@@ -110,12 +109,12 @@ HINTERNET WINAPI WinHttpOpenRequest(
                        (make-WSTR-array accept-types :default WINHTTP_DEFAULT_ACCEPT_TYPES)
                        (or flags 0))))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384090.aspx
+;; BOOL WINAPI WinHttpCloseHandle(
+;;   __in  HINTERNET hInternet
+;; );
 (defun close-handle (hinternet)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384090.aspx
-BOOL WINAPI WinHttpCloseHandle(
-  __in  HINTERNET hInternet
-);
-"
+  "Closes a single HINTERNET handle."
   ;; close しているかどうかのチェックはしないので check-valid-handle は呼ばない
   (check-type hinternet hinternet)
   (unless (hinternet-closed-p hinternet)
@@ -124,18 +123,18 @@ BOOL WINAPI WinHttpCloseHandle(
     (gc-free (hinternet-handle hinternet))
     (setf (hinternet-closed-p hinternet) t)))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384110.aspx
+;; BOOL WINAPI WinHttpSendRequest(
+;;   __in      HINTERNET hRequest,
+;;   __in_opt  LPCWSTR pwszHeaders,
+;;   __in      DWORD dwHeadersLength,
+;;   __in_opt  LPVOID lpOptional,
+;;   __in      DWORD dwOptionalLength,
+;;   __in      DWORD dwTotalLength,
+;;   __in      DWORD_PTR dwContext
+;; );
 (defun send-request (request &key data headers total-length context)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384110.aspx
-BOOL WINAPI WinHttpSendRequest(
-  __in      HINTERNET hRequest,
-  __in_opt  LPCWSTR pwszHeaders,
-  __in      DWORD dwHeadersLength,
-  __in_opt  LPVOID lpOptional,
-  __in      DWORD dwOptionalLength,
-  __in      DWORD dwTotalLength,
-  __in      DWORD_PTR dwContext
-);
-"
+  "Sends the specified request to the HTTP server."
   (check-valid-handle request request)
   (let ((&headers (make-WSTR headers :default WINHTTP_NO_ADDITIONAL_HEADERS))
         (&data (make-CSTR data :default WINHTTP_NO_REQUEST_DATA)))
@@ -148,15 +147,15 @@ BOOL WINAPI WinHttpSendRequest(
                          (or total-length (CSTR-length &data))
                          (or context NULL)))))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384120.aspx
+;; BOOL WINAPI WinHttpWriteData(
+;;   __in   HINTERNET hRequest,
+;;   __in   LPCVOID lpBuffer,
+;;   __in   DWORD dwNumberOfBytesToWrite,
+;;   __out  LPDWORD lpdwNumberOfBytesWritten
+;; );
 (defun write-data (request data)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384120.aspx
-BOOL WINAPI WinHttpWriteData(
-  __in   HINTERNET hRequest,
-  __in   LPCVOID lpBuffer,
-  __in   DWORD dwNumberOfBytesToWrite,
-  __out  LPDWORD lpdwNumberOfBytesWritten
-);
-"
+  "Writes request data to an HTTP server."
   (check-valid-handle request request)
   (let ((&written (make-DWORD))
         (&data (make-CSTR data)))
@@ -167,27 +166,34 @@ BOOL WINAPI WinHttpWriteData(
                        &written))
     (unpack-DWORD &written)))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384105.aspx
+;; BOOL WINAPI WinHttpReceiveResponse(
+;;   __in        HINTERNET hRequest,
+;;   __reserved  LPVOID lpReserved
+;; );
 (defun receive-response (request)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384105.aspx
-BOOL WINAPI WinHttpReceiveResponse(
-  __in        HINTERNET hRequest,
-  __reserved  LPVOID lpReserved
-);
-"
+  "Waits to receive the response to an HTTP request initiated by winhttp:send-request.
+When winhttp:receive-response completes successfully, the status code and
+response headers have been received and are available for the application to
+inspect using winhttp:query-headers.
+
+An application must call winhttp:receive-response before it can use
+winhttp:query-data-available and winhttp:read-data to access the response
+entity body (if any)."
   (check-valid-handle request request)
   (assert-BOOL
    (WinHttpReceiveResponse (request-handle request) NULL)))
 
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384087.aspx
+;; BOOL WINAPI WinHttpAddRequestHeaders(
+;;   __in  HINTERNET hRequest,
+;;   __in  LPCWSTR pwszHeaders,
+;;   __in  DWORD dwHeadersLength,
+;;   __in  DWORD dwModifiers
+;; );
 (defun add-request-headers (request headers &key (modifiers WINHTTP_ADDREQ_FLAG_ADD))
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384087.aspx
-BOOL WINAPI WinHttpAddRequestHeaders(
-  __in  HINTERNET hRequest,
-  __in  LPCWSTR pwszHeaders,
-  __in  DWORD dwHeadersLength,
-  __in  DWORD dwModifiers
-);
-"
+  "Adds one or more HTTP request headers to the HTTP request handle."
   (check-valid-handle request request)
   (check-type headers string)
   (let ((headers (make-WSTR headers)))
@@ -198,17 +204,17 @@ BOOL WINAPI WinHttpAddRequestHeaders(
                                modifiers))))
 
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384112.aspx
+;; BOOL WINAPI WinHttpSetCredentials(
+;;   __in        HINTERNET hRequest,
+;;   __in        DWORD AuthTargets,
+;;   __in        DWORD AuthScheme,
+;;   __in        LPCWSTR pwszUserName,
+;;   __in        LPCWSTR pwszPassword,
+;;   __reserved  LPVOID pAuthParams
+;; );
 (defun set-credentials (request auth-targets auth-scheme username password)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384112.aspx
-BOOL WINAPI WinHttpSetCredentials(
-  __in        HINTERNET hRequest,
-  __in        DWORD AuthTargets,
-  __in        DWORD AuthScheme,
-  __in        LPCWSTR pwszUserName,
-  __in        LPCWSTR pwszPassword,
-  __reserved  LPVOID pAuthParams
-);
-"
+  "Passes the required authorization credentials to the server."
   (check-valid-handle request request)
   (assert-BOOL
    (WinHttpSetCredentials (request-handle request)
@@ -219,15 +225,15 @@ BOOL WINAPI WinHttpSetCredentials(
                           NULL)))
 
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384104.aspx
+;; BOOL WINAPI WinHttpReadData(
+;;   __in   HINTERNET hRequest,
+;;   __out  LPVOID lpBuffer,
+;;   __in   DWORD dwNumberOfBytesToRead,
+;;   __out  LPDWORD lpdwNumberOfBytesRead
+;; );
 (defun read-data (request num-of-bytes-to-read)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384104.aspx
-BOOL WINAPI WinHttpReadData(
-  __in   HINTERNET hRequest,
-  __out  LPVOID lpBuffer,
-  __in   DWORD dwNumberOfBytesToRead,
-  __out  LPDWORD lpdwNumberOfBytesRead
-);
-"
+  "Reads data from a handle opened by the winhttp:open-request function."
   (check-valid-handle request request)
   (let ((&buffer (make-CSTR-buffer num-of-bytes-to-read))
         (&num-of-bytes-read (make-DWORD)))
@@ -240,15 +246,15 @@ BOOL WINAPI WinHttpReadData(
       (values (unpack-CSTR &buffer bytes)
               bytes))))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384100.aspx
+;; BOOL WINAPI WinHttpQueryAuthSchemes(
+;;   __in   HINTERNET hRequest,
+;;   __out  LPDWORD lpdwSupportedSchemes,
+;;   __out  LPDWORD lpdwFirstScheme,
+;;   __out  LPDWORD pdwAuthTarget
+;; );
 (defun query-auth-schemes (request)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384100.aspx
-BOOL WINAPI WinHttpQueryAuthSchemes(
-  __in   HINTERNET hRequest,
-  __out  LPDWORD lpdwSupportedSchemes,
-  __out  LPDWORD lpdwFirstScheme,
-  __out  LPDWORD pdwAuthTarget
-);
-"
+  "Returns the authorization schemes that are supported by the server."
   (check-valid-handle request request)
   (let ((&supported-schemes (make-DWORD))
         (&first-scheme (make-DWORD))
@@ -262,13 +268,13 @@ BOOL WINAPI WinHttpQueryAuthSchemes(
             (unpack-DWORD &first-scheme)
             (unpack-DWORD &auth-target))))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384101.aspx
+;; BOOL WINAPI WinHttpQueryDataAvailable(
+;;   __in   HINTERNET hRequest,
+;;   __out  LPDWORD lpdwNumberOfBytesAvailable
+;; );
 (defun query-data-available (request)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384101.aspx
-BOOL WINAPI WinHttpQueryDataAvailable(
-  __in   HINTERNET hRequest,
-  __out  LPDWORD lpdwNumberOfBytesAvailable
-);
-"
+  "Returns the amount of data, in bytes, available to be read with winhttp:read-data."
   (check-valid-handle request request)
   (let ((&num-of-bytes-available (make-DWORD)))
     (assert-BOOL
@@ -276,17 +282,17 @@ BOOL WINAPI WinHttpQueryDataAvailable(
                                 &num-of-bytes-available))
     (unpack-DWORD &num-of-bytes-available)))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384102.aspx
+;; BOOL WINAPI WinHttpQueryHeaders(
+;;   __in      HINTERNET hRequest,
+;;   __in      DWORD dwInfoLevel,
+;;   __in_opt  LPCWSTR pwszName,
+;;   __out     LPVOID lpBuffer,
+;;   __inout   LPDWORD lpdwBufferLength,
+;;   __inout   LPDWORD lpdwIndex
+;; );
 (defun query-headers (request header &key (index WINHTTP_NO_HEADER_INDEX))
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384102.aspx
-BOOL WINAPI WinHttpQueryHeaders(
-  __in      HINTERNET hRequest,
-  __in      DWORD dwInfoLevel,
-  __in_opt  LPCWSTR pwszName,
-  __out     LPVOID lpBuffer,
-  __inout   LPDWORD lpdwBufferLength,
-  __inout   LPDWORD lpdwIndex
-);
-"
+  "Retrieves header information associated with an HTTP request."
   (check-valid-handle request request)
   (check-type header (or integer string symbol))
   (check-type index integer)
@@ -320,15 +326,15 @@ BOOL WINAPI WinHttpQueryHeaders(
           )))))
 
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384092.aspx
+;; BOOL WINAPI WinHttpCrackUrl(
+;;   __in     LPCWSTR pwszUrl,
+;;   __in     DWORD dwUrlLength,
+;;   __in     DWORD dwFlags,
+;;   __inout  LPURL_COMPONENTS lpUrlComponents
+;; );
 (defun crack-url (url &key flags)
-  "http://msdn.microsoft.com/en-us/library/windows/desktop/aa384092.aspx
-BOOL WINAPI WinHttpCrackUrl(
-  __in     LPCWSTR pwszUrl,
-  __in     DWORD dwUrlLength,
-  __in     DWORD dwFlags,
-  __inout  LPURL_COMPONENTS lpUrlComponents
-);
-"
+  "Separates a URL into its component parts such as host name and path."
   (let ((wstr-url (make-WSTR url))
         (components (make-URL_COMPONENTS)))
     (si:clear-chunk components)
