@@ -2,7 +2,7 @@
 
 ;;; xl-winhttp/api.l
 ;;
-;; Copyright (c) 2011 MIYAMUKO Katsuyuki.
+;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
@@ -101,13 +101,16 @@ an HINTERNET connection handle to an HTTP session for that initial target."
   "Creates an HTTP request handle."
   (check-valid-handle connection connection)
   (wrap-request
-   (WinHttpOpenRequest (connection-handle connection)
-                       (make-WSTR verb)
-                       (make-WSTR object-name)
-                       (make-WSTR version)
-                       (make-WSTR referrer :default WINHTTP_NO_REFERER)
-                       (make-WSTR-array accept-types :default WINHTTP_DEFAULT_ACCEPT_TYPES)
-                       (or flags 0))))
+   (multiple-value-bind (&accept-types chunks)
+       (make-WSTR-array accept-types :default WINHTTP_DEFAULT_ACCEPT_TYPES)
+     (gc-guard connection chunks)
+     (WinHttpOpenRequest (connection-handle connection)
+                         (make-WSTR verb)
+                         (make-WSTR object-name)
+                         (make-WSTR version)
+                         (make-WSTR referrer :default WINHTTP_NO_REFERER)
+                         &accept-types
+                         (or flags 0)))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384090.aspx
 ;; BOOL WINAPI WinHttpCloseHandle(

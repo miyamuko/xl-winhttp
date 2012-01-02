@@ -2,7 +2,7 @@
 
 ;;; xl-winhttp/ffi/winapi.l
 ;;
-;; Copyright (c) 2011 MIYAMUKO Katsuyuki.
+;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
@@ -77,8 +77,10 @@ Value: chunk list
 (defun gc-guard (owner chunks)
   (when (and chunks (atom chunks))
     (setf chunks (list chunks)))
-  (setf (gethash owner *gc-gard*)
-        (append (gethash owner *gc-gard*) chunks)))
+  (let ((chunks (remove-if-not #'chunkp chunks)))
+    (when chunks
+      (setf (gethash owner *gc-gard*)
+            (append (gethash owner *gc-gard*) chunks)))))
 
 (defun gc-free (owner)
   (remhash owner *gc-gard*))
@@ -117,7 +119,7 @@ Value: chunk list
 ;;              „¤„Ÿ„¨„Ÿ„£        „¤„Ÿ„¨„Ÿ„¨„Ÿ„¨„Ÿ„£
 (defun make-WSTR-array (strs &key (default NULL))
   (when (nullp strs)
-    (return-from make-WSTR-array default))
+    (return-from make-WSTR-array (values default nil)))
   (dolist (str strs)
     (check-type str string))
   (let* ((chunks (mapcar #'make-WSTR strs))
@@ -213,8 +215,11 @@ Value: chunk list
   (check-chunk chunk)
   (si:unpack-int32 chunk 0))
 
+(defun chunkp (chunk)
+  (eq (type-of chunk) 'si:chunk))
+
 (defun check-chunk (chunk)
-  (unless (eq (type-of chunk) 'si:chunk)
+  (unless (chunkp chunk)
     (error 'type-error
            :datum chunk
            :expected-type 'si:chunk)))
