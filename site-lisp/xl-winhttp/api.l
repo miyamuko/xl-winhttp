@@ -47,10 +47,6 @@
           query-data-available
           query-headers
           crack-url
-
-          with-open
-          with-connect
-          with-open-request
           ))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098.aspx
@@ -372,20 +368,6 @@ entity body (if any)."
     ))
 
 
-(defmacro define-with-macro (init-func)
-  (let ((name (intern (format nil "with-~A" init-func)))
-        (args (cadr (si:closure-body (symbol-function init-func)))))
-    `(progn
-       (defmacro ,name ((var ,@args) &body body)
-         `(let ((,var (,',init-func ,@args)))
-            (unwind-protect
-                (progn ,@body)
-              (close-handle ,var))))
-       (setf (get ',name 'ed:lisp-indent-hook) 1))))
-
-(define-with-macro open)
-(define-with-macro connect)
-(define-with-macro open-request)
 
 
 (provide "xl-winhttp/api")
