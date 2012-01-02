@@ -42,11 +42,13 @@
           receive-response
           add-request-headers
           set-credentials
+          set-timeouts
           read-data
           query-auth-schemes
           query-data-available
           query-headers
           crack-url
+          create-url
           ))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098.aspx
@@ -223,6 +225,25 @@ entity body (if any)."
                           (make-WSTR password)
                           NULL)))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384116.aspx
+;; BOOL WINAPI WinHttpSetTimeouts(
+;;   __in  HINTERNET hInternet,
+;;   __in  int dwResolveTimeout,
+;;   __in  int dwConnectTimeout,
+;;   __in  int dwSendTimeout,
+;;   __in  int dwReceiveTimeout
+;; );
+(defun set-timeouts (hinternet &key (resolve 0) (connect 60000) (send 30000) (receive 30000))
+  "Sets time-outs involved with HTTP transactions."
+  (check-type hinternet (or session request))
+  (check-type resolve integer)
+  (check-type connect integer)
+  (check-type send integer)
+  (check-type receive integer)
+  (assert-BOOL
+   (WinHttpSetTimeouts hinternet resolve connect send receive)))
+
+
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384104.aspx
 ;; BOOL WINAPI WinHttpReadData(
@@ -366,6 +387,57 @@ entity body (if any)."
                                  (URL_COMPONENTS-dwExtraInfoLength components))
             )
     ))
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384093.aspx
+;; BOOL WINAPI WinHttpCreateUrl(
+;;   __in     LPURL_COMPONENTS lpUrlComponents,
+;;   __in     DWORD dwFlags,
+;;   __out    LPWSTR pwszUrl,
+;;   __inout  LPDWORD lpdwUrlLength
+;; );
+(defun create-url (scheme username password hostname port url-path extra-info &key flags)
+  "Creates a URL from component parts such as the host name and path."
+  (flet ((make-WSTR (str)
+           ;; (make-WSTR "") は NULL 文字だけの chunk を返す (WSTR-length は 0)。
+           ;; それを WinHttpCreateUrl に渡すとゴミが URL に設定されるので、
+           ;; 空文字列の場合は chunk を作成しない。
+           (if (equal str "")
+               NULL
+             (winhttp.ffi:make-WSTR str))))
+    (let ((components (make-URL_COMPONENTS))
+          (&username (make-WSTR username))
+          (&password (make-WSTR password))
+          (&hostname (make-WSTR hostname))
+          (&url-path (make-WSTR url-path))
+          (&extra-info (make-WSTR extra-info)))
+      (si:clear-chunk components)
+      (setf (URL_COMPONENTS-dwStructSize components) (c:c-struct-size-of URL_COMPONENTS)
+            (URL_COMPONENTS-lpszUserName components) &username
+            (URL_COMPONENTS-dwUserNameLength components) (WSTR-length &username)
+            (URL_COMPONENTS-lpszPassword components) &password
+            (URL_COMPONENTS-dwPasswordLength components) (WSTR-length &password)
+            (URL_COMPONENTS-lpszHostName components) &hostname
+            (URL_COMPONENTS-dwHostNameLength components) (WSTR-length &hostname)
+            (URL_COMPONENTS-lpszUrlPath components) &url-path
+            (URL_COMPONENTS-dwUrlPathLength components) (WSTR-length &url-path)
+            (URL_COMPONENTS-lpszExtraInfo components) &extra-info
+            (URL_COMPONENTS-dwExtraInfoLength components) (WSTR-length &extra-info)
+            (URL_COMPONENTS-nPort components) port
+            )
+      (if (integerp scheme)
+          (setf (URL_COMPONENTS-nScheme components) scheme)
+        (let ((&scheme (make-WSTR scheme)))
+          (setf (URL_COMPONENTS-dwSchemeLength components) (WSTR-length &scheme)
+                (URL_COMPONENTS-lpszScheme components) &scheme
+                )))
+      (setf flags (or flags 0))
+      (let ((&len (make-DWORD)))
+        (WinHttpCreateUrl components flags NULL &len)
+        (let ((&buffer (make-WSTR-buffer (unpack-DWORD &len))))
+          (assert-BOOL
+           (WinHttpCreateUrl components flags &buffer &len))
+          (unpack-WSTR &buffer (unpack-DWORD &len)))))))
+
 
 
 

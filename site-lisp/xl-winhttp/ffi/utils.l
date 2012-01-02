@@ -92,8 +92,8 @@ Value: chunk list
   (check-type str string)
   (si:make-string-chunk (convert-internal-to-WSTR str)))
 
-(defun make-WSTR-buffer (size)
-  (make-buffer 'wstr size))
+(defun make-WSTR-buffer (wstr-len)
+  (make-buffer 'wstr (* wstr-len *size-of-WCHAR*)))
 
 ;; (make-WSTR-buffer '("foo" "bar" "baz")
 ;;
