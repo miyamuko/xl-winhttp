@@ -42,13 +42,26 @@
           receive-response
           add-request-headers
           set-credentials
+          set-option
           set-timeouts
           read-data
           query-auth-schemes
           query-data-available
           query-headers
+          query-option
           crack-url
           create-url
+          check-platform
+          create-proxy-resolver
+          detect-auto-proxy-config-url
+          get-default-proxy-configuration
+          get-ieproxy-config-for-current-user
+          get-proxy-for-url
+          get-proxy-for-url-ex
+          reset-auto-proxy
+          set-default-proxy-configuration
+          time-from-system-time
+          time-to-system-time
           ))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098.aspx
@@ -225,6 +238,18 @@ entity body (if any)."
                           (make-WSTR password)
                           NULL)))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384114.aspx
+;; BOOL WINAPI WinHttpSetOption(
+;;   __in  HINTERNET hInternet,
+;;   __in  DWORD dwOption,
+;;   __in  LPVOID lpBuffer,
+;;   __in  DWORD dwBufferLength
+;; );
+(defun set-option ()
+  "Sets an Internet option."
+  ;; TODO
+  )
+
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384116.aspx
 ;; BOOL WINAPI WinHttpSetTimeouts(
 ;;   __in  HINTERNET hInternet,
@@ -345,6 +370,18 @@ entity body (if any)."
             (convert-WSTR-to-internal (unpack-CSTR &buffer bytes)))
           )))))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384103.aspx
+;; BOOL WINAPI WinHttpQueryOption(
+;;   __in     HINTERNET hInternet,
+;;   __in     DWORD dwOption,
+;;   __out    LPVOID lpBuffer,
+;;   __inout  LPDWORD lpdwBufferLength
+;; );
+(defun query-option ()
+  "Queries an Internet option on the specified handle."
+  ;; TODO
+  )
+
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384092.aspx
 ;; BOOL WINAPI WinHttpCrackUrl(
@@ -439,7 +476,119 @@ entity body (if any)."
           (unpack-WSTR &buffer (unpack-DWORD &len)))))))
 
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384089.aspx
+;; BOOL WinHttpCheckPlatform(void);
+(defun check-platform ()
+  "Determines whether the current platform is supported by this version of Microsoft Windows HTTP Services (WinHTTP)."
+  ;; TODO
+  )
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/hh405355.aspx
+;; DWORD WinHttpCreateProxyResolver(
+;;   _In_   HINTERNET hSession,
+;;   _Out_  HINTERNET *phResolver
+;; );
+(defun create-proxy-resolver ()
+  "Creates a handle for use by winhttp:get-proxy-for-url-ex."
+  ;; TODO
+  )
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384094.aspx
+;; BOOL WINAPI WinHttpDetectAutoProxyConfigUrl(
+;;   __in   DWORD dwAutoDetectFlags,
+;;   __out  LPWSTR *ppwszAutoConfigUrl
+;; );
+(defun detect-auto-proxy-config-url ()
+  "Finds the URL for the Proxy Auto-Configuration (PAC) file.
+This function reports the URL of the PAC file, but it does not download the file."
+  ;; TODO
+  )
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384095.aspx
+;; BOOL WINAPI WinHttpGetDefaultProxyConfiguration(
+;;   __inout  WINHTTP_PROXY_INFO *pProxyInfo
+;; );
+(defun get-default-proxy-configuration ()
+  "Retrieves the default WinHTTP proxy configuration from the registry."
+  ;; TODO
+  )
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384096.aspx
+;; BOOL WINAPI WinHttpGetIEProxyConfigForCurrentUser(
+;;   __inout  WINHTTP_CURRENT_USER_IE_PROXY_CONFIG *pProxyConfig
+;; );
+(defun get-ieproxy-config-for-current-user ()
+  "Retrieves the Internet Explorer proxy configuration for the current user."
+  ;; TODO
+  )
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384097.aspx
+;; BOOL WINAPI WinHttpGetProxyForUrl(
+;;   __in   HINTERNET hSession,
+;;   __in   LPCWSTR lpcwszUrl,
+;;   __in   WINHTTP_AUTOPROXY_OPTIONS *pAutoProxyOptions,
+;;   __out  WINHTTP_PROXY_INFO *pProxyInfo
+;; );
+(defun get-proxy-for-url ()
+  "Retrieves the proxy data for the specified URL."
+  ;; TODO
+  )
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/hh405356.aspx
+;; DWORD WINHTTPAPI WinHttpGetProxyForUrlEx(
+;;   _In_      HINTERNET hResolver,
+;;   _In_      PCWSTR pcwszUrl,
+;;   _In_opt_  PCWSTR pcwszHost,
+;;   _In_opt_  PCWSTR pcwszPath,
+;;   _In_opt_  INTERNET_SCHEME isScheme,
+;;   _In_opt_  INTERNET_PORT ipPort,
+;;   _In_      WINHTTP_AUTOPROXY_OPTIONS *pAutoProxyOptions,
+;;   _In_      DWORD_PTR pContext
+;; );
+(defun get-proxy-for-url-ex ()
+  "Retrieves the proxy data for the specified URL."
+  ;; TODO
+  )
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/hh405357.aspx
+;; DWORD WinHttpResetAutoProxy(
+;;   _In_  HINTERNET hSession,
+;;   _In_  DWORD dwFlags
+;; );
+(defun reset-auto-proxy ()
+  "Resets the auto-proxy."
+  ;; TODO
+  )
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384113.aspx
+;; BOOL WINAPI WinHttpSetDefaultProxyConfiguration(
+;;   __in  WINHTTP_PROXY_INFO *pProxyInfo
+;; );
+(defun set-default-proxy-configuration ()
+  "Sets the default WinHTTP proxy configuration in the registry."
+  ;; TODO
+  )
+
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384117.aspx
+;; BOOL WINAPI WinHttpTimeFromSystemTime(
+;;   __in   const SYSTEMTIME *pst,
+;;   __out  LPWSTR pwszTime
+;; );
+(defun time-from-system-time ()
+  "Formats a date and time according to the HTTP version 1.0 specification."
+  ;; TODO
+  )
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384118.aspx
+;; BOOL WINAPI WinHttpTimeToSystemTime(
+;;   __in   LPCWSTR pwszTime,
+;;   __out  SYSTEMTIME *pst
+;; );
+(defun time-to-system-time ()
+  "Takes an HTTP time/date string and converts it to a SYSTEMTIME structure."
+  ;; TODO
+  )
 
 
 (provide "xl-winhttp/api")
