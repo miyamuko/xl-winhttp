@@ -373,9 +373,10 @@ entity body (if any)."
 
 
 (defmacro define-with-macro (init-func)
-  (let ((name (intern (format nil "with-~A" init-func))))
+  (let ((name (intern (format nil "with-~A" init-func)))
+        (args (cadr (si:closure-body (symbol-function init-func)))))
     `(progn
-       (defmacro ,name ((var &rest args) &body body)
+       (defmacro ,name ((var ,@args) &body body)
          `(let ((,var (,',init-func ,@args)))
             (unwind-protect
                 (progn ,@body)
