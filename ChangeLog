@@ -1,3 +1,9 @@
+2012-01-05  MIYAMUKO Katsuyuki
+
+	* ひととおり API を実装。
+	WinHttpCreateProxyResolver, WinHttpGetProxyForUrlEx は Windows 8
+	からの API で動作確認ができていないので未実装。
+
 2011-12-27  MIYAMUKO Katsuyuki
 
 	* xl-winhttp 作成開始

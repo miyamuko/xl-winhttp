@@ -81,7 +81,6 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 ## TODO
 
 * 非同期
-* 足りない API の追加
 * リファレンス
 * オプションをキーワードで指定できるようにする
 

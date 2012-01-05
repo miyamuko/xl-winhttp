@@ -31,7 +31,11 @@
 
 (in-package :xl-winhttp.ffi)
 
-(export '(nullp
+(export '(*size-of-WCHAR*
+          *size-of-DWORD*
+          *size-of-pointer*
+
+          nullp
 
           gc-guard
           gc-free
@@ -41,6 +45,7 @@
           make-WSTR-array
           unpack-WSTR
           unpack-WSTR-pointer
+          unpack-WSTR-pointer-and-free
           WSTR-length
           bytes->WSTR-length
 
@@ -51,11 +56,18 @@
 
           make-DWORD
           unpack-DWORD
+          make-pointer
+          unpack-pointer
+
+          chunkp
+          check-chunk
 
           convert-internal-to-WSTR
           convert-WSTR-to-internal
 
-          assert-BOOL
+          unpack-BOOL
+
+          find-error-name
           ))
 
 (defparameter *gc-gard* (make-hash-table)
@@ -65,7 +77,7 @@ Key: Handle
 Value: chunk list
 ")
 
-(defparameter *size-of-WCHAR* 2)
+(defparameter *size-of-WCHAR* (c::ctypedef-size (c::expand-c-type 'c:wchar_t)))
 (defparameter *size-of-DWORD* (c::ctypedef-size (c::expand-c-type 'winapi:DWORD)))
 (defparameter *size-of-pointer* (c::ctypedef-size (c::expand-c-type '(c:void *))))
 
@@ -146,11 +158,18 @@ Value: chunk list
   (let ((size (* (or wstr-len (WSTR-length chunk)) *size-of-WCHAR*)))
     (convert-WSTR-to-internal (si:unpack-string chunk 0 size nil))))
 
-(defun unpack-WSTR-pointer (pointer wstr-len)
-  (when (or (nullp pointer)
-            (nullp wstr-len))
-    (return-from unpack-WSTR-pointer nil))
-  (convert-WSTR-to-internal (unpack-CSTR-pointer pointer (* wstr-len *size-of-WCHAR*))))
+(defun unpack-WSTR-pointer (pointer &optional wstr-len)
+  (unless (nullp pointer)
+    (unless wstr-len
+      (setf wstr-len (wcslen pointer)))
+    (when (< 0 wstr-len)
+      (convert-WSTR-to-internal (unpack-CSTR-pointer pointer (* wstr-len *size-of-WCHAR*))))))
+
+(defun unpack-WSTR-pointer-and-free (pointer &optional wstr-len)
+  (unless (nullp pointer)
+    (prog1
+        (unpack-WSTR-pointer pointer wstr-len)
+      (GlobalFree pointer))))
 
 (defun bytes->WSTR-length (bytes)
   (identity (floor (/ bytes *size-of-WCHAR*))))
@@ -215,6 +234,12 @@ Value: chunk list
   (check-chunk chunk)
   (si:unpack-int32 chunk 0))
 
+(setf (symbol-function 'make-pointer)
+      (symbol-function 'make-DWORD)
+      (symbol-function 'unpack-pointer)
+      (symbol-function 'unpack-DWORD)
+      )
+
 (defun chunkp (chunk)
   (eq (type-of chunk) 'si:chunk))
 
@@ -232,12 +257,17 @@ Value: chunk list
   (when str
     (ed::convert-encoding-from-internal ed::*encoding-utf16le* str)))
 
-(defmacro assert-BOOL (&body body)
-  (let ((result (gensym)))
-    `(let ((,result (progn ,@body)))
-       (when (nullp ,result)
-         (error (format nil "~A failed" ',(caar body))))
-       t)))
+
+(defun unpack-BOOL (bool)
+  (not (nullp bool)))
+
+(defun find-error-name (error-code)
+  (unless (zerop error-code)
+    (do-external-symbols (sym :winhttp.ffi)
+      (when (and (boundp sym)
+                 (equal error-code (symbol-value sym))
+                 (string-match "ERROR_" (string sym)))
+        (return sym)))))
 
 
 (provide "xl-winhttp/ffi/winapi")

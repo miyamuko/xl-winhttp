@@ -33,10 +33,9 @@
 (in-package :xl-winhttp)
 
 (defmacro define-with-macro (init-func)
-  (let ((name (intern (format nil "with-~A" init-func)))
-        (args (cadr (si:closure-body (symbol-function init-func)))))
+  (let ((name (intern (format nil "with-~A" init-func))))
     `(progn
-       (defmacro ,name ((var ,@args) &body body)
+       (defmacro ,name ((var &rest args) &body body)
          `(let ((,var (,',init-func ,@args)))
             (unwind-protect
                 (progn ,@body)

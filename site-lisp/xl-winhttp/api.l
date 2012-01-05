@@ -29,6 +29,7 @@
   (require "xl-winhttp/package")
   (require "xl-winhttp/ffi")
   (require "xl-winhttp/types")
+  (require "xl-winhttp/conditions")
   )
 
 (in-package :xl-winhttp)
@@ -42,16 +43,16 @@
           receive-response
           add-request-headers
           set-credentials
-          set-option
           set-timeouts
           read-data
           query-auth-schemes
           query-data-available
           query-headers
-          query-option
+
           crack-url
           create-url
           check-platform
+
           create-proxy-resolver
           detect-auto-proxy-config-url
           get-default-proxy-configuration
@@ -60,8 +61,16 @@
           get-proxy-for-url-ex
           reset-auto-proxy
           set-default-proxy-configuration
+
           time-from-system-time
           time-to-system-time
+
+          set-option
+          query-option
+          set-option-DWORD
+          query-option-DWORD
+          set-option-WSTR
+          query-option-WSTR
           ))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098.aspx
@@ -111,10 +120,10 @@ an HINTERNET connection handle to an HTTP session for that initial target."
 (defun open-request (connection verb object-name &key version referrer accept-types flags)
   "Creates an HTTP request handle."
   (check-valid-handle connection connection)
-  (wrap-request
-   (multiple-value-bind (&accept-types chunks)
-       (make-WSTR-array accept-types :default WINHTTP_DEFAULT_ACCEPT_TYPES)
-     (gc-guard connection chunks)
+  (multiple-value-bind (&accept-types chunks)
+      (make-WSTR-array accept-types :default WINHTTP_DEFAULT_ACCEPT_TYPES)
+    (gc-guard connection chunks)
+    (wrap-request
      (WinHttpOpenRequest (connection-handle connection)
                          (make-WSTR verb)
                          (make-WSTR object-name)
@@ -238,18 +247,6 @@ entity body (if any)."
                           (make-WSTR password)
                           NULL)))
 
-;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384114.aspx
-;; BOOL WINAPI WinHttpSetOption(
-;;   __in  HINTERNET hInternet,
-;;   __in  DWORD dwOption,
-;;   __in  LPVOID lpBuffer,
-;;   __in  DWORD dwBufferLength
-;; );
-(defun set-option ()
-  "Sets an Internet option."
-  ;; TODO
-  )
-
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384116.aspx
 ;; BOOL WINAPI WinHttpSetTimeouts(
 ;;   __in  HINTERNET hInternet,
@@ -266,7 +263,7 @@ entity body (if any)."
   (check-type send integer)
   (check-type receive integer)
   (assert-BOOL
-   (WinHttpSetTimeouts hinternet resolve connect send receive)))
+   (WinHttpSetTimeouts (hinternet-handle hinternet) resolve connect send receive)))
 
 
 
@@ -370,18 +367,6 @@ entity body (if any)."
             (convert-WSTR-to-internal (unpack-CSTR &buffer bytes)))
           )))))
 
-;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384103.aspx
-;; BOOL WINAPI WinHttpQueryOption(
-;;   __in     HINTERNET hInternet,
-;;   __in     DWORD dwOption,
-;;   __out    LPVOID lpBuffer,
-;;   __inout  LPDWORD lpdwBufferLength
-;; );
-(defun query-option ()
-  "Queries an Internet option on the specified handle."
-  ;; TODO
-  )
-
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384092.aspx
 ;; BOOL WINAPI WinHttpCrackUrl(
@@ -480,29 +465,32 @@ entity body (if any)."
 ;; BOOL WinHttpCheckPlatform(void);
 (defun check-platform ()
   "Determines whether the current platform is supported by this version of Microsoft Windows HTTP Services (WinHTTP)."
-  ;; TODO
-  )
+  (assert-BOOL
+   (WinHttpCheckPlatform)))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/hh405355.aspx
 ;; DWORD WinHttpCreateProxyResolver(
 ;;   _In_   HINTERNET hSession,
 ;;   _Out_  HINTERNET *phResolver
 ;; );
-(defun create-proxy-resolver ()
+(defun create-proxy-resolver (session)
   "Creates a handle for use by winhttp:get-proxy-for-url-ex."
-  ;; TODO
-  )
+  ;; Windows 8 から
+  (error "Not implemented"))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384094.aspx
 ;; BOOL WINAPI WinHttpDetectAutoProxyConfigUrl(
 ;;   __in   DWORD dwAutoDetectFlags,
 ;;   __out  LPWSTR *ppwszAutoConfigUrl
 ;; );
-(defun detect-auto-proxy-config-url ()
+(defun detect-auto-proxy-config-url (flags)
   "Finds the URL for the Proxy Auto-Configuration (PAC) file.
 This function reports the URL of the PAC file, but it does not download the file."
-  ;; TODO
-  )
+  (check-type flags integer)
+  (let ((&pointer (make-pointer)))
+    (assert-BOOL
+     (WinHttpDetectAutoProxyConfigUrl flags &pointer))
+    (unpack-WSTR-pointer-and-free (unpack-pointer &pointer))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384095.aspx
 ;; BOOL WINAPI WinHttpGetDefaultProxyConfiguration(
@@ -510,8 +498,11 @@ This function reports the URL of the PAC file, but it does not download the file
 ;; );
 (defun get-default-proxy-configuration ()
   "Retrieves the default WinHTTP proxy configuration from the registry."
-  ;; TODO
-  )
+  (let ((&proxy-info (make-WINHTTP_PROXY_INFO)))
+    (si:clear-chunk &proxy-info)
+    (assert-BOOL
+     (WinHttpGetDefaultProxyConfiguration &proxy-info))
+    (unpack-proxy-info &proxy-info)))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384096.aspx
 ;; BOOL WINAPI WinHttpGetIEProxyConfigForCurrentUser(
@@ -519,8 +510,15 @@ This function reports the URL of the PAC file, but it does not download the file
 ;; );
 (defun get-ieproxy-config-for-current-user ()
   "Retrieves the Internet Explorer proxy configuration for the current user."
-  ;; TODO
-  )
+  (let ((&proxy-config (make-WINHTTP_CURRENT_USER_IE_PROXY_CONFIG)))
+    (si:clear-chunk &proxy-config)
+    (assert-BOOL
+     (WinHttpGetIEProxyConfigForCurrentUser &proxy-config))
+    (values (unpack-WSTR-pointer-and-free (WINHTTP_CURRENT_USER_IE_PROXY_CONFIG-lpszProxy &proxy-config))
+            (unpack-WSTR-pointer-and-free (WINHTTP_CURRENT_USER_IE_PROXY_CONFIG-lpszProxyBypass &proxy-config))
+            (unpack-WSTR-pointer-and-free (WINHTTP_CURRENT_USER_IE_PROXY_CONFIG-lpszAutoConfigUrl &proxy-config))
+            (unpack-BOOL (WINHTTP_CURRENT_USER_IE_PROXY_CONFIG-fAutoDetect &proxy-config))
+            )))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384097.aspx
 ;; BOOL WINAPI WinHttpGetProxyForUrl(
@@ -529,10 +527,36 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   __in   WINHTTP_AUTOPROXY_OPTIONS *pAutoProxyOptions,
 ;;   __out  WINHTTP_PROXY_INFO *pProxyInfo
 ;; );
-(defun get-proxy-for-url ()
+(defun get-proxy-for-url (session url &key
+                                  (flags 0)
+                                  (auto-detect-flags 0)
+                                  auto-config-url
+                                  auto-logon-if-challenged)
   "Retrieves the proxy data for the specified URL."
-  ;; TODO
-  )
+  (check-type session session)
+  (check-type url string)
+  (check-type flags integer)
+  (check-type auto-detect-flags integer)
+  (check-type auto-config-url string)
+  (check-type auto-logon-if-challenged (or t nil))
+  (let ((&auto-proxy-opts (make-WINHTTP_AUTOPROXY_OPTIONS))
+        (&proxy-info (make-WINHTTP_PROXY_INFO))
+        (&url (make-WSTR url))
+        (&auto-config-url (make-WSTR auto-config-url)))
+    (si:clear-chunk &auto-proxy-opts)
+    (si:clear-chunk &proxy-info)
+    (setf (WINHTTP_AUTOPROXY_OPTIONS-dwFlags &auto-proxy-opts) flags
+          (WINHTTP_AUTOPROXY_OPTIONS-dwAutoDetectFlags &auto-proxy-opts) auto-detect-flags
+          (WINHTTP_AUTOPROXY_OPTIONS-lpszAutoConfigUrl &auto-proxy-opts) &auto-config-url
+          (WINHTTP_AUTOPROXY_OPTIONS-fAutoLogonIfChallenged &auto-proxy-opts) (if auto-logon-if-challenged
+                                                                                  winapi:TRUE winapi:FALSE)
+          )
+    (assert-BOOL
+     (WinHttpGetProxyForUrl (session-handle session)
+                            &url
+                            &auto-proxy-opts
+                            &proxy-info))
+    (unpack-proxy-info &proxy-info)))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/hh405356.aspx
 ;; DWORD WINHTTPAPI WinHttpGetProxyForUrlEx(
@@ -545,29 +569,45 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   _In_      WINHTTP_AUTOPROXY_OPTIONS *pAutoProxyOptions,
 ;;   _In_      DWORD_PTR pContext
 ;; );
-(defun get-proxy-for-url-ex ()
+(defun get-proxy-for-url-ex (resolver url)
   "Retrieves the proxy data for the specified URL."
-  ;; TODO
-  )
+  ;; Windows 8 から
+  (error "Not implemented"))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/hh405357.aspx
 ;; DWORD WinHttpResetAutoProxy(
 ;;   _In_  HINTERNET hSession,
 ;;   _In_  DWORD dwFlags
 ;; );
-(defun reset-auto-proxy ()
+(defun reset-auto-proxy (session &key (flags 0))
   "Resets the auto-proxy."
-  ;; TODO
-  )
+  (check-type session session)
+  (check-type flags integer)
+  (assert-SUCCESS
+   (WinHttpResetAutoProxy (session-handle session) flags)))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384113.aspx
 ;; BOOL WINAPI WinHttpSetDefaultProxyConfiguration(
 ;;   __in  WINHTTP_PROXY_INFO *pProxyInfo
 ;; );
-(defun set-default-proxy-configuration ()
+(defun set-default-proxy-configuration (&key proxy-name proxy-bypass access-type)
   "Sets the default WinHTTP proxy configuration in the registry."
-  ;; TODO
-  )
+  (let ((&proxy-info (make-WINHTTP_PROXY_INFO))
+        (&proxy-name (make-WSTR proxy-name :default WINHTTP_NO_PROXY_NAME))
+        (&proxy-bypass (make-WSTR proxy-bypass :default WINHTTP_NO_PROXY_BYPASS)))
+    (unless access-type
+      (setf access-type (if (equal &proxy-name WINHTTP_NO_PROXY_NAME)
+                            ;; MSDN にはプロキシを指定しない場合は、WINHTTP_ACCESS_TYPE_DEFAULT_PROXY
+                            ;; を指定しろと書いてあるが NO_PROXY じゃないとエラーになる
+                            WINHTTP_ACCESS_TYPE_NO_PROXY
+                          WINHTTP_ACCESS_TYPE_NAMED_PROXY)))
+    (si:clear-chunk &proxy-info)
+    (setf (WINHTTP_PROXY_INFO-lpszProxy &proxy-info) &proxy-name
+          (WINHTTP_PROXY_INFO-lpszProxyBypass &proxy-info) &proxy-bypass
+          (WINHTTP_PROXY_INFO-dwAccessType &proxy-info) access-type
+          )
+    (assert-BOOL
+     (WinHttpSetDefaultProxyConfiguration &proxy-info))))
 
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384117.aspx
@@ -575,20 +615,120 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   __in   const SYSTEMTIME *pst,
 ;;   __out  LPWSTR pwszTime
 ;; );
-(defun time-from-system-time ()
+(defun time-from-system-time (year month day-of-week day hour minute second milliseconds)
   "Formats a date and time according to the HTTP version 1.0 specification."
-  ;; TODO
-  )
+  (let ((&systime (make-SYSTEMTIME))
+        (&time (make-CSTR-buffer WINHTTP_TIME_FORMAT_BUFSIZE)))
+    (si:clear-chunk &systime)
+    (setf (SYSTEMTIME-wYear &systime) year
+          (SYSTEMTIME-wMonth &systime) month
+          (SYSTEMTIME-wDayOfWeek &systime) day-of-week
+          (SYSTEMTIME-wDay &systime) day
+          (SYSTEMTIME-wHour &systime) hour
+          (SYSTEMTIME-wMinute &systime) minute
+          (SYSTEMTIME-wSecond &systime) second
+          (SYSTEMTIME-wMilliseconds &systime) milliseconds
+          )
+    (assert-BOOL
+     (WinHttpTimeFromSystemTime &systime &time))
+    ;; 最後に NUL 文字が付いて返ってくるので削除
+    (delete #\NUL (unpack-WSTR &time))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384118.aspx
 ;; BOOL WINAPI WinHttpTimeToSystemTime(
 ;;   __in   LPCWSTR pwszTime,
 ;;   __out  SYSTEMTIME *pst
 ;; );
-(defun time-to-system-time ()
+(defun time-to-system-time (time)
   "Takes an HTTP time/date string and converts it to a SYSTEMTIME structure."
-  ;; TODO
-  )
+  (check-type time string)
+  (let ((&systime (make-SYSTEMTIME)))
+    (si:clear-chunk &systime)
+    (assert-BOOL
+     (WinHttpTimeToSystemTime (make-WSTR time) &systime))
+    (values (SYSTEMTIME-wYear &systime)
+            (SYSTEMTIME-wMonth &systime)
+            (SYSTEMTIME-wDayOfWeek &systime)
+            (SYSTEMTIME-wDay &systime)
+            (SYSTEMTIME-wHour &systime)
+            (SYSTEMTIME-wMinute &systime)
+            (SYSTEMTIME-wSecond &systime)
+            (SYSTEMTIME-wMilliseconds &systime)
+            )))
+
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384114.aspx
+;; BOOL WINAPI WinHttpSetOption(
+;;   __in  HINTERNET hInternet,
+;;   __in  DWORD dwOption,
+;;   __in  LPVOID lpBuffer,
+;;   __in  DWORD dwBufferLength
+;; );
+(defun set-option (hinternet option buffer buffer-length)
+  "Sets an Internet option."
+  (check-type hinternet (or session request))
+  (check-type option integer)
+  (check-chunk buffer)
+  (check-type buffer-length integer)
+  (assert-BOOL
+   (WinHttpSetOption (hinternet-handle hinternet)
+                     option buffer buffer-length)))
+
+(defun set-option-DWORD (hinternet option value)
+  "Sets an Internet DWORD option."
+  (let ((&value (make-DWORD value)))
+    (set-option hinternet option &value *size-of-DWORD*)))
+
+(defun set-option-WSTR (hinternet option value)
+  "Sets an Internet WSTR option."
+  (let ((&value (make-WSTR value)))
+    (set-option hinternet option &value (WSTR-length &value))))
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384103.aspx
+;; BOOL WINAPI WinHttpQueryOption(
+;;   __in     HINTERNET hInternet,
+;;   __in     DWORD dwOption,
+;;   __out    LPVOID lpBuffer,
+;;   __inout  LPDWORD lpdwBufferLength
+;; );
+(defun query-option (hinternet option buffer buffer-length &key ignore-error)
+  "Queries an Internet option on the specified handle."
+  (check-type hinternet (or session request))
+  (check-type option integer)
+  (unless (nullp buffer)
+    (check-chunk buffer))
+  (check-chunk buffer-length)
+  (if ignore-error
+      (unpack-BOOL
+       (WinHttpQueryOption (hinternet-handle hinternet)
+                           option buffer buffer-length))
+  (assert-BOOL
+   (WinHttpQueryOption (hinternet-handle hinternet)
+                       option buffer buffer-length))))
+
+(defun query-option-DWORD (hinternet option)
+  "Queries an Internet DWORD option on the specified handle."
+  (let ((&buffer (make-DWORD))
+        (&buffer-length (make-DWORD *size-of-DWORD*)))
+    (query-option hinternet option &buffer &buffer-length)
+    (unpack-DWORD &buffer)))
+
+(defun query-option-WSTR (hinternet option)
+  "Queries an Internet WSTR option on the specified handle."
+  (let ((&buffer-length (make-DWORD)))
+    (query-option hinternet option NULL &buffer-length :ignore-error t)
+    (let ((&buffer (make-WSTR-buffer (/ (unpack-DWORD &buffer-length)
+                                        *size-of-WCHAR*))))
+      (query-option hinternet option &buffer &buffer-length)
+      (unpack-WSTR &buffer))))
+
+
+;; private
+
+(defun unpack-proxy-info (proxy-info)
+  (values (unpack-WSTR-pointer-and-free (WINHTTP_PROXY_INFO-lpszProxy proxy-info))
+          (unpack-WSTR-pointer-and-free (WINHTTP_PROXY_INFO-lpszProxyBypass proxy-info))
+          (WINHTTP_PROXY_INFO-dwAccessType proxy-info)))
 
 
 (provide "xl-winhttp/api")

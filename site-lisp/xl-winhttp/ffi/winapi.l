@@ -2,7 +2,7 @@
 
 ;;; xl-winhttp/ffi/winapi.l
 ;;
-;; Copyright (c) 2011 MIYAMUKO Katsuyuki.
+;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
@@ -37,6 +37,32 @@
 (c:*define-c-type (c:void *) LPCVOID)
 (c:*define-c-type (DWORD *) LPDWORD)
 (c:*define-c-type (DWORD *) DWORD_PTR)
+
+(c:*define-c-struct SYSTEMTIME
+  (WORD wYear)
+  (WORD wMonth)
+  (WORD wDayOfWeek)
+  (WORD wDay)
+  (WORD wHour)
+  (WORD wMinute)
+  (WORD wSecond)
+  (WORD wMilliseconds)
+  )
+
+(c:*define-dll-entry
+  HGLOBAL
+  GlobalFree (HGLOBAL)
+  "kernel32")
+
+(c:*define-dll-entry
+  DWORD
+  GetLastError ()
+  "kernel32")
+
+(c:*define-dll-entry
+  c:size_t
+  wcslen ((c:wchar_t *))
+  "msvcrt")
 
 
 (provide "xl-winhttp/ffi/winapi")

@@ -2,7 +2,7 @@
 
 ;;; xl-winhttp/types.l
 ;;
-;; Copyright (c) 2011 MIYAMUKO Katsuyuki.
+;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
@@ -27,6 +27,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "xl-winhttp/package")
+  (require "xl-winhttp/conditions")
   )
 
 (in-package :xl-winhttp)
@@ -52,7 +53,7 @@
          `(let ((,$args (list ,@args)))
             (let ((,$handle (apply ',api ,$args)))
               (when (zerop ,$handle)
-                (error (format nil "~A failed" ',api)))
+                (raise-winhttp-condition ',api))
               (gc-guard ,$handle ,$args)
               (,',ctor :handle ,$handle)
               ))))))

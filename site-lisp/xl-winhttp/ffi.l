@@ -2,7 +2,7 @@
 
 ;;; xl-winhttp/ffi.l
 ;;
-;; Copyright (c) 2011 MIYAMUKO Katsuyuki.
+;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
@@ -28,6 +28,7 @@
 (in-package :user)
 
 (require "xl-winhttp/ffi/winapi")
+(require "xl-winhttp/ffi/winerror")
 (require "xl-winhttp/ffi/winhttp")
 (require "xl-winhttp/ffi/utils")
 

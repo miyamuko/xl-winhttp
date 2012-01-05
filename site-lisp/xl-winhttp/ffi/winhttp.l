@@ -258,7 +258,6 @@
 
 (c:*define WINHTTP_TIME_FORMAT_BUFSIZE   62)
 
-#|
 (c:*define-dll-entry
   BOOL
   WinHttpTimeFromSystemTime
@@ -276,7 +275,7 @@
    (SYSTEMTIME *) ; pst         ;; output in GMT time
    )
   *winhttp-dll*)
-|#
+
 
 ;;
 ;; flags for CrackUrl() and CombineUrl()

@@ -29,6 +29,7 @@
 
 (require "xl-winhttp/version")
 (require "xl-winhttp/api")
+(require "xl-winhttp/macros")
 
 
 (provide "xl-winhttp")
