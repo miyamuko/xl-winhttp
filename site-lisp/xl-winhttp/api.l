@@ -272,7 +272,6 @@ entity body (if any)."
    (WinHttpSetTimeouts (hinternet-handle hinternet) resolve connect send receive)))
 
 
-
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384104.aspx
 ;; BOOL WINAPI WinHttpReadData(
 ;;   __in   HINTERNET hRequest,
@@ -723,10 +722,11 @@ This function reports the URL of the PAC file, but it does not download the file
   "Queries an Internet WSTR option on the specified handle."
   (let ((&buffer-length (make-DWORD)))
     (query-option hinternet option NULL &buffer-length :ignore-error t)
-    (let ((&buffer (make-WSTR-buffer (/ (unpack-DWORD &buffer-length)
-                                        *size-of-WCHAR*))))
-      (query-option hinternet option &buffer &buffer-length)
-      (unpack-WSTR &buffer))))
+    (let ((bytes (unpack-DWORD &buffer-length)))
+      (when (< 0 bytes)
+        (let ((&buffer (make-WSTR-buffer (/ bytes *size-of-WCHAR*))))
+          (query-option hinternet option &buffer &buffer-length)
+          (unpack-WSTR &buffer))))))
 
 
 ;; private
