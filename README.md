@@ -12,7 +12,7 @@
 (defun http-get (url)
   (multiple-value-bind (scheme user pass host port path extra)
       (winhttp:crack-url url)
-    (winhttp:with-open (session "xl-winhttp/0.0.1")
+    (winhttp:with-open (session :user-agent "xl-winhttp/0.0.1")
       (winhttp:with-connect (conn session host port)
         (winhttp:with-open-request (req conn "GET" (format nil "~A~A" path (or extra ""))
                                         :flags (if (string= scheme "https")
@@ -109,7 +109,7 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 
 xl-winhttp は MIT/X ライセンスに従って本ソフトウェアを使用、再頒布することができます。
 
-    Copyright (c) 2011 MIYAMUKO Katsuyuki.
+    Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the
