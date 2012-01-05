@@ -120,6 +120,12 @@ an HINTERNET connection handle to an HTTP session for that initial target."
 (defun open-request (connection verb object-name &key version referrer accept-types flags)
   "Creates an HTTP request handle."
   (check-valid-handle connection connection)
+
+  ;; Note: This string should be all uppercase. Many servers treat HTTP verbs as case-sensitive,
+  ;; and the Internet Engineering Task Force (IETF) Requests for Comments (RFCs) spell these
+  ;; verbs using uppercase characters only.
+  (setf verb (string-upcase (string verb)))
+
   (multiple-value-bind (&accept-types chunks)
       (make-WSTR-array accept-types :default WINHTTP_DEFAULT_ACCEPT_TYPES)
     (gc-guard connection chunks)
