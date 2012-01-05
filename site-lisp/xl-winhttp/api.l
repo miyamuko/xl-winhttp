@@ -72,7 +72,7 @@
 ;;   __in      LPCWSTR pwszProxyBypass,
 ;;   __in      DWORD dwFlags
 ;; );
-(defun open (user-agent &key access-type proxy-name proxy-bypass flags)
+(defun open (&key user-agent access-type proxy-name proxy-bypass flags)
   "Initializes, for an application, the use of WinHTTP functions and returns a WinHTTP-session handle."
   (wrap-session
    (WinHttpOpen (make-WSTR user-agent)
