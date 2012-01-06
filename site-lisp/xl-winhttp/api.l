@@ -316,7 +316,7 @@ entity body (if any)."
                               &auth-target))
     (values (unpack-flags (unpack-DWORD &supported-schemes) *auth-scheme-flags*)
             (unpack-flags (unpack-DWORD &first-scheme) *auth-scheme-flags*)
-            (unpack-DWORD (unpack-DWORD &auth-target) *auth-target-flags*))))
+            (unpack-flags (unpack-DWORD &auth-target) *auth-target-flags*))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384101.aspx
 ;; BOOL WINAPI WinHttpQueryDataAvailable(
@@ -352,7 +352,7 @@ entity body (if any)."
              (values WINHTTP_QUERY_CUSTOM
                      (make-WSTR (string header))))
             (t
-             (values (make-flag header *query-type*)
+             (values (make-flag header *query-type* :flags nil)
                      WINHTTP_HEADER_NAME_BY_INDEX)))
     (let ((&buffer-length (make-DWORD))
           (&header-index (make-DWORD index)))
