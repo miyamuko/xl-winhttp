@@ -27,6 +27,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "xl-winhttp/package")
+  (require "xl-winhttp/ffi")
   )
 
 (in-package :xl-winhttp)
