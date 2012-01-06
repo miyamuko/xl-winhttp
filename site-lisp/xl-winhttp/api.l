@@ -151,7 +151,7 @@ an HINTERNET connection handle to an HTTP session for that initial target."
   (unless (hinternet-closed-p hinternet)
     (assert-BOOL
      (WinHttpCloseHandle (hinternet-handle hinternet)))
-    (gc-free (hinternet-handle hinternet))
+    (gc-free hinternet)
     (setf (hinternet-closed-p hinternet) t)))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384110.aspx
