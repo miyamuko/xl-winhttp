@@ -585,12 +585,10 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   _In_  HINTERNET hSession,
 ;;   _In_  DWORD dwFlags
 ;; );
-(defun reset-auto-proxy (session &key (flags 0))
+(defun reset-auto-proxy (session &key flags)
   "Resets the auto-proxy."
-  (check-type session session)
-  (check-type flags integer)
-  (assert-SUCCESS
-   (WinHttpResetAutoProxy (session-handle session) flags)))
+  ;; Windows 8 ‚©‚ç
+  (error "Not implemented"))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384113.aspx
 ;; BOOL WINAPI WinHttpSetDefaultProxyConfiguration(
