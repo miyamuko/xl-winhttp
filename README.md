@@ -16,8 +16,8 @@
       (winhttp:with-connect (conn session host port)
         (winhttp:with-open-request (req conn "GET" (format nil "~A~A" path (or extra ""))
                                         :flags (if (string= scheme "https")
-                                                   winhttp.ffi:WINHTTP_FLAG_SECURE
-                                                 winhttp.ffi:NULL))
+                                                   :secure
+                                                 nil))
           (winhttp:send-request req)
           (winhttp:receive-response req)
           (let (body (total 0))
@@ -31,7 +31,8 @@
                 (message "~D bytes" total)))
             (values
              (format nil "~{~A~}" (nreverse body))
-             (split-string (winhttp:query-headers req winhttp.ffi:WINHTTP_QUERY_RAW_HEADERS)
+             (parse-integer (winhttp:query-headers req :status-code))
+             (split-string (winhttp:query-headers req :raw-headers)
                            #\NUL)
              )))))))
 
@@ -72,7 +73,7 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 ## INSTALL
 
 1. [NetInstaller](http://www7a.biglobe.ne.jp/~hat/xyzzy/ni.html)
-   で xl-winhttp をインストールします。
+   で xl-winhttp, ansi-loop, ansify をインストールします。
 
 2. xl-winhttp はライブラリであるため自動的にロードはされません。
    必要な時点で require してください。
@@ -82,12 +83,6 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 
 * 非同期
 * リファレンス
-* オプションをキーワードで指定できるようにする
-
-  ```lisp
-  (winhttp:with-open-request (req conn "GET" "/") :flags :secure)
-    ...)
-  ```
 
 
 ## KNOWN BUGS

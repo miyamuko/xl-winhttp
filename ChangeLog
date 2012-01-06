@@ -1,5 +1,9 @@
 2012-01-06  MIYAMUKO Katsuyuki
 
+	* オプションをキーワードで指定できるようにした
+	  (winhttp:with-open-request (req conn "GET" "/") :flags :secure)
+	    ...)
+
 	* (winhttp:reset-auto-proxy): WinHttpResetAutoProxy も Windows 8 からの
 	API だったため実装を削除した
 

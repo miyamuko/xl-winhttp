@@ -31,6 +31,7 @@
   (require "xl-winhttp/types")
   (require "xl-winhttp/conditions")
   (require "xl-winhttp/utils")
+  (require "xl-winhttp/flags")
   )
 
 (in-package :xl-winhttp)
@@ -86,10 +87,10 @@
   "Initializes, for an application, the use of WinHTTP functions and returns a WinHTTP-session handle."
   (wrap-session
    (WinHttpOpen (make-WSTR user-agent)
-                (or access-type WINHTTP_ACCESS_TYPE_DEFAULT_PROXY)
+                (make-flag access-type *access-type* :flags nil)
                 (make-WSTR proxy-name :default WINHTTP_NO_PROXY_NAME)
                 (make-WSTR proxy-bypass :default WINHTTP_NO_PROXY_BYPASS)
-                (or flags 0))))
+                (make-flag flags *open-flags*))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384091.aspx
 ;; HINTERNET WINAPI WinHttpConnect(
@@ -137,7 +138,7 @@ an HINTERNET connection handle to an HTTP session for that initial target."
                          (make-WSTR version)
                          (make-WSTR referrer :default WINHTTP_NO_REFERER)
                          &accept-types
-                         (or flags 0)))))
+                         (make-flag flags *open-request-flags*)))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384090.aspx
 ;; BOOL WINAPI WinHttpCloseHandle(
@@ -222,7 +223,7 @@ entity body (if any)."
 ;;   __in  DWORD dwHeadersLength,
 ;;   __in  DWORD dwModifiers
 ;; );
-(defun add-request-headers (request headers &key (modifiers WINHTTP_ADDREQ_FLAG_ADD))
+(defun add-request-headers (request headers &key (modifiers :add))
   "Adds one or more HTTP request headers to the HTTP request handle."
   (check-valid-handle request request)
   (check-type headers string)
@@ -231,6 +232,7 @@ entity body (if any)."
      (WinHttpAddRequestHeaders (request-handle request)
                                headers
                                (WSTR-length headers)
+                               (make-flag modifiers *add-request-flags*)
                                modifiers))))
 
 
@@ -248,8 +250,8 @@ entity body (if any)."
   (check-valid-handle request request)
   (assert-BOOL
    (WinHttpSetCredentials (request-handle request)
-                          auth-targets
-                          auth-scheme
+                          (make-flag auth-targets *auth-target-flags*)
+                          (make-flag auth-scheme *auth-scheme-flags*)
                           (make-WSTR username)
                           (make-WSTR password)
                           NULL)))
@@ -312,9 +314,9 @@ entity body (if any)."
                               &supported-schemes
                               &first-scheme
                               &auth-target))
-    (values (unpack-DWORD &supported-schemes)
-            (unpack-DWORD &first-scheme)
-            (unpack-DWORD &auth-target))))
+    (values (unpack-flags (unpack-DWORD &supported-schemes) *auth-scheme-flags*)
+            (unpack-flags (unpack-DWORD &first-scheme) *auth-scheme-flags*)
+            (unpack-DWORD (unpack-DWORD &auth-target) *auth-target-flags*))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384101.aspx
 ;; BOOL WINAPI WinHttpQueryDataAvailable(
@@ -344,11 +346,14 @@ entity body (if any)."
   (check-valid-handle request request)
   (check-type header (or integer string symbol))
   (check-type index integer)
+  ;; TODO: WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_QUERY_FLAG_SYSTEMTIME Ç…ëŒâûÇ∑ÇÈ
   (multiple-value-bind (info-level name)
-      (cond ((integerp header)
-             (values header WINHTTP_HEADER_NAME_BY_INDEX))
+      (cond ((stringp header)
+             (values WINHTTP_QUERY_CUSTOM
+                     (make-WSTR (string header))))
             (t
-             (values WINHTTP_QUERY_CUSTOM (make-WSTR (string header)))))
+             (values (make-flag header *query-type*)
+                     WINHTTP_HEADER_NAME_BY_INDEX)))
     (let ((&buffer-length (make-DWORD))
           (&header-index (make-DWORD index)))
       (let ((bytes (progn
@@ -386,6 +391,7 @@ entity body (if any)."
   (let ((wstr-url (make-WSTR url))
         (components (make-URL_COMPONENTS)))
     (si:clear-chunk components)
+    ;; TODO: ICU_DECODE Ç…ëŒâûÇ∑ÇÈ
     ;; -1 ÇéwíËÇ∑ÇÈÇ∆ lpszXxx ÇÕ wstr-url ÇÃÉÅÉÇÉäÇéwÇ∑
     (setf (URL_COMPONENTS-dwStructSize components) (c:c-struct-size-of URL_COMPONENTS)
           (URL_COMPONENTS-dwSchemeLength components) -1
@@ -398,7 +404,7 @@ entity body (if any)."
     (assert-BOOL
      (WinHttpCrackUrl wstr-url
                       (WSTR-length wstr-url)
-                      (or flags 0)
+                      (make-flag flags *crack-url-flags*)
                       components))
     (values (unpack-WSTR-pointer (URL_COMPONENTS-lpszScheme components)
                                  (URL_COMPONENTS-dwSchemeLength components))
@@ -458,7 +464,7 @@ entity body (if any)."
           (setf (URL_COMPONENTS-dwSchemeLength components) (WSTR-length &scheme)
                 (URL_COMPONENTS-lpszScheme components) &scheme
                 )))
-      (setf flags (or flags 0))
+      (setf flags (make-flag flags *create-url-flags*))
       (let ((&len (make-DWORD)))
         (WinHttpCreateUrl components flags NULL &len)
         (let ((&buffer (make-WSTR-buffer (unpack-DWORD &len))))
@@ -489,13 +495,13 @@ entity body (if any)."
 ;;   __in   DWORD dwAutoDetectFlags,
 ;;   __out  LPWSTR *ppwszAutoConfigUrl
 ;; );
-(defun detect-auto-proxy-config-url (flags)
+(defun detect-auto-proxy-config-url (auto-detect-flags)
   "Finds the URL for the Proxy Auto-Configuration (PAC) file.
 This function reports the URL of the PAC file, but it does not download the file."
-  (check-type flags integer)
   (let ((&pointer (make-pointer)))
     (assert-BOOL
-     (WinHttpDetectAutoProxyConfigUrl flags &pointer))
+     (WinHttpDetectAutoProxyConfigUrl (make-flag auto-detect-flags *auto-detect-type-flags*)
+                                      &pointer))
     (unpack-WSTR-pointer-and-free (unpack-pointer &pointer))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384095.aspx
@@ -542,7 +548,6 @@ This function reports the URL of the PAC file, but it does not download the file
   (check-type session session)
   (check-type url string)
   (check-type flags integer)
-  (check-type auto-detect-flags integer)
   (check-type auto-config-url string)
   (check-type auto-logon-if-challenged (or t nil))
   (let ((&auto-proxy-opts (make-WINHTTP_AUTOPROXY_OPTIONS))
@@ -551,11 +556,10 @@ This function reports the URL of the PAC file, but it does not download the file
         (&auto-config-url (make-WSTR auto-config-url)))
     (si:clear-chunk &auto-proxy-opts)
     (si:clear-chunk &proxy-info)
-    (setf (WINHTTP_AUTOPROXY_OPTIONS-dwFlags &auto-proxy-opts) flags
-          (WINHTTP_AUTOPROXY_OPTIONS-dwAutoDetectFlags &auto-proxy-opts) auto-detect-flags
+    (setf (WINHTTP_AUTOPROXY_OPTIONS-dwFlags &auto-proxy-opts) (make-flag flags *auto-proxy-flags*)
+          (WINHTTP_AUTOPROXY_OPTIONS-dwAutoDetectFlags &auto-proxy-opts) (make-flag auto-detect-flags *auto-detect-type-flags*)
           (WINHTTP_AUTOPROXY_OPTIONS-lpszAutoConfigUrl &auto-proxy-opts) &auto-config-url
-          (WINHTTP_AUTOPROXY_OPTIONS-fAutoLogonIfChallenged &auto-proxy-opts) (if auto-logon-if-challenged
-                                                                                  winapi:TRUE winapi:FALSE)
+          (WINHTTP_AUTOPROXY_OPTIONS-fAutoLogonIfChallenged &auto-proxy-opts) (if auto-logon-if-challenged winapi:TRUE winapi:FALSE)
           )
     (assert-BOOL
      (WinHttpGetProxyForUrl (session-handle session)
@@ -608,7 +612,7 @@ This function reports the URL of the PAC file, but it does not download the file
     (si:clear-chunk &proxy-info)
     (setf (WINHTTP_PROXY_INFO-lpszProxy &proxy-info) &proxy-name
           (WINHTTP_PROXY_INFO-lpszProxyBypass &proxy-info) &proxy-bypass
-          (WINHTTP_PROXY_INFO-dwAccessType &proxy-info) access-type
+          (WINHTTP_PROXY_INFO-dwAccessType &proxy-info) (make-flag access-type *access-type* :flags nil)
           )
     (assert-BOOL
      (WinHttpSetDefaultProxyConfiguration &proxy-info))))
@@ -733,7 +737,8 @@ This function reports the URL of the PAC file, but it does not download the file
 (defun unpack-proxy-info (proxy-info)
   (values (unpack-WSTR-pointer-and-free (WINHTTP_PROXY_INFO-lpszProxy proxy-info))
           (unpack-WSTR-pointer-and-free (WINHTTP_PROXY_INFO-lpszProxyBypass proxy-info))
-          (WINHTTP_PROXY_INFO-dwAccessType proxy-info)))
+          (unpack-flags (WINHTTP_PROXY_INFO-dwAccessType proxy-info) *access-type* :flags nil)
+          ))
 
 
 (provide "xl-winhttp/api")

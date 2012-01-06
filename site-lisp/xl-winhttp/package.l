@@ -2,7 +2,7 @@
 
 ;;; xl-winhttp/package.l
 ;;
-;; Copyright (c) 2011 MIYAMUKO Katsuyuki.
+;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
@@ -28,6 +28,8 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "foreign")
   (require "wip/winapi")
+  (require "ansi-loop")
+  (require "ansify")
 
   (unless (find-package :xl-winhttp.ffi)
     (defpackage :xl-winhttp.ffi
@@ -45,11 +47,23 @@
        :editor
        :xl-winhttp.ffi
        )
-      (:shadow
-       open
-       connect
-       )))
+      (:shadowing-import-from :ansi-loop
+       :loop
+       :loop-finish
+       )
+      (:shadowing-import-from :ansify
+       :typecase
+       )
+      ))
   )
+
+(in-package :xl-winhttp)
+
+(shadow
+ '(;; defpackage ‚Å‚Í shadow ‚Æ shadowing-import-from ‚ð“¯Žž‚ÉŽg‚¦‚È‚¢
+   open
+   connect
+   ))
 
 
 (provide "xl-winhttp/package")
