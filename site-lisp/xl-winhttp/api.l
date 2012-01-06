@@ -30,6 +30,7 @@
   (require "xl-winhttp/ffi")
   (require "xl-winhttp/types")
   (require "xl-winhttp/conditions")
+  (require "xl-winhttp/utils")
   )
 
 (in-package :xl-winhttp)

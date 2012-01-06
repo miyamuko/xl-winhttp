@@ -1,6 +1,6 @@
 ; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
 
-;;; xl-winhttp/conditions.l
+;;; xl-winhttp/utils.l
 ;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
@@ -27,35 +27,26 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "xl-winhttp/package")
+  (require "xl-winhttp/conditions")
   )
 
 (in-package :xl-winhttp)
 
-(export '(winhttp-condition
-          winhttp-condition-api
-          winhttp-condition-error-code
-          winhttp-condition-error-name
-          ))
+(defmacro assert-BOOL (&body body)
+  (let ((result (gensym)))
+    `(let ((,result (progn ,@body)))
+       (when (nullp ,result)
+         (raise-winhttp-condition ',(caar body)))
+       t)))
 
-;; network-error のサブコンディションにすると、例外を処理しないと
-;; いちいちダイアログが出てうざいので simple-error にする
-(define-condition winhttp-condition (simple-error)
-  (api error-code error-name)
-  (:report (lambda (c s)
-             (format s "~A に失敗しました。エラーコード: ~D~@[ (~A)~]"
-                     (winhttp-condition-api c)
-                     (winhttp-condition-error-code c)
-                     (winhttp-condition-error-name c)
-                     ))))
-
-(defmacro raise-winhttp-condition (api)
-  `(let ((error-code (GetLastError)))
-     (error (make-condition 'winhttp-condition
-                            :api ,api
-                            :error-code error-code
-                            :error-name (find-error-name error-code)))))
+(defmacro assert-SUCCESS (&body body)
+  (let ((result (gensym)))
+    `(let ((,result (progn ,@body)))
+       (when (/= ,result ERROR_SUCCESS)
+         (raise-winhttp-condition ',(caar body)))
+       t)))
 
 
-(provide "xl-winhttp/conditions")
+(provide "xl-winhttp/utils")
 
 ;;; End
