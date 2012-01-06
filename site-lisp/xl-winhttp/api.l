@@ -227,10 +227,10 @@ entity body (if any)."
   "Adds one or more HTTP request headers to the HTTP request handle."
   (check-valid-handle request request)
   (check-type headers string)
-  (let ((headers (make-WSTR headers)))
+  (let ((&headers (make-WSTR headers)))
     (assert-BOOL
      (WinHttpAddRequestHeaders (request-handle request)
-                               headers
+                               &headers
                                (WSTR-length headers)
                                (make-flag modifiers *add-request-flags*)
                                modifiers))))
@@ -365,7 +365,7 @@ entity body (if any)."
                                           &header-index)
                      (unpack-DWORD &buffer-length))))
         (when (< 0 bytes)
-          (let ((&buffer (make-CSTR-buffer bytes)))
+          (let ((&buffer (make-WSTR-buffer (bytes->WSTR-length bytes))))
             (assert-BOOL
              (WinHttpQueryHeaders (request-handle request)
                                   info-level name
@@ -373,9 +373,7 @@ entity body (if any)."
                                   &header-index))
             ;; NULL 文字を含まないサイズが返ってくる。
             (setf bytes (unpack-DWORD &buffer-length))
-            ;; lpBuffer は WSTR だが lpdwBufferLength はバイト数で返ってくるので、
-            ;; CSTR のまま操作して最後に WSTR に変換する。
-            (convert-WSTR-to-internal (unpack-CSTR &buffer bytes)))
+            (unpack-WSTR &buffer (bytes->WSTR-length bytes)))
           )))))
 
 
@@ -388,37 +386,37 @@ entity body (if any)."
 ;; );
 (defun crack-url (url &key flags)
   "Separates a URL into its component parts such as host name and path."
-  (let ((wstr-url (make-WSTR url))
-        (components (make-URL_COMPONENTS)))
-    (si:clear-chunk components)
+  (let ((&url (make-WSTR url))
+        (&components (make-URL_COMPONENTS)))
+    (si:clear-chunk &components)
     ;; TODO: ICU_DECODE に対応する
-    ;; -1 を指定すると lpszXxx は wstr-url のメモリを指す
-    (setf (URL_COMPONENTS-dwStructSize components) (c:c-struct-size-of URL_COMPONENTS)
-          (URL_COMPONENTS-dwSchemeLength components) -1
-          (URL_COMPONENTS-dwUserNameLength components) -1
-          (URL_COMPONENTS-dwPasswordLength components) -1
-          (URL_COMPONENTS-dwHostNameLength components) -1
-          (URL_COMPONENTS-dwUrlPathLength components) -1
-          (URL_COMPONENTS-dwExtraInfoLength components) -1
+    ;; -1 を指定すると lpszXxx は &url のメモリを指す
+    (setf (URL_COMPONENTS-dwStructSize &components) (c:c-struct-size-of URL_COMPONENTS)
+          (URL_COMPONENTS-dwSchemeLength &components) -1
+          (URL_COMPONENTS-dwUserNameLength &components) -1
+          (URL_COMPONENTS-dwPasswordLength &components) -1
+          (URL_COMPONENTS-dwHostNameLength &components) -1
+          (URL_COMPONENTS-dwUrlPathLength &components) -1
+          (URL_COMPONENTS-dwExtraInfoLength &components) -1
           )
     (assert-BOOL
-     (WinHttpCrackUrl wstr-url
-                      (WSTR-length wstr-url)
+     (WinHttpCrackUrl &url
+                      (WSTR-length &url)
                       (make-flag flags *crack-url-flags*)
-                      components))
-    (values (unpack-WSTR-pointer (URL_COMPONENTS-lpszScheme components)
-                                 (URL_COMPONENTS-dwSchemeLength components))
-            (unpack-WSTR-pointer (URL_COMPONENTS-lpszUserName components)
-                                 (URL_COMPONENTS-dwUserNameLength components))
-            (unpack-WSTR-pointer (URL_COMPONENTS-lpszPassword components)
-                                 (URL_COMPONENTS-dwPasswordLength components))
-            (unpack-WSTR-pointer (URL_COMPONENTS-lpszHostName components)
-                                 (URL_COMPONENTS-dwHostNameLength components))
-            (URL_COMPONENTS-nPort components)
-            (unpack-WSTR-pointer (URL_COMPONENTS-lpszUrlPath components)
-                                 (URL_COMPONENTS-dwUrlPathLength components))
-            (unpack-WSTR-pointer (URL_COMPONENTS-lpszExtraInfo components)
-                                 (URL_COMPONENTS-dwExtraInfoLength components))
+                      &components))
+    (values (unpack-WSTR-pointer (URL_COMPONENTS-lpszScheme &components)
+                                 (URL_COMPONENTS-dwSchemeLength &components))
+            (unpack-WSTR-pointer (URL_COMPONENTS-lpszUserName &components)
+                                 (URL_COMPONENTS-dwUserNameLength &components))
+            (unpack-WSTR-pointer (URL_COMPONENTS-lpszPassword &components)
+                                 (URL_COMPONENTS-dwPasswordLength &components))
+            (unpack-WSTR-pointer (URL_COMPONENTS-lpszHostName &components)
+                                 (URL_COMPONENTS-dwHostNameLength &components))
+            (URL_COMPONENTS-nPort &components)
+            (unpack-WSTR-pointer (URL_COMPONENTS-lpszUrlPath &components)
+                                 (URL_COMPONENTS-dwUrlPathLength &components))
+            (unpack-WSTR-pointer (URL_COMPONENTS-lpszExtraInfo &components)
+                                 (URL_COMPONENTS-dwExtraInfoLength &components))
             )
     ))
 
@@ -438,38 +436,38 @@ entity body (if any)."
            (if (equal str "")
                NULL
              (winhttp.ffi:make-WSTR str))))
-    (let ((components (make-URL_COMPONENTS))
+    (let ((&components (make-URL_COMPONENTS))
           (&username (make-WSTR username))
           (&password (make-WSTR password))
           (&hostname (make-WSTR hostname))
           (&url-path (make-WSTR url-path))
           (&extra-info (make-WSTR extra-info)))
-      (si:clear-chunk components)
-      (setf (URL_COMPONENTS-dwStructSize components) (c:c-struct-size-of URL_COMPONENTS)
-            (URL_COMPONENTS-lpszUserName components) &username
-            (URL_COMPONENTS-dwUserNameLength components) (WSTR-length &username)
-            (URL_COMPONENTS-lpszPassword components) &password
-            (URL_COMPONENTS-dwPasswordLength components) (WSTR-length &password)
-            (URL_COMPONENTS-lpszHostName components) &hostname
-            (URL_COMPONENTS-dwHostNameLength components) (WSTR-length &hostname)
-            (URL_COMPONENTS-lpszUrlPath components) &url-path
-            (URL_COMPONENTS-dwUrlPathLength components) (WSTR-length &url-path)
-            (URL_COMPONENTS-lpszExtraInfo components) &extra-info
-            (URL_COMPONENTS-dwExtraInfoLength components) (WSTR-length &extra-info)
-            (URL_COMPONENTS-nPort components) port
+      (si:clear-chunk &components)
+      (setf (URL_COMPONENTS-dwStructSize &components) (c:c-struct-size-of URL_COMPONENTS)
+            (URL_COMPONENTS-lpszUserName &components) &username
+            (URL_COMPONENTS-dwUserNameLength &components) (WSTR-length &username)
+            (URL_COMPONENTS-lpszPassword &components) &password
+            (URL_COMPONENTS-dwPasswordLength &components) (WSTR-length &password)
+            (URL_COMPONENTS-lpszHostName &components) &hostname
+            (URL_COMPONENTS-dwHostNameLength &components) (WSTR-length &hostname)
+            (URL_COMPONENTS-lpszUrlPath &components) &url-path
+            (URL_COMPONENTS-dwUrlPathLength &components) (WSTR-length &url-path)
+            (URL_COMPONENTS-lpszExtraInfo &components) &extra-info
+            (URL_COMPONENTS-dwExtraInfoLength &components) (WSTR-length &extra-info)
+            (URL_COMPONENTS-nPort &components) port
             )
       (if (integerp scheme)
-          (setf (URL_COMPONENTS-nScheme components) scheme)
+          (setf (URL_COMPONENTS-nScheme &components) scheme)
         (let ((&scheme (make-WSTR scheme)))
-          (setf (URL_COMPONENTS-dwSchemeLength components) (WSTR-length &scheme)
-                (URL_COMPONENTS-lpszScheme components) &scheme
+          (setf (URL_COMPONENTS-dwSchemeLength &components) (WSTR-length &scheme)
+                (URL_COMPONENTS-lpszScheme &components) &scheme
                 )))
       (setf flags (make-flag flags *create-url-flags*))
       (let ((&len (make-DWORD)))
-        (WinHttpCreateUrl components flags NULL &len)
+        (WinHttpCreateUrl &components flags NULL &len)
         (let ((&buffer (make-WSTR-buffer (unpack-DWORD &len))))
           (assert-BOOL
-           (WinHttpCreateUrl components flags &buffer &len))
+           (WinHttpCreateUrl &components flags &buffer &len))
           (unpack-WSTR &buffer (unpack-DWORD &len)))))))
 
 
@@ -626,7 +624,7 @@ This function reports the URL of the PAC file, but it does not download the file
 (defun time-from-system-time (year month day-of-week day hour minute second milliseconds)
   "Formats a date and time according to the HTTP version 1.0 specification."
   (let ((&systime (make-SYSTEMTIME))
-        (&time (make-CSTR-buffer WINHTTP_TIME_FORMAT_BUFSIZE)))
+        (&time (make-WSTR-buffer (bytes->WSTR-length WINHTTP_TIME_FORMAT_BUFSIZE))))
     (si:clear-chunk &systime)
     (setf (SYSTEMTIME-wYear &systime) year
           (SYSTEMTIME-wMonth &systime) month
