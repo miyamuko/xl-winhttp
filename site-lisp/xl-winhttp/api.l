@@ -99,7 +99,7 @@
 ;;   __in        INTERNET_PORT nServerPort,
 ;;   __reserved  DWORD dwReserved
 ;; );
-(defun connect (session server port)
+(defun connect (session server &optional (port INTERNET_DEFAULT_PORT))
   "Specifies the initial target server of an HTTP request and returns
 an HINTERNET connection handle to an HTTP session for that initial target."
   (check-valid-handle session session)
