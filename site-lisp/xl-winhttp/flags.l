@@ -32,6 +32,7 @@
 
 (in-package :xl-winhttp)
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098.aspx
 (defvar *open-flags*
   `(:async                      ,WINHTTP_FLAG_ASYNC
     ))
@@ -47,6 +48,7 @@
     :secure                     ,WINHTTP_FLAG_SECURE
     ))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384087.aspx
 (defvar *add-request-flags*
   `(:add                        ,WINHTTP_ADDREQ_FLAG_ADD
     :add-if-new                 ,WINHTTP_ADDREQ_FLAG_ADD_IF_NEW
