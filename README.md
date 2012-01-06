@@ -83,6 +83,21 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 
 * 非同期
 * リファレンス
+* reset-auto-proxy, create-proxy-resolver, get-proxy-for-url-ex
+  - Windows 8 で追加された API への対応
+* add-request-headers, send-request
+  - ヘッダの指定を柔軟に
+* set-option, query-option
+  - オプションの取得を型を意識せずに出来るようにする
+* query-headers
+  - WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_QUERY_FLAG_SYSTEMTIME に対応する
+  - 複数のヘッダをまとめてリストで返す
+* crack-url
+  - ICU_DECODE
+* 便利 API の追加
+  - time-from-universal-time
+  - time-to-universal-time
+* check-type を徹底的に
 
 
 ## KNOWN BUGS
