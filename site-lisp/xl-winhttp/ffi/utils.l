@@ -70,7 +70,7 @@
           find-error-name
           ))
 
-(defparameter *gc-gard* (make-hash-table)
+(defparameter *gc-guard* (make-hash-table)
   "GC ‚É‚æ‚è chunk ‚ª‰ğ•ú‚³‚ê‚È‚¢‚æ‚¤‚ÉQÆ‚ğ•Û‚·‚é
 
 Key: Handle
@@ -91,11 +91,11 @@ Value: chunk list
     (setf chunks (list chunks)))
   (let ((chunks (remove-if-not #'chunkp chunks)))
     (when chunks
-      (setf (gethash owner *gc-gard*)
-            (append (gethash owner *gc-gard*) chunks)))))
+      (setf (gethash owner *gc-guard*)
+            (append (gethash owner *gc-guard*) chunks)))))
 
 (defun gc-free (owner)
-  (remhash owner *gc-gard*))
+  (remhash owner *gc-guard*))
 
 
 (defun make-WSTR (str &key (default NULL))
