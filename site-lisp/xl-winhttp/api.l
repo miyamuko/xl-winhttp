@@ -264,7 +264,7 @@ entity body (if any)."
 ;; );
 (defun set-timeouts (hinternet &key (resolve 0) (connect 60000) (send 30000) (receive 30000))
   "Sets time-outs involved with HTTP transactions."
-  (check-type hinternet (or session request))
+  (check-valid-handle hinternet (or session request))
   (check-type resolve integer)
   (check-type connect integer)
   (check-type send integer)
@@ -672,7 +672,7 @@ This function reports the URL of the PAC file, but it does not download the file
 ;; );
 (defun set-option (hinternet option buffer buffer-length)
   "Sets an Internet option."
-  (check-type hinternet (or session request))
+  (check-valid-handle hinternet (or session request))
   (check-type option integer)
   (check-chunk buffer)
   (check-type buffer-length integer)
@@ -699,7 +699,7 @@ This function reports the URL of the PAC file, but it does not download the file
 ;; );
 (defun query-option (hinternet option buffer buffer-length &key ignore-error)
   "Queries an Internet option on the specified handle."
-  (check-type hinternet (or session request))
+  (check-valid-handle hinternet (or session request))
   (check-type option integer)
   (unless (nullp buffer)
     (check-chunk buffer))
