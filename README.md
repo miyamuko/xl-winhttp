@@ -20,15 +20,26 @@
                                                  nil))
           (winhttp:send-request req)
           (winhttp:receive-response req)
-          (let (body (total 0))
+          (let ((body nil)
+                (total 0)
+                (content-length (winhttp:query-headers req :content-length)))
+            (when content-length
+              (setf content-length (parse-integer content-length)))
             (long-operation
               (loop
                 (let ((n (winhttp:query-data-available req)))
                   (when (<= n 0)
                     (return))
-                  (incf total n)
-                  (push (winhttp:read-data req n) body))
-                (message "~D bytes" total)))
+                  (multiple-value-bind (data n)
+                      (winhttp:read-data req n)
+                    (incf total n)
+                    (push data body))
+                  (do-events)
+                  (if content-length
+                      (message "~D/~D bytes (~D%)" total content-length
+                               (floor (* 100 (/ total content-length))))
+                    (message "~D bytes" total))
+                  )))
             (values
              (format nil "~{~A~}" (nreverse body))
              (parse-integer (winhttp:query-headers req :status-code))
@@ -38,18 +49,24 @@
 
 ;; SSL
 (http-get "https://www.hatena.ne.jp/login")
-"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">
-  ...
-"
-("HTTP/1.1 200 OK" "Cache-Control: no-cache" "Connection: Keep-Alive" ...)
+;=> "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">
+;     :
+;   "
+;   200
+;   ("HTTP/1.1 200 OK" "Cache-Control: no-cache" "Connection: Keep-Alive" ...)
 
 ;; Shift_JIS (charset なし) (xhr だと化ける)
-(alexandria:write-string-into-file
- (http-get "http://miyamuko.s56.xrea.com/xyzzy/package.l") "package.l")
+(alexandria:write-byte-vector-into-file
+ (map 'vector #'char-code (http-get "http://miyamuko.s56.xrea.com/xyzzy/package.l"))
+ "package.l")
+
+;=> nil
 
 ;; 中国語(簡体字) (xhr だと化ける)
-(alexandria:write-string-into-file
- (http-get "http://www.baidu.com/s?wd=xyzzy") "baidu.html")
+(alexandria:write-byte-vector-into-file
+ (map 'vector #'char-code (http-get "http://www.baidu.com/s?wd=xyzzy"))
+ "baidu.html")
+;=> nil
 ```
 
 
