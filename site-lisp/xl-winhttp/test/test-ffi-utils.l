@@ -95,14 +95,14 @@
 
 (define-test xl-winhttp/ffi/make-WSTR
   (let ((wstr (make-WSTR "foo"))
-        (bytes (1+ (* 2 3))))
+        (bytes (* 2 (1+ 3))))
     (assert-eql bytes (si:chunk-size wstr))
-    (assert-equal (format nil "~{~C~}" '(#\f #\NUL #\o #\NUL #\o #\NUL #\NUL))
+    (assert-equal (format nil "~{~C~}" '(#\f #\NUL #\o #\NUL #\o #\NUL #\NUL #\NUL))
         (si:unpack-string wstr 0 bytes nil)))
   (let ((wstr (make-WSTR ""))
-        (bytes (1+ (* 2 0))))
+        (bytes (* 2 (1+ 0))))
     (assert-eql bytes (si:chunk-size wstr))
-    (assert-equal (format nil "~{~C~}" '(#\NUL))
+    (assert-equal (format nil "~{~C~}" '(#\NUL #\NUL))
         (si:unpack-string wstr 0 bytes nil)))
   (let ((wstr (make-WSTR nil)))
     (assert-eql 0 wstr))

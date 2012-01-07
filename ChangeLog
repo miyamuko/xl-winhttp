@@ -1,3 +1,8 @@
+2012-01-07  MIYAMUKO Katsuyuki
+
+	* (make-WSTR): WSTR の最後の NULL 文字が一つ足りなくて、
+	ときどきエラーになっていたのを修正
+
 2012-01-06  MIYAMUKO Katsuyuki
 
 	* (winhttp:connect): ポート番号を optional にした。

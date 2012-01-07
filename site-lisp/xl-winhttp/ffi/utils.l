@@ -102,7 +102,11 @@ Value: chunk list
   (when (nullp str)
     (return-from make-WSTR default))
   (check-type str string)
-  (si:make-string-chunk (convert-internal-to-WSTR str)))
+  ;; si:make-string-chunk は NULL 文字を 1 つだけ付けてくれるが、
+  ;; wchar_t の場合は 2 つ必要なので NULL 文字を 1 つ追加しておく
+  (si:make-string-chunk (format nil "~A~C"
+                                (convert-internal-to-WSTR str)
+                                #\NUL)))
 
 (defun make-WSTR-buffer (wstr-len)
   (make-buffer 'wstr (* wstr-len *size-of-WCHAR*)))
