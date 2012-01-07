@@ -109,8 +109,6 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 * query-headers
   - WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_QUERY_FLAG_SYSTEMTIME に対応する
   - 複数のヘッダをまとめてリストで返す
-* crack-url
-  - ICU_DECODE
 * 便利 API の追加
   - time-from-universal-time
   - time-to-universal-time

@@ -1,5 +1,8 @@
 2012-01-07  MIYAMUKO Katsuyuki
 
+	* (crack-url): :decode または :escape フラグを指定された場合に
+	エラーになっていたのを修正
+
 	* (make-WSTR): WSTR の最後の NULL 文字が一つ足りなくて、
 	ときどきエラーになっていたのを修正
 

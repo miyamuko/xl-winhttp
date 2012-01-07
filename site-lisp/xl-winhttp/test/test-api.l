@@ -28,12 +28,14 @@
 (require "lisp-unit")
 
 (require "xl-winhttp")
+(require "xl-winhttp/test/helper")
 
 (defpackage :xl-winhttp.test.api
   (:use :lisp :editor
    :lisp-unit
    :winhttp
    :winhttp.ffi
+   :xl-winhttp.test.helper
    )
   (:shadowing-import-from :winhttp
    open
@@ -51,14 +53,32 @@
 (define-test xl-winhttp/api/crack-url
   (assert-equal (values "http" nil nil "www.yahoo.co.jp" 80 nil nil)
       (crack-url "http://www.yahoo.co.jp"))
-  (assert-equal (values "http" "foo" "bar" "www.yahoo.co.jp" 8080 nil nil)
-      (crack-url "http://foo:bar@www.yahoo.co.jp:8080"))
   (assert-equal (values "http" nil nil "www.google.co.jp" 80 "/search" "?q=xyzzy")
       (crack-url "http://www.google.co.jp/search?q=xyzzy"))
   (assert-equal (values "https" nil nil "127.0.0.1" 443 "/index.html" nil)
       (crack-url "https://127.0.0.1/index.html"))
   (assert-equal (values "https" nil nil "127.0.0.1" 444 "/index.html" nil)
       (crack-url "https://127.0.0.1:444/index.html"))
+
+  ;; reject-userpwd
+  (assert-equal (values "http" "foo" "bar" "www.yahoo.co.jp" 8080 nil nil)
+      (crack-url "http://foo:bar@www.yahoo.co.jp:8080"))
+  (assert-winhttp-condition (WinHttpCrackUrl 12005 ERROR_WINHTTP_INVALID_URL)
+      (crack-url "http://foo:bar@www.yahoo.co.jp:8080" :flags :reject-userpwd))
+
+  ;; escape
+  (assert-equal (values "http" nil nil "www.google.co.jp" 80 "/search" "?q=%E3%81%82")
+      (crack-url "http://www.google.co.jp/search?q=Ç†" :flags :escape))
+
+  ;; decode
+  (assert-equal (values "http" nil nil "www.google.co.jp" 80 "/search" "?q=Ç†")
+      (crack-url "http://www.google.co.jp/search?q=%E3%81%82" :flags :decode))
+
+  ;; EUC ÇÃèÍçáÇÕ decode Ç≈Ç´Ç»Ç¢
+  (assert-equal (values "http" nil nil "search.hatena.ne.jp" 80 "/search" "?word=%A4%A2")
+      (crack-url "http://search.hatena.ne.jp/search?word=%A4%A2" :flags nil))
+  (assert-winhttp-condition (WinHttpCrackUrl 87 ERROR_INVALID_PARAMETER)
+    (crack-url "http://search.hatena.ne.jp/search?word=%A4%A2" :flags :decode))
   )
 
 (define-test xl-winhttp/api/create-url
@@ -79,9 +99,16 @@
       (create-url "https" nil nil "127.0.0.1" 444 "/index.html" nil))
 
   (assert-equal "http://127.0.0.1/index.html"
-      (create-url winhttp.ffi:INTERNET_SCHEME_HTTP nil nil "127.0.0.1" winhttp.ffi:INTERNET_DEFAULT_HTTP_PORT "/index.html" nil))
+      (create-url INTERNET_SCHEME_HTTP nil nil "127.0.0.1" INTERNET_DEFAULT_HTTP_PORT "/index.html" nil))
   (assert-equal "https://127.0.0.1/index.html"
-      (create-url winhttp.ffi:INTERNET_SCHEME_HTTPS nil nil "127.0.0.1" winhttp.ffi:INTERNET_DEFAULT_HTTPS_PORT "/index.html" nil))
+      (create-url INTERNET_SCHEME_HTTPS nil nil "127.0.0.1" INTERNET_DEFAULT_HTTPS_PORT "/index.html" nil))
+
+  ;; escape
+  (assert-equal "http://www.google.co.jp/search?q=%20!%22%23$%25&'()"
+      (create-url "http" nil nil "www.google.co.jp" 80 "/search" "?q= !\"#$%&'()" :flags :escape))
+  ;; reject-userpwd
+  (assert-equal "http://www.yahoo.co.jp:8080"
+      (create-url "http" "foo" "bar" "www.yahoo.co.jp" 8080 nil nil :flags :reject-userpwd))
   )
 
 

@@ -387,17 +387,28 @@ entity body (if any)."
 (defun crack-url (url &key flags)
   "Separates a URL into its component parts such as host name and path."
   (let ((&url (make-WSTR url))
+        (&scheme (make-WSTR-buffer INTERNET_MAX_SCHEME_LENGTH))
+        (&username (make-WSTR-buffer INTERNET_MAX_USER_NAME_LENGTH))
+        (&password (make-WSTR-buffer INTERNET_MAX_PASSWORD_LENGTH))
+        (&hostname (make-WSTR-buffer INTERNET_MAX_HOST_NAME_LENGTH))
+        (&url-path (make-WSTR-buffer INTERNET_MAX_PATH_LENGTH))
+        (&extra-info (make-WSTR-buffer INTERNET_MAX_PATH_LENGTH))
         (&components (make-URL_COMPONENTS)))
     (si:clear-chunk &components)
-    ;; TODO: ICU_DECODE に対応する
-    ;; -1 を指定すると lpszXxx は &url のメモリを指す
+    ;; ICU_DECODE, ICU_ESCAPE 指定時は呼び出し元でバッファを用意する必要がある
     (setf (URL_COMPONENTS-dwStructSize &components) (c:c-struct-size-of URL_COMPONENTS)
-          (URL_COMPONENTS-dwSchemeLength &components) -1
-          (URL_COMPONENTS-dwUserNameLength &components) -1
-          (URL_COMPONENTS-dwPasswordLength &components) -1
-          (URL_COMPONENTS-dwHostNameLength &components) -1
-          (URL_COMPONENTS-dwUrlPathLength &components) -1
-          (URL_COMPONENTS-dwExtraInfoLength &components) -1
+          (URL_COMPONENTS-lpszScheme &components) &scheme
+          (URL_COMPONENTS-dwSchemeLength &components) (WSTR-length &scheme)
+          (URL_COMPONENTS-lpszUserName &components) &username
+          (URL_COMPONENTS-dwUserNameLength &components) (WSTR-length &username)
+          (URL_COMPONENTS-lpszPassword &components) &password
+          (URL_COMPONENTS-dwPasswordLength &components) (WSTR-length &password)
+          (URL_COMPONENTS-lpszHostName &components) &hostname
+          (URL_COMPONENTS-dwHostNameLength &components) (WSTR-length &hostname)
+          (URL_COMPONENTS-lpszUrlPath &components) &url-path
+          (URL_COMPONENTS-dwUrlPathLength &components) (WSTR-length &url-path)
+          (URL_COMPONENTS-lpszExtraInfo &components) &extra-info
+          (URL_COMPONENTS-dwExtraInfoLength &components) (WSTR-length &extra-info)
           )
     (assert-BOOL
      (WinHttpCrackUrl &url
