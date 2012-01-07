@@ -28,12 +28,14 @@
 (require "lisp-unit")
 
 (require "xl-winhttp")
+(require "xl-winhttp/test/helper")
 
 (defpackage :xl-winhttp.test.api
   (:use :lisp :editor
    :lisp-unit
    :winhttp
    :winhttp.ffi
+   :xl-winhttp.test.helper
    )
   (:shadowing-import-from :winhttp
    open
@@ -49,48 +51,24 @@
   (with-open (session)
     (with-connect (connection session "localhost" 1234567)
       (with-open-request (request connection "GET" "/")
-        (handler-case
-            (progn
-              (send-request request)
-              (error "winhttp-condition not threw"))
-          (winhttp-condition (c)
-            (assert-equal 12029 (winhttp-condition-error-code c))
-            (assert-equal 'ERROR_WINHTTP_CANNOT_CONNECT (winhttp-condition-error-name c))
-            (assert-equal 'WinHttpSendRequest (winhttp-condition-api c)))))))
+        (assert-winhttp-condition (WinHttpSendRequest 12029 ERROR_WINHTTP_CANNOT_CONNECT)
+            (send-request request)))))
   )
 
 (define-test xl-winhttp/condition/resolve-error
   (with-open (session)
     (with-connect (connection session "no-such-host" 8888)
       (with-open-request (request connection "GET" "/")
-        (handler-case
-            (progn
-              (send-request request)
-              (error "winhttp-condition not threw"))
-          (winhttp-condition (c)
-            (assert-equal 12007 (winhttp-condition-error-code c))
-            (assert-equal 'ERROR_WINHTTP_NAME_NOT_RESOLVED (winhttp-condition-error-name c))
-            (assert-equal 'WinHttpSendRequest (winhttp-condition-api c)))))))
+        (assert-winhttp-condition (WinHttpSendRequest 12007 ERROR_WINHTTP_NAME_NOT_RESOLVED)
+            (send-request request)))))
   )
 
 (define-test xl-winhttp/condition/set-invalid-option
   (with-open (session)
-    (handler-case
-        (progn
-          (set-option-DWORD session WINHTTP_OPTION_HANDLE_TYPE 10)
-          (error "winhttp-condition not threw"))
-      (winhttp-condition (c)
-        (assert-equal 12011 (winhttp-condition-error-code c))
-        (assert-equal 'WinHttpSetOption (winhttp-condition-api c))
-        ))
+    (assert-winhttp-condition (WinHttpSetOption 12011 ERROR_WINHTTP_OPTION_NOT_SETTABLE)
+        (set-option-DWORD session WINHTTP_OPTION_HANDLE_TYPE 10))
 
-    (handler-case
-        (progn
-          (query-option-DWORD session WINHTTP_OPTION_CONFIGURE_PASSPORT_AUTH)
-          (error "winhttp-condition not threw"))
-      (winhttp-condition (c)
-        (assert-equal 87 (winhttp-condition-error-code c))
-        (assert-equal 'WinHttpQueryOption (winhttp-condition-api c))
-        ))
+    (assert-winhttp-condition (WinHttpQueryOption 87 ERROR_INVALID_PARAMETER)
+        (query-option-DWORD session WINHTTP_OPTION_CONFIGURE_PASSPORT_AUTH))
     )
   )
