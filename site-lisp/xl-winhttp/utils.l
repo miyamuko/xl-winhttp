@@ -32,6 +32,8 @@
 
 (in-package :xl-winhttp)
 
+(defconstant +CRLF+ (format nil "~C~C" (code-char #x0d) (code-char #x0a)))
+
 (defmacro assert-BOOL (&body body)
   (let ((result (gensym)))
     `(let ((,result (progn ,@body)))
@@ -53,6 +55,45 @@
 (defun plist-values (plist)
   (loop for (k v) on plist by #'cddr
         collect v))
+
+(defun dotp (lst)
+  (and (consp lst)
+       (atom (cdr lst))
+       (not (null (cdr lst)))))
+
+(defun to-alist (lst)
+  (cond ((null lst)
+         nil)
+        ;; (to-alist '(:foo . 1))
+        ((dotp lst)
+         (list lst))
+        ;; (to-alist '(:foo 1 ...))
+        ((atom (car lst))
+         (cons (cons (car lst) (cadr lst))
+               (to-alist (cddr lst))))
+        ;; (to-alist '((:foo . 1) ...)
+        ((dotp (car lst))
+         (cons (car lst)
+               (to-alist (cdr lst))))
+        ;; (to-alist '((:foo 1) ...)
+        (t
+         (cons (cons (caar lst) (cadar lst))
+               (to-alist (cdr lst))))))
+
+(defun format-headers (header)
+  (etypecase header
+    (null nil)
+    (string
+     (if (string= header "")
+         nil
+       header))
+    (list
+     (format nil "~{~A~}"
+             (mapcar #'(lambda (pair)
+                         (format nil "~A: ~A~A"
+                                 (car pair) (cdr pair)
+                                 +CRLF+))
+                     (to-alist header))))))
 
 
 (provide "xl-winhttp/utils")

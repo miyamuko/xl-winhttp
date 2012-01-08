@@ -9,6 +9,8 @@
 ```lisp
 (require "xl-winhttp")
 
+(defparameter *accept-languages* '("ja" "en-US;q=0.8" "en;q=0.6"))
+
 (defun http-get (url)
   (multiple-value-bind (scheme user pass host port path extra)
       (winhttp:crack-url url)
@@ -18,7 +20,9 @@
                                         :flags (if (string= scheme "https")
                                                    :secure
                                                  nil))
-          (winhttp:send-request req)
+          (dolist (lang *accept-languages*)
+            (winhttp:add-request-headers req `(:Accept-Language ,lang) :coalesce-with-comma))
+          (winhttp:send-request req :headers `(:X-Yzzy-Version ,(software-version)))
           (winhttp:receive-response req)
           (let ((body nil)
                 (total 0)
@@ -41,8 +45,8 @@
             (values
              (format nil "~{~A~}" (nreverse body))
              (winhttp:query-response-header req :status-code :type :number)
-             (split-string (winhttp:query-response-header req :raw-headers)
-                           #\NUL)
+             (split-string (winhttp:query-request-header req :raw-headers) #\NUL)
+             (split-string (winhttp:query-response-header req :raw-headers) #\NUL)
              )))))))
 
 ;; SSL
@@ -51,6 +55,7 @@
 ;     :
 ;   "
 ;   200
+;   ("GET /login HTTP/1.1" "Accept-Language: ja, en-US;q=0.8, en;q=0.6" "X-Yzzy-Version: 0.2.2.235" ...)
 ;   ("HTTP/1.1 200 OK" "Cache-Control: no-cache" "Connection: Keep-Alive" ...)
 
 ;; Shift_JIS (charset なし) (xhr だと化ける)
@@ -100,8 +105,6 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 * リファレンス
 * reset-auto-proxy, create-proxy-resolver, get-proxy-for-url-ex
   - Windows 8 で追加された API への対応
-* add-request-headers, send-request
-  - ヘッダの指定を柔軟に
 * set-option, query-option
   - DWORD, WSTR 型以外のオプションに対応
 * check-type を徹底的に

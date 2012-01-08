@@ -252,6 +252,86 @@
     )
   )
 
+(define-test xl-winhttp/api/send-request-header
+  (with-open (session :user-agent "xl-winhttp")
+    (with-connect (connection session "www.google.co.jp")
+      (with-open-request (request connection "GET" "/")
+        (send-request request :headers '(:X-String :foo
+                                         :X-Number 123))
+        (assert-equal "foo"
+            (query-request-header request "X-String"))
+        (assert-equal "123"
+            (query-request-header request "X-Number"))
+        )
+
+      (with-open-request (request connection "GET" "/")
+        (add-request-headers request '(:X-String :bar
+                                       :X-Number 124))
+        (assert-equal "bar"
+            (query-request-header request "X-String"))
+        (assert-equal "124"
+            (query-request-header request "X-Number"))
+        )
+
+      (with-open-request (request connection "GET" "/")
+        (add-request-headers request '(:X-String :foo))
+        (add-request-headers request '(:X-String :bar))
+        (assert-equal '("foo" "bar")
+            (query-request-headers request "X-String"))
+        )
+
+      (with-open-request (request connection "GET" "/")
+        (add-request-headers request '(:X-String :foo) :add-if-new)
+        (assert-winhttp-condition (WinHttpAddRequestHeaders 12155 ERROR_WINHTTP_HEADER_ALREADY_EXISTS)
+            (add-request-headers request '(:X-String :bar) :add-if-new))
+        (assert-equal '("foo")
+            (query-request-headers request "X-String"))
+        )
+
+      (with-open-request (request connection "GET" "/")
+        (assert-winhttp-condition (WinHttpAddRequestHeaders 12150 ERROR_WINHTTP_HEADER_NOT_FOUND)
+            (add-request-headers request '(:X-String :bar) :replace))
+        (add-request-headers request '(:X-String :foo) :add)
+        (add-request-headers request '(:X-String :bar) :replace)
+        (assert-equal '("bar")
+            (query-request-headers request "X-String"))
+        )
+
+      (with-open-request (request connection "GET" "/")
+        (add-request-headers request '(:X-String :foo) :coalesce)
+        (add-request-headers request '(:X-String :bar) :coalesce)
+        (assert-equal '("foo, bar")
+            (query-request-headers request "X-String"))
+        )
+
+      (with-open-request (request connection "GET" "/")
+        (add-request-headers request '(:X-String :foo) :coalesce-with-comma)
+        (add-request-headers request '(:X-String :bar) :coalesce-with-comma)
+        (assert-equal '("foo, bar")
+            (query-request-headers request "X-String"))
+        )
+
+      (with-open-request (request connection "GET" "/")
+        (add-request-headers request '(:X-String :foo) :coalesce-with-semicolon)
+        (add-request-headers request '(:X-String :bar) :coalesce-with-semicolon)
+        (assert-equal '("foo; bar")
+            (query-request-headers request "X-String"))
+        )
+
+      (with-open-request (request connection "GET" "/")
+        (add-request-headers request '(:X-String :foo :X-String :bar))
+        (assert-equal '("foo" "bar")
+            (query-request-headers request "X-String"))
+        )
+
+      (with-open-request (request connection "GET" "/")
+        (add-request-headers request '(:X-String :foo :X-String :bar) :coalesce-with-semicolon)
+        (add-request-headers request '(:X-String :baz :X-String :hoge) :coalesce-with-semicolon)
+        (assert-equal '("foo; bar; baz; hoge")
+            (query-request-headers request "X-String"))
+        )
+      )))
+
 (define-test xl-winhttp/api/query-request-header
   (with-open (session :user-agent "xl-winhttp")
     (with-connect (connection session "www.google.co.jp")

@@ -169,7 +169,7 @@ an HINTERNET connection handle to an HTTP session for that initial target."
 (defun send-request (request &key data headers total-length context)
   "Sends the specified request to the HTTP server."
   (check-valid-handle request request)
-  (let ((&headers (make-WSTR headers :default WINHTTP_NO_ADDITIONAL_HEADERS))
+  (let ((&headers (make-WSTR (format-headers headers) :default WINHTTP_NO_ADDITIONAL_HEADERS))
         (&data (make-CSTR data :default WINHTTP_NO_REQUEST_DATA)))
     (assert-BOOL
      (WinHttpSendRequest (request-handle request)
@@ -225,17 +225,15 @@ entity body (if any)."
 ;;   __in  DWORD dwHeadersLength,
 ;;   __in  DWORD dwModifiers
 ;; );
-(defun add-request-headers (request headers &key (modifiers :add))
+(defun add-request-headers (request headers &optional (modifiers :add))
   "Adds one or more HTTP request headers to the HTTP request handle."
   (check-valid-handle request request)
-  (check-type headers string)
-  (let ((&headers (make-WSTR headers)))
+  (let ((&headers (make-WSTR (format-headers headers))))
     (assert-BOOL
      (WinHttpAddRequestHeaders (request-handle request)
                                &headers
-                               (WSTR-length headers)
-                               (make-flag modifiers *add-request-flags*)
-                               modifiers))))
+                               (WSTR-length &headers)
+                               (make-flag modifiers *add-request-flags*)))))
 
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384112.aspx

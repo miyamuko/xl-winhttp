@@ -1,5 +1,12 @@
 2012-01-08  MIYAMUKO Katsuyuki
 
+	* (add-request-headers, send-request): ヘッダの指定周りを整理
+	- ヘッダを plist や alist で指定できるようにした
+	  (add-request-headers request '(:Content-Type "text/html" :X-Yzzy-Version "0.2.2.235"))
+	- add-request-headers が動いていなかったのを修正
+	- add-request-headers の modifiers 引数をキーワード引数じゃなくて
+	  オプショナルな引数にした
+
 	* (query-request-header, query-request-headers)
 	(query-response-header, query-response-headers): query-headers 周りを整理
 	- リクエストヘッダを取得できるようにした
