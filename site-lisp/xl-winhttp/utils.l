@@ -46,6 +46,14 @@
          (raise-winhttp-condition ',(caar body)))
        t)))
 
+(defun plist-keys (plist)
+  (loop for (k v) on plist by #'cddr
+        collect k))
+
+(defun plist-values (plist)
+  (loop for (k v) on plist by #'cddr
+        collect v))
+
 
 (provide "xl-winhttp/utils")
 

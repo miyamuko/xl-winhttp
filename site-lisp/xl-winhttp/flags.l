@@ -28,6 +28,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "xl-winhttp/package")
   (require "xl-winhttp/ffi")
+  (require "xl-winhttp/utils")
   )
 
 (in-package :xl-winhttp)
@@ -221,8 +222,7 @@
                           (otherwise
                            (or (getf keyword-flag-alist flag)
                                (error (format nil "未定義のオプションです: ~S~%有効な値: ~S"
-                                              flag (loop for (k v) on keyword-flag-alist by #'cddr
-                                                         collect k)
+                                              flag (plist-keys keyword-flag-alist)
                                               ))))))
                     value)))
     (otherwise
@@ -231,10 +231,10 @@
 (defun unpack-flags (value keyword-flag-alist &key (flags t))
   (check-type value integer)
   (if flags
-      (loop for (k v) on keyword-flag-alist by #'cddr
+      (loop for v in (plist-values keyword-flag-alist)
             when (= v (logand value v))
             collect k)
-    (loop for (k v) on keyword-flag-alist by #'cddr
+    (loop for v in (plist-values keyword-flag-alist)
           when (= v value)
           return k)))
 
