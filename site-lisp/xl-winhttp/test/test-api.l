@@ -251,3 +251,92 @@
         (query-option session WINHTTP_OPTION_CONFIGURE_PASSPORT_AUTH))
     )
   )
+
+(define-test xl-winhttp/api/query-request-header
+  (with-open (session :user-agent "xl-winhttp")
+    (with-connect (connection session "www.google.co.jp")
+      (with-open-request (request connection "GET" "/")
+        (send-request request
+                      :headers (format nil "~{~A~%~}" '("X-String: foo"
+                                                        "X-String: bar"
+                                                        "X-Number: 123"
+                                                        "X-Number: 12345"
+                                                        "X-Date: Wed, 03 May 2000 18:02:01 GMT"
+                                                        "X-Date: Thu, 04 May 2000 03:02:01 GMT"
+                                                        )))
+        (receive-response request)
+        (assert-equal "GET"
+            (query-request-header request :request-method))
+
+        (assert-equal "foo"
+            (query-request-header request "X-String"))
+        (assert-equal "foo"
+            (query-request-header request "X-String" :index 0))
+        (assert-equal "bar"
+            (query-request-header request "X-String" :index 1))
+        (assert-equal '("foo" "bar")
+            (query-request-headers request "X-String"))
+
+        (assert-equal "123"
+            (query-request-header request "X-Number"))
+        (assert-equal "123"
+            (query-request-header request "X-Number" :index 0))
+        (assert-equal "12345"
+            (query-request-header request "X-Number" :index 1))
+        (assert-equal '("123" "12345")
+            (query-request-headers request "X-Number"))
+
+        (assert-equal "Wed, 03 May 2000 18:02:01 GMT"
+            (query-request-header request "X-Date"))
+        (assert-equal "Wed, 03 May 2000 18:02:01 GMT"
+            (query-request-header request "X-Date" :index 0))
+        (assert-equal "Thu, 04 May 2000 03:02:01 GMT"
+            (query-request-header request "X-Date" :index 1))
+        (assert-equal '("Wed, 03 May 2000 18:02:01 GMT"
+                        "Thu, 04 May 2000 03:02:01 GMT")
+            (query-request-headers request "X-Date"))
+
+        ;; :number
+        (assert-equal 123
+            (query-request-header request "X-Number" :type :number))
+        (assert-equal 123
+            (query-request-header request "X-Number" :index 0 :type :number))
+        (assert-equal 12345
+            (query-request-header request "X-Number" :index 1 :type :number))
+        (assert-equal '(123 12345)
+            (query-request-headers request "X-Number" :type :number))
+
+        ;; :system-time
+        (assert-equal (values 1 2 3 4 5 2000 3 nil -9)
+            (query-request-header request "X-Date" :type :system-time))
+        (assert-equal (values 1 2 3 4 5 2000 3 nil -9)
+            (query-request-header request "X-Date" :index 0 :type :system-time))
+        (assert-equal (values 1 2 12 4 5 2000 3 nil -9)
+            (query-request-header request "X-Date" :index 1 :type :system-time))
+        (assert-equal '((1 2 3 4 5 2000 3 nil -9)
+                        (1 2 12 4 5 2000 3 nil -9))
+            (query-request-headers request "X-Date" :type :system-time))
+
+        ;; :universal-time
+        (assert-equal 3166365721
+            (query-request-header request "X-Date" :type :universal-time))
+        (assert-equal 3166365721
+            (query-request-header request "X-Date" :index 0 :type :universal-time))
+        (assert-equal 3166398121
+            (query-request-header request "X-Date" :index 1 :type :universal-time))
+        (assert-equal '(3166365721 3166398121)
+            (query-request-headers request "X-Date" :type :universal-time))
+        )))
+  )
+
+(define-test xl-winhttp/api/query-response-header
+  (with-open (session :user-agent "xl-winhttp")
+    (with-connect (connection session "www.google.co.jp")
+      (with-open-request (request connection "GET" "/")
+        (send-request request)
+        (receive-response request)
+
+        ;; TODO
+        ;; テスト用のサーバを書いてレスポンスヘッダ周りのテスト
+        )))
+  )

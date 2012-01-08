@@ -50,7 +50,10 @@
           read-data
           query-auth-schemes
           query-data-available
-          query-headers
+          query-request-header
+          query-request-headers
+          query-response-header
+          query-response-headers
 
           crack-url
           create-url
@@ -331,6 +334,83 @@ entity body (if any)."
                                 &num-of-bytes-available))
     (unpack-DWORD &num-of-bytes-available)))
 
+(defun query-request-header (request header &key type index)
+  "Retrieves request header information associated with an HTTP request."
+  (query-headers request header :direction :request :type type :index index))
+
+(defun query-request-headers (request header &key type)
+  "Retrieves all request header information associated with an HTTP request."
+  (query-headers request header :direction :request :type type :all t))
+
+(defun query-response-header (request header &key type index)
+  "Retrieves response header information associated with an HTTP request."
+  (query-headers request header :direction :response :type type :index index))
+
+(defun query-response-headers (request header &key type)
+  "Retrieves all response header information associated with an HTTP request."
+  (query-headers request header :direction :response :type type :all t))
+
+(defun query-headers (request header &key direction type index all)
+  (check-valid-handle request request)
+  (check-type header (or integer string symbol))
+  (multiple-value-bind (info-level name)
+      (cond ((stringp header)
+             (values WINHTTP_QUERY_CUSTOM
+                     (make-WSTR (string header))))
+            (t
+             (values (make-flag header *query-type* :flags nil)
+                     WINHTTP_HEADER_NAME_BY_INDEX)))
+    (let ((flags (logior (case type
+                           (:number WINHTTP_QUERY_FLAG_NUMBER)
+                           (:system-time WINHTTP_QUERY_FLAG_SYSTEMTIME)
+                           (:universal-time WINHTTP_QUERY_FLAG_SYSTEMTIME)
+                           (t 0))
+                         (ecase direction
+                           (:request WINHTTP_QUERY_FLAG_REQUEST_HEADERS)
+                           (:response 0))))
+          (impl (case type
+                  (:number #'query-headers-DWORD)
+                  (:system-time #'query-headers-SYSTEMTIME)
+                  (:universal-time #'query-headers-universal-time)
+                  (t #'query-headers-LPWSTR))))
+      (setf info-level (logior info-level flags))
+      (flet ((query (index)
+               (let ((r (funcall impl request info-level name (make-DWORD index))))
+                 ;; (query-response-header ... :type :system-time) の場合は多値で返す
+                 (if (and r (listp r) (not all))
+                     (values-list r)
+                   r))))
+        (if all
+            (loop for i from 0 below 100
+                  for h = (query i)
+                  while h
+                  collect h)
+          (query (or index WINHTTP_NO_HEADER_INDEX)))))))
+
+(defun query-headers-DWORD (request info-level &name &index)
+  (%query-headers request info-level &name &index
+                  (make-DWORD) *size-of-DWORD*
+                  #'unpack-DWORD))
+
+(defun query-headers-universal-time (request info-level &name &index)
+  (query-headers-SYSTEMTIME request info-level &name &index :universal-time t))
+
+(defun query-headers-SYSTEMTIME (request info-level &name &index &key universal-time)
+  (%query-headers request info-level &name &index
+                  (make-SYSTEMTIME) (c:c-struct-size-of SYSTEMTIME)
+                  #'(lambda (&systime)
+                      (let ((u (SYSTEMTIME->universal-time &systime)))
+                        (if universal-time
+                            u
+                          (multiple-value-list (decode-universal-time u)))))))
+
+(defun query-headers-LPWSTR (request info-level &name &index)
+  (let ((bytes (%query-headers-buffer-length request info-level &name &index)))
+    (when (< 0 bytes)
+      (%query-headers request info-level &name &index
+                      (make-WSTR-buffer (bytes->WSTR-length bytes)) bytes
+                      #'unpack-WSTR))))
+
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384102.aspx
 ;; BOOL WINAPI WinHttpQueryHeaders(
 ;;   __in      HINTERNET hRequest,
@@ -340,40 +420,28 @@ entity body (if any)."
 ;;   __inout   LPDWORD lpdwBufferLength,
 ;;   __inout   LPDWORD lpdwIndex
 ;; );
-(defun query-headers (request header &key (index WINHTTP_NO_HEADER_INDEX))
-  "Retrieves header information associated with an HTTP request."
-  (check-valid-handle request request)
-  (check-type header (or integer string symbol))
-  (check-type index integer)
-  ;; TODO: WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_QUERY_FLAG_SYSTEMTIME に対応する
-  (multiple-value-bind (info-level name)
-      (cond ((stringp header)
-             (values WINHTTP_QUERY_CUSTOM
-                     (make-WSTR (string header))))
-            (t
-             (values (make-flag header *query-type* :flags nil)
-                     WINHTTP_HEADER_NAME_BY_INDEX)))
-    (let ((&buffer-length (make-DWORD))
-          (&header-index (make-DWORD index)))
-      (let ((bytes (progn
-                     ;; ヘッダを格納するバッファサイズを取得 (最後の NULL 文字分を含む)。
-                     ;; &header-index には次のヘッダのインデックスはセットされない。
-                     (WinHttpQueryHeaders (request-handle request)
-                                          info-level name
-                                          NULL &buffer-length
-                                          &header-index)
-                     (unpack-DWORD &buffer-length))))
-        (when (< 0 bytes)
-          (let ((&buffer (make-WSTR-buffer (bytes->WSTR-length bytes))))
-            (assert-BOOL
-             (WinHttpQueryHeaders (request-handle request)
-                                  info-level name
-                                  &buffer &buffer-length
-                                  &header-index))
-            ;; NULL 文字を含まないサイズが返ってくる。
-            (setf bytes (unpack-DWORD &buffer-length))
-            (unpack-WSTR &buffer (bytes->WSTR-length bytes)))
-          )))))
+(defun %query-headers (request info-level &name &index &buffer buffer-length unpacker)
+  (check-chunk &buffer)
+  (check-chunk &index)
+  (check-type info-level integer)
+  (check-type buffer-length integer)
+  (let ((&buffer-length (make-DWORD buffer-length)))
+    (let ((result (WinHttpQueryHeaders (hinternet-handle request)
+                                       info-level &name
+                                       &buffer &buffer-length &index)))
+      (if (nullp result)
+          (unless (= ERROR_WINHTTP_HEADER_NOT_FOUND (GetLastError))
+            (raise-winhttp-condition 'WinHttpQueryHeaders))
+        (let ((bytes (unpack-DWORD &buffer-length)))
+          (when (< 0 bytes)
+            (funcall unpacker &buffer)))))))
+
+(defun %query-headers-buffer-length (request info-level &name &index)
+  (let ((&buffer-length (make-DWORD)))
+    (WinHttpQueryHeaders (hinternet-handle request)
+                         info-level &name
+                         NULL &buffer-length &index)
+    (unpack-DWORD &buffer-length)))
 
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384092.aspx
@@ -670,13 +738,16 @@ This function reports the URL of the PAC file, but it does not download the file
     (si:clear-chunk &systime)
     (assert-BOOL
      (WinHttpTimeToSystemTime (make-WSTR time) &systime))
-    (encode-universal-time (SYSTEMTIME-wSecond &systime)
-                           (SYSTEMTIME-wMinute &systime)
-                           (SYSTEMTIME-wHour &systime)
-                           (SYSTEMTIME-wDay &systime)
-                           (SYSTEMTIME-wMonth &systime)
-                           (SYSTEMTIME-wYear &systime)
-                           0)))
+    (SYSTEMTIME->universal-time &systime)))
+
+(defun SYSTEMTIME->universal-time (&systime)
+  (encode-universal-time (SYSTEMTIME-wSecond &systime)
+                         (SYSTEMTIME-wMinute &systime)
+                         (SYSTEMTIME-wHour &systime)
+                         (SYSTEMTIME-wDay &systime)
+                         (SYSTEMTIME-wMonth &systime)
+                         (SYSTEMTIME-wYear &systime)
+                         0))
 
 
 (defun set-option (hinternet option value)

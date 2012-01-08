@@ -22,9 +22,7 @@
           (winhttp:receive-response req)
           (let ((body nil)
                 (total 0)
-                (content-length (winhttp:query-headers req :content-length)))
-            (when content-length
-              (setf content-length (parse-integer content-length)))
+                (content-length (winhttp:query-response-header req :content-length :type :number)))
             (long-operation
               (loop
                 (let ((n (winhttp:query-data-available req)))
@@ -42,8 +40,8 @@
                   )))
             (values
              (format nil "~{~A~}" (nreverse body))
-             (parse-integer (winhttp:query-headers req :status-code))
-             (split-string (winhttp:query-headers req :raw-headers)
+             (winhttp:query-response-header req :status-code :type :number)
+             (split-string (winhttp:query-response-header req :raw-headers)
                            #\NUL)
              )))))))
 
@@ -106,9 +104,6 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
   - ヘッダの指定を柔軟に
 * set-option, query-option
   - DWORD, WSTR 型以外のオプションに対応
-* query-headers
-  - WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_QUERY_FLAG_SYSTEMTIME に対応する
-  - 複数のヘッダをまとめてリストで返す
 * check-type を徹底的に
 
 

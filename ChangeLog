@@ -1,5 +1,16 @@
 2012-01-08  MIYAMUKO Katsuyuki
 
+	* (query-request-header, query-request-headers)
+	(query-response-header, query-response-headers): query-headers 周りを整理
+	- リクエストヘッダを取得できるようにした
+	  (query-request-header req :user-agent)
+	- 取得するデータ型を指定できるようにした
+	  (query-response-header req :status-code :type :number)
+	  (query-response-header req :status-code :type :system-time)
+	  (query-response-header req :status-code :type :universal-time)
+	- 複数のヘッダをまとめてリストで取得できるようにした
+	  (query-response-headers req :set-cookie)
+
 	* (set-option, query-option): オプションの取得を型を意識せずに出来るようにした
 	また、オプションをキーワードで指定出来るようにした
 	現状は DWORD と WSTR 型のオプションのみサポートしている
