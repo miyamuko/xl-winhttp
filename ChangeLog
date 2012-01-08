@@ -1,5 +1,9 @@
 2012-01-08  MIYAMUKO Katsuyuki
 
+	* (set-option, query-option): オプションの取得を型を意識せずに出来るようにした
+	また、オプションをキーワードで指定出来るようにした
+	現状は DWORD と WSTR 型のオプションのみサポートしている
+
 	* (time-from-universal-time, time-to-universal-time): 追加
 
 	* (time-from-system-time, time-to-system-time): 戻り値と引数の形式を

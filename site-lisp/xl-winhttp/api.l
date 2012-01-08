@@ -32,6 +32,7 @@
   (require "xl-winhttp/conditions")
   (require "xl-winhttp/utils")
   (require "xl-winhttp/flags")
+  (require "xl-winhttp/options")
   )
 
 (in-package :xl-winhttp)
@@ -71,10 +72,6 @@
 
           set-option
           query-option
-          set-option-DWORD
-          query-option-DWORD
-          set-option-WSTR
-          query-option-WSTR
           ))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098.aspx
@@ -682,6 +679,40 @@ This function reports the URL of the PAC file, but it does not download the file
                            0)))
 
 
+(defun set-option (hinternet option value)
+  "Sets an Internet option."
+  (dispatch-option-handler :set-option hinternet option value))
+
+(defun query-option (hinternet option)
+  "Queries an Internet option on the specified handle."
+  (dispatch-option-handler :query-option hinternet option))
+
+(defun dispatch-option-handler (operation hinternet option &rest args)
+  (let ((option (find-option option)))
+    (check-option operation hinternet option)
+    (let ((impl (intern (format nil "~A-~A" operation (option-data-type option))
+                        :winhttp)))
+      (unless (fboundp impl)
+        (error "Not implemented: ~S: ~S" impl option))
+      (apply impl
+             ;; WINHTTP_OPTION_ENABLETRACING など、ハンドルを指定しなくてもいいオプションがある
+             (if hinternet (hinternet-handle hinternet) NULL)
+             (option-value option)
+             args))))
+
+
+;;; set-option handler
+
+(defun set-option-DWORD (hinternet-handle option-value value)
+  (check-type value integer)
+  (let ((&value (make-DWORD value)))
+    (%set-option hinternet-handle option-value &value *size-of-DWORD*)))
+
+(defun set-option-LPWSTR (hinternet-handle option-value value)
+  (check-type value string)
+  (let ((&value (make-WSTR value)))
+    (%set-option hinternet-handle option-value &value (WSTR-length &value))))
+
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384114.aspx
 ;; BOOL WINAPI WinHttpSetOption(
 ;;   __in  HINTERNET hInternet,
@@ -689,25 +720,36 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   __in  LPVOID lpBuffer,
 ;;   __in  DWORD dwBufferLength
 ;; );
-(defun set-option (hinternet option buffer buffer-length)
-  "Sets an Internet option."
-  (check-valid-handle hinternet (or session request))
-  (check-type option integer)
-  (check-chunk buffer)
+(defun %set-option (hinternet-handle option-value &buffer buffer-length)
+  (check-chunk &buffer)
   (check-type buffer-length integer)
   (assert-BOOL
-   (WinHttpSetOption (hinternet-handle hinternet)
-                     option buffer buffer-length)))
+   (WinHttpSetOption hinternet-handle option-value &buffer buffer-length)))
 
-(defun set-option-DWORD (hinternet option value)
-  "Sets an Internet DWORD option."
-  (let ((&value (make-DWORD value)))
-    (set-option hinternet option &value *size-of-DWORD*)))
+;; Not implemented option types.
+;;   BOOL
+;;   CERT_CONTEXT
+;;   DWORD_PTR
+;;   HTTP_VERSION_INFO
+;;   LPVOID
+;;   WINHTTP_CREDS
+;;   WINHTTP_CREDS_EX
+;;   WINHTTP_PROXY_INFO
 
-(defun set-option-WSTR (hinternet option value)
-  "Sets an Internet WSTR option."
-  (let ((&value (make-WSTR value)))
-    (set-option hinternet option &value (WSTR-length &value))))
+
+;;; query-option handler
+
+(defun query-option-DWORD (hinternet-handle option-value)
+  (%query-option hinternet-handle option-value
+                 (make-DWORD) *size-of-DWORD*
+                 #'unpack-DWORD))
+
+(defun query-option-LPWSTR (hinternet-handle option-value)
+  (let ((bytes (%option-buffer-length hinternet-handle option-value)))
+    (when (< 0 bytes)
+      (%query-option hinternet-handle option-value
+                     (make-WSTR-buffer (bytes->WSTR-length bytes)) bytes
+                     #'unpack-WSTR))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384103.aspx
 ;; BOOL WINAPI WinHttpQueryOption(
@@ -716,40 +758,33 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   __out    LPVOID lpBuffer,
 ;;   __inout  LPDWORD lpdwBufferLength
 ;; );
-(defun query-option (hinternet option buffer buffer-length &key ignore-error)
-  "Queries an Internet option on the specified handle."
-  (check-valid-handle hinternet (or session request))
-  (check-type option integer)
-  (unless (nullp buffer)
-    (check-chunk buffer))
-  (check-chunk buffer-length)
-  (if ignore-error
-      (unpack-BOOL
-       (WinHttpQueryOption (hinternet-handle hinternet)
-                           option buffer buffer-length))
-  (assert-BOOL
-   (WinHttpQueryOption (hinternet-handle hinternet)
-                       option buffer buffer-length))))
-
-(defun query-option-DWORD (hinternet option)
-  "Queries an Internet DWORD option on the specified handle."
-  (let ((&buffer (make-DWORD))
-        (&buffer-length (make-DWORD *size-of-DWORD*)))
-    (query-option hinternet option &buffer &buffer-length)
-    (unpack-DWORD &buffer)))
-
-(defun query-option-WSTR (hinternet option)
-  "Queries an Internet WSTR option on the specified handle."
-  (let ((&buffer-length (make-DWORD)))
-    (query-option hinternet option NULL &buffer-length :ignore-error t)
+(defun %query-option (hinternet-handle option-value &buffer buffer-length unpacker)
+  (check-chunk &buffer)
+  (check-type buffer-length integer)
+  (let ((&buffer-length (make-DWORD buffer-length)))
+    (assert-BOOL
+     (WinHttpQueryOption hinternet-handle option-value &buffer &buffer-length))
     (let ((bytes (unpack-DWORD &buffer-length)))
       (when (< 0 bytes)
-        (let ((&buffer (make-WSTR-buffer (/ bytes *size-of-WCHAR*))))
-          (query-option hinternet option &buffer &buffer-length)
-          (unpack-WSTR &buffer))))))
+        (funcall unpacker &buffer)))))
+
+(defun %option-buffer-length (hinternet-handle option-value)
+  (let ((&buffer-length (make-DWORD)))
+    (WinHttpQueryOption hinternet-handle option-value NULL &buffer-length)
+    (unpack-DWORD &buffer-length)))
+
+;; Not implemented option types.
+;;   CERT_CONTEXT
+;;   DWORD_PTR
+;;   HINTERNET
+;;   HTTP_VERSION_INFO
+;;   LPVOID
+;;   SecPkgContext_IssuerListInfoEx*
+;;   WINHTTP_CERTIFICATE_INFO
+;;   WINHTTP_PROXY_INFO
 
 
-;; private
+;;; private
 
 (defun unpack-proxy-info (proxy-info)
   (values (unpack-WSTR-pointer-and-free (WINHTTP_PROXY_INFO-lpszProxy proxy-info))

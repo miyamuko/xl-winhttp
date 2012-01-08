@@ -105,7 +105,7 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 * add-request-headers, send-request
   - ヘッダの指定を柔軟に
 * set-option, query-option
-  - オプションの取得を型を意識せずに出来るようにする
+  - DWORD, WSTR 型以外のオプションに対応
 * query-headers
   - WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_QUERY_FLAG_SYSTEMTIME に対応する
   - 複数のヘッダをまとめてリストで返す

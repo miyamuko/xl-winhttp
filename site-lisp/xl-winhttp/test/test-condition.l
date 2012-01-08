@@ -62,13 +62,3 @@
         (assert-winhttp-condition (WinHttpSendRequest 12007 ERROR_WINHTTP_NAME_NOT_RESOLVED)
             (send-request request)))))
   )
-
-(define-test xl-winhttp/condition/set-invalid-option
-  (with-open (session)
-    (assert-winhttp-condition (WinHttpSetOption 12011 ERROR_WINHTTP_OPTION_NOT_SETTABLE)
-        (set-option-DWORD session WINHTTP_OPTION_HANDLE_TYPE 10))
-
-    (assert-winhttp-condition (WinHttpQueryOption 87 ERROR_INVALID_PARAMETER)
-        (query-option-DWORD session WINHTTP_OPTION_CONFIGURE_PASSPORT_AUTH))
-    )
-  )

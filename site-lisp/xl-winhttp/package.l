@@ -52,7 +52,9 @@
        :loop-finish
        )
       (:shadowing-import-from :ansify
+       :ecase
        :typecase
+       :etypecase
        )
       ))
   )

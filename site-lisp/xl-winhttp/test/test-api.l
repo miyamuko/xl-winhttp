@@ -177,29 +177,77 @@
   )
 
 
-(define-test xl-winhttp/api/query-option-WSTR
+(define-test xl-winhttp/api/query-option-session
   (with-open (session :user-agent "xl-winhttp/1.0")
     (assert-equal "xl-winhttp/1.0"
-        (query-option-WSTR session WINHTTP_OPTION_USER_AGENT)))
-  )
+        (query-option session WINHTTP_OPTION_USER_AGENT))
+    (assert-equal "xl-winhttp/1.0"
+        (query-option session :user-agent))
 
-(define-test xl-winhttp/api/set-option-WSTR
-  (with-open (session :user-agent "xl-winhttp/1.0")
-    (set-option-WSTR session WINHTTP_OPTION_USER_AGENT "xl-winhttp/1.1")
-    (assert-equal "xl-winhttp/1.1"
-        (query-option-WSTR session WINHTTP_OPTION_USER_AGENT)))
-  )
-
-(define-test xl-winhttp/api/query-option-DWORD
-  (with-open (session :user-agent "xl-winhttp/1.0")
     (set-timeouts session :connect 123)
     (assert-equal 123
-        (query-option-DWORD session WINHTTP_OPTION_CONNECT_TIMEOUT)))
+        (query-option session WINHTTP_OPTION_CONNECT_TIMEOUT))
+    (assert-equal 123
+        (query-option session :connect-timeout))
+    )
   )
 
-(define-test xl-winhttp/api/set-option-DWORD
+(define-test xl-winhttp/api/set-option-session
   (with-open (session :user-agent "xl-winhttp/1.0")
-    (set-option-DWORD session WINHTTP_OPTION_CONNECT_TIMEOUT 123456)
+    (set-option session WINHTTP_OPTION_USER_AGENT "xl-winhttp/1.1")
+    (assert-equal "xl-winhttp/1.1"
+        (query-option session WINHTTP_OPTION_USER_AGENT))
+
+    (set-option session :user-agent "xl-winhttp/1.1")
+    (assert-equal "xl-winhttp/1.1"
+        (query-option session :user-agent))
+
+    (set-option session WINHTTP_OPTION_CONNECT_TIMEOUT 123456)
     (assert-equal 123456
-        (query-option-DWORD session WINHTTP_OPTION_CONNECT_TIMEOUT)))
+        (query-option session WINHTTP_OPTION_CONNECT_TIMEOUT))
+
+    (set-option session :connect-timeout 123456)
+    (assert-equal 123456
+        (query-option session :connect-timeout))
+    )
+  )
+
+(define-test xl-winhttp/api/set-query-option-request
+  (with-open (session)
+    (with-connect (connection session "www.google.co.jp")
+      (with-open-request (request connection "GET" "/")
+        (set-option request WINHTTP_OPTION_USERNAME "foo")
+        (assert-equal "foo"
+            (query-option request WINHTTP_OPTION_USERNAME))
+        (assert-equal "foo"
+            (query-option request :username))
+
+        (set-option request WINHTTP_OPTION_USERNAME "bar")
+        (assert-equal "bar"
+            (query-option request WINHTTP_OPTION_USERNAME))
+        (assert-equal "bar"
+            (query-option request :username))
+
+        (set-option request WINHTTP_OPTION_WRITE_BUFFER_SIZE 123)
+        (assert-equal 123
+            (query-option request WINHTTP_OPTION_WRITE_BUFFER_SIZE))
+        (assert-equal 123
+            (query-option request :write-buffer-size))
+
+        (set-option request :write-buffer-size 12345)
+        (assert-equal 12345
+            (query-option request WINHTTP_OPTION_WRITE_BUFFER_SIZE))
+        (assert-equal 12345
+            (query-option request :write-buffer-size))
+        )))
+  )
+
+(define-test xl-winhttp/api/invalid-option
+  (with-open (session)
+    (assert-error 'simple-error
+        (set-option session WINHTTP_OPTION_HANDLE_TYPE 10))
+
+    (assert-error 'simple-error
+        (query-option session WINHTTP_OPTION_CONFIGURE_PASSPORT_AUTH))
+    )
   )
