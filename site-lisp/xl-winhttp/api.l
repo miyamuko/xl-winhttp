@@ -65,7 +65,9 @@
           set-default-proxy-configuration
 
           time-from-system-time
+          time-from-universal-time
           time-to-system-time
+          time-to-universal-time
 
           set-option
           query-option
@@ -632,46 +634,52 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   __in   const SYSTEMTIME *pst,
 ;;   __out  LPWSTR pwszTime
 ;; );
-(defun time-from-system-time (year month day-of-week day hour minute second milliseconds)
-  "Formats a date and time according to the HTTP version 1.0 specification."
-  (let ((&systime (make-SYSTEMTIME))
-        (&time (make-WSTR-buffer (bytes->WSTR-length WINHTTP_TIME_FORMAT_BUFSIZE))))
-    (si:clear-chunk &systime)
-    (setf (SYSTEMTIME-wYear &systime) year
-          (SYSTEMTIME-wMonth &systime) month
-          (SYSTEMTIME-wDayOfWeek &systime) day-of-week
-          (SYSTEMTIME-wDay &systime) day
-          (SYSTEMTIME-wHour &systime) hour
-          (SYSTEMTIME-wMinute &systime) minute
-          (SYSTEMTIME-wSecond &systime) second
-          (SYSTEMTIME-wMilliseconds &systime) milliseconds
-          )
-    (assert-BOOL
-     (WinHttpTimeFromSystemTime &systime &time))
-    ;; ç≈å„Ç… NUL ï∂éöÇ™ïtÇ¢Çƒï‘Ç¡ÇƒÇ≠ÇÈÇÃÇ≈çÌèú
-    (delete #\NUL (unpack-WSTR &time))))
+(defun time-from-system-time (second minute hour day month year &optional time-zone)
+  "Formats a decoded time according to the HTTP version 1.0 specification."
+  (time-from-universal-time (encode-universal-time second minute hour day month year time-zone)))
+
+(defun time-from-universal-time (universal-time)
+  "Formats a universal-time according to the HTTP version 1.0 specification."
+  (multiple-value-bind (second minute hour date month year day-of-week daylight-p zone)
+      (decode-universal-time universal-time 0)
+    (let ((&systime (make-SYSTEMTIME))
+          (&time (make-WSTR-buffer (bytes->WSTR-length WINHTTP_TIME_FORMAT_BUFSIZE))))
+      (si:clear-chunk &systime)
+      (setf (SYSTEMTIME-wYear &systime) year
+            (SYSTEMTIME-wMonth &systime) month
+            (SYSTEMTIME-wDay &systime) date
+            (SYSTEMTIME-wHour &systime) hour
+            (SYSTEMTIME-wMinute &systime) minute
+            (SYSTEMTIME-wSecond &systime) second
+            )
+      (assert-BOOL
+       (WinHttpTimeFromSystemTime &systime &time))
+      ;; ç≈å„Ç… NUL ï∂éöÇ™ïtÇ¢Çƒï‘Ç¡ÇƒÇ≠ÇÈÇÃÇ≈çÌèú
+      (delete #\NUL (unpack-WSTR &time)))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384118.aspx
 ;; BOOL WINAPI WinHttpTimeToSystemTime(
 ;;   __in   LPCWSTR pwszTime,
 ;;   __out  SYSTEMTIME *pst
 ;; );
-(defun time-to-system-time (time)
-  "Takes an HTTP time/date string and converts it to a SYSTEMTIME structure."
+(defun time-to-system-time (time &optional time-zone)
+  "Takes an HTTP time/date string and converts it to a decoded time."
+  (decode-universal-time (time-to-universal-time time) time-zone))
+
+(defun time-to-universal-time (time)
+  "Takes an HTTP time/date string and converts it to a universal-time."
   (check-type time string)
   (let ((&systime (make-SYSTEMTIME)))
     (si:clear-chunk &systime)
     (assert-BOOL
      (WinHttpTimeToSystemTime (make-WSTR time) &systime))
-    (values (SYSTEMTIME-wYear &systime)
-            (SYSTEMTIME-wMonth &systime)
-            (SYSTEMTIME-wDayOfWeek &systime)
-            (SYSTEMTIME-wDay &systime)
-            (SYSTEMTIME-wHour &systime)
-            (SYSTEMTIME-wMinute &systime)
-            (SYSTEMTIME-wSecond &systime)
-            (SYSTEMTIME-wMilliseconds &systime)
-            )))
+    (encode-universal-time (SYSTEMTIME-wSecond &systime)
+                           (SYSTEMTIME-wMinute &systime)
+                           (SYSTEMTIME-wHour &systime)
+                           (SYSTEMTIME-wDay &systime)
+                           (SYSTEMTIME-wMonth &systime)
+                           (SYSTEMTIME-wYear &systime)
+                           0)))
 
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384114.aspx

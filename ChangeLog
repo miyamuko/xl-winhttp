@@ -1,3 +1,10 @@
+2012-01-08  MIYAMUKO Katsuyuki
+
+	* (time-from-universal-time, time-to-universal-time): 追加
+
+	* (time-from-system-time, time-to-system-time): 戻り値と引数の形式を
+	decoded time 形式にした
+
 2012-01-07  MIYAMUKO Katsuyuki
 
 	* (crack-url): :decode または :escape フラグを指定された場合に

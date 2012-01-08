@@ -113,20 +113,67 @@
 
 
 (define-test xl-winhttp/api/time-to-system-time
-  (assert-equal (values 2000 11 2 21 1 6 53 0)
-      (time-to-system-time "Tue, 21 Nov 2000 01:06:53 GMT"))
-  (assert-equal (values 2012 1 4 5 5 54 55 0)
-      (time-to-system-time "Thu, 05 Jan 2012 05:54:55 GMT"))
+  (assert-equal (values 0 0 9 1 1 1900 0 nil -9)
+      (time-to-system-time "Mon, 01 Jan 1900 00:00:00 GMT"))
+  (assert-equal (values 0 0 9 1 1 1900 0 nil -9)
+      (time-to-system-time "Mon, 01 Jan 1900 00:00:00 GMT" -9))
+  (assert-equal (values 0 0 0 1 1 1900 0 nil 0)
+      (time-to-system-time "Mon, 01 Jan 1900 00:00:00 GMT" 0))
+
+  (assert-equal (values 1 2 3 4 5 2000 3 nil -9)
+      (time-to-system-time "Wed, 03 May 2000 18:02:01 GMT"))
+  (assert-equal (values 1 2 3 4 5 2000 3 nil 0)
+      (time-to-system-time "Thu, 04 May 2000 03:02:01 GMT" 0))
+
+  (assert-equal (values 1 2 3 4 5 2000 3 nil 0)
+      (time-to-system-time (time-from-system-time 1 2 3 4 5 2000 0) 0))
+
+  (assert-equal (values 1 2 3 4 5 2000 3 nil -9)
+      (time-to-system-time (time-from-system-time 1 2 3 4 5 2000)))
   )
 
 (define-test xl-winhttp/api/time-from-system-time
-  (assert-equal "Tue, 21 Nov 2000 01:06:53 GMT"
-      (time-from-system-time 2000 11 2 21 1 6 53 0))
-  (assert-equal "Thu, 05 Jan 2012 05:54:55 GMT"
-      (time-from-system-time 2012 1 4 5 5 54 55 0))
-  (assert-equal "Thu, 05 Jan 2012 05:54:55 GMT"
-      (multiple-value-call #'time-from-system-time
-        (time-to-system-time "Thu, 05 Jan 2012 05:54:55 GMT")))
+  (assert-equal "Fri, 31 Dec 1999 15:00:00 GMT"
+      (time-from-system-time 0 0 0 1 1 2000))
+  (assert-equal "Fri, 31 Dec 1999 15:00:00 GMT"
+      (time-from-system-time 0 0 0 1 1 2000 -9))
+  (assert-equal "Sat, 01 Jan 2000 00:00:00 GMT"
+      (time-from-system-time 0 0 0 1 1 2000 0))
+
+  (assert-equal "Wed, 03 May 2000 18:02:01 GMT"
+      (time-from-system-time 1 2 3 4 5 2000))
+  (assert-equal "Thu, 04 May 2000 03:02:01 GMT"
+      (time-from-system-time 1 2 3 4 5 2000 0))
+
+  (assert-equal "Wed, 03 May 2000 18:02:01 GMT"
+      (multiple-value-bind (second minute hour date month year day-of-week daylight-p time-zone)
+          (time-to-system-time "Wed, 03 May 2000 18:02:01 GMT")
+        (time-from-system-time second minute hour date month year time-zone)))
+
+  (assert-equal "Wed, 03 May 2000 18:02:01 GMT"
+      (multiple-value-bind (second minute hour date month year day-of-week daylight-p time-zone)
+          (time-to-system-time "Wed, 03 May 2000 18:02:01 GMT" 0)
+        (time-from-system-time second minute hour date month year time-zone)))
+  )
+
+(define-test xl-winhttp/api/time-to-universal-time
+  (assert-equal (encode-universal-time 0 0 9 1 1 1900 -9)
+      (time-to-universal-time "Mon, 01 Jan 1900 00:00:00 GMT"))
+  (assert-equal (encode-universal-time 1 2 3 4 5 2000 -9)
+      (time-to-universal-time "Wed, 03 May 2000 18:02:01 GMT"))
+
+  (assert-equal (encode-universal-time 1 2 3 4 5 2000 -9)
+      (time-to-universal-time (time-from-universal-time (encode-universal-time 1 2 3 4 5 2000 -9))))
+  )
+
+(define-test xl-winhttp/api/time-from-universal-time
+  (assert-equal "Mon, 01 Jan 1900 00:00:00 GMT"
+      (time-from-universal-time (encode-universal-time 0 0 9 1 1 1900 -9)))
+  (assert-equal "Wed, 03 May 2000 18:02:01 GMT"
+      (time-from-universal-time (encode-universal-time 1 2 3 4 5 2000 -9)))
+
+  (assert-equal "Wed, 03 May 2000 18:02:01 GMT"
+      (time-from-universal-time (time-to-universal-time "Wed, 03 May 2000 18:02:01 GMT")))
   )
 
 
