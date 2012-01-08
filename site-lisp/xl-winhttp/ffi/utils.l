@@ -274,6 +274,6 @@ Value: chunk list
         (return sym)))))
 
 
-(provide "xl-winhttp/ffi/winapi")
+(provide "xl-winhttp/ffi/utils")
 
 ;;; End

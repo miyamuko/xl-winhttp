@@ -32,6 +32,6 @@
 (setf (get 'assert-winhttp-condition 'ed:lisp-indent-hook) 2)
 
 
-(provide "xl-xl-winhttp/test/helper")
+(provide "xl-winhttp/test/helper")
 
 ;;; End
