@@ -16,8 +16,14 @@
 
 (in-package :xl-winhttp.test.helper)
 
-(export '(assert-winhttp-condition
+(export '(windows7-or-later-p
+          assert-winhttp-condition
           ))
+
+(defun windows7-or-later-p (&optional (major (os-major-version))
+                                      (minor (os-minor-version)))
+  (let ((ver (+ major (/ minor 10))))
+    (<= 6.1 ver)))
 
 (defmacro assert-winhttp-condition ((api error-code error-name) &body body)
   `(handler-case

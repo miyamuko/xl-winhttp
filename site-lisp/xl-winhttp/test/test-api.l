@@ -75,10 +75,12 @@
       (crack-url "http://www.google.co.jp/search?q=%E3%81%82" :decode t))
 
   ;; EUC ÇÃèÍçáÇÕ decode Ç≈Ç´Ç»Ç¢
+  ;; Windows 7 à»ç~ÇÃèÍçáÇÕ ERROR_WINHTTP_INVALID_URL Ç™î≠ê∂Ç∑ÇÈ
   (assert-equal (values "http" nil nil "search.hatena.ne.jp" 80 "/search" "?word=%A4%A2")
       (crack-url "http://search.hatena.ne.jp/search?word=%A4%A2" :decode nil))
-  (assert-winhttp-condition (WinHttpCrackUrl 87 ERROR_INVALID_PARAMETER)
-      (crack-url "http://search.hatena.ne.jp/search?word=%A4%A2" :decode t))
+  (when (windows7-or-later-p)
+    (assert-winhttp-condition (WinHttpCrackUrl 87 ERROR_INVALID_PARAMETER)
+        (crack-url "http://search.hatena.ne.jp/search?word=%A4%A2" :decode t)))
   )
 
 (define-test xl-winhttp/api/create-url
@@ -258,6 +260,7 @@
       (with-open-request (request connection "GET" "/")
         (send-request request :headers '(:X-String :foo
                                          :X-Number 123))
+        (receive-response request)
         (assert-equal "foo"
             (query-request-header request "X-String"))
         (assert-equal "123"
