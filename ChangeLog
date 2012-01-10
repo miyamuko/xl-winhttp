@@ -1,3 +1,9 @@
+2012-01-10  MIYAMUKO Katsuyuki
+
+	* フラグをキーワードのリストではなくキーワード引数にした
+	  (winhttp:with-open-request (req conn "GET" "/") :secure t)
+	    ...)
+
 2012-01-08  MIYAMUKO Katsuyuki
 
 	* (add-request-headers, send-request): ヘッダの指定周りを整理

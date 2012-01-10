@@ -64,21 +64,21 @@
   (assert-equal (values "http" "foo" "bar" "www.yahoo.co.jp" 8080 nil nil)
       (crack-url "http://foo:bar@www.yahoo.co.jp:8080"))
   (assert-winhttp-condition (WinHttpCrackUrl 12005 ERROR_WINHTTP_INVALID_URL)
-      (crack-url "http://foo:bar@www.yahoo.co.jp:8080" :flags :reject-userpwd))
+      (crack-url "http://foo:bar@www.yahoo.co.jp:8080" :reject-userpwd t))
 
   ;; escape
   (assert-equal (values "http" nil nil "www.google.co.jp" 80 "/search" "?q=%E3%81%82")
-      (crack-url "http://www.google.co.jp/search?q=Ç†" :flags :escape))
+      (crack-url "http://www.google.co.jp/search?q=Ç†" :escape t))
 
   ;; decode
   (assert-equal (values "http" nil nil "www.google.co.jp" 80 "/search" "?q=Ç†")
-      (crack-url "http://www.google.co.jp/search?q=%E3%81%82" :flags :decode))
+      (crack-url "http://www.google.co.jp/search?q=%E3%81%82" :decode t))
 
   ;; EUC ÇÃèÍçáÇÕ decode Ç≈Ç´Ç»Ç¢
   (assert-equal (values "http" nil nil "search.hatena.ne.jp" 80 "/search" "?word=%A4%A2")
-      (crack-url "http://search.hatena.ne.jp/search?word=%A4%A2" :flags nil))
+      (crack-url "http://search.hatena.ne.jp/search?word=%A4%A2" :decode nil))
   (assert-winhttp-condition (WinHttpCrackUrl 87 ERROR_INVALID_PARAMETER)
-    (crack-url "http://search.hatena.ne.jp/search?word=%A4%A2" :flags :decode))
+      (crack-url "http://search.hatena.ne.jp/search?word=%A4%A2" :decode t))
   )
 
 (define-test xl-winhttp/api/create-url
@@ -105,10 +105,10 @@
 
   ;; escape
   (assert-equal "http://www.google.co.jp/search?q=%20!%22%23$%25&'()"
-      (create-url "http" nil nil "www.google.co.jp" 80 "/search" "?q= !\"#$%&'()" :flags :escape))
+      (create-url "http" nil nil "www.google.co.jp" 80 "/search" "?q= !\"#$%&'()" :escape t))
   ;; reject-userpwd
   (assert-equal "http://www.yahoo.co.jp:8080"
-      (create-url "http" "foo" "bar" "www.yahoo.co.jp" 8080 nil nil :flags :reject-userpwd))
+      (create-url "http" "foo" "bar" "www.yahoo.co.jp" 8080 nil nil :reject-userpwd t))
   )
 
 

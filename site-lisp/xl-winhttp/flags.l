@@ -207,6 +207,13 @@
 
 
 
+(defmacro expand-flags (plist)
+  `(make-flag (list ,@(mapcar #'(lambda (k)
+                                  `(when ,(intern (string k))
+                                     ,k))
+                              (winhttp::plist-keys (symbol-value plist))))
+              ,plist))
+
 (defun make-flag (value keyword-flag-alist &key (default 0) (flags t))
   (typecase value
     (null default)
@@ -218,6 +225,7 @@
      (apply #'logior
             (mapcar #'(lambda (flag)
                         (typecase flag
+                          (null 0)
                           (integer flag)
                           (otherwise
                            (or (getf keyword-flag-alist flag)

@@ -17,9 +17,7 @@
     (winhttp:with-open (session :user-agent "xl-winhttp/0.0.1")
       (winhttp:with-connect (conn session host port)
         (winhttp:with-open-request (req conn "GET" (format nil "~A~A" path (or extra ""))
-                                        :flags (if (string= scheme "https")
-                                                   :secure
-                                                 nil))
+                                        :secure (string= scheme "https"))
           (dolist (lang *accept-languages*)
             (winhttp:add-request-headers req `(:Accept-Language ,lang) :coalesce-with-comma))
           (winhttp:send-request req :headers `(:X-Yzzy-Version ,(software-version)))
