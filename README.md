@@ -66,10 +66,6 @@
 ;;
 ;; start-timer を利用したなんちゃって非同期バージョン
 ;;
-(defparameter *winhttp-connection* nil)
-(defparameter *winhttp-request* nil)
-(defparameter *winhttp-worker-state* nil)
-(defparameter *winhttp-worker-callback* nil)
 
 ;; 非同期 GET
 (defun http-get-async (url callback)
@@ -78,59 +74,57 @@
       (winhttp:crack-url url)
     ;; connection と request を作成
     ;; この時点では実際には接続されない
-    (setf *winhttp-connection*
-          (winhttp:connect (winhttp-session) host port))
-    (setf *winhttp-request*
-          (winhttp:open-request *winhttp-connection* "GET" (format nil "~A~A" (or path "") (or extra ""))
-                                :accept "*/*"
-                                :secure (string= scheme "https")))
-    ;; 非同期処理を開始
-    (setf *winhttp-worker-callback* callback)
-    (dispatch-winhttp-async-worker 'send-request)))
+    (let* ((conn (winhttp:connect (winhttp-session) host port))
+           (req (winhttp:open-request conn "GET" (format nil "~A~A" (or path "") (or extra ""))
+                                      :accept "*/*"
+                                      :secure (string= scheme "https"))))
+      ;; 非同期処理を開始
+      (dispatch-winhttp-async-worker 'send-request conn req callback))))
 
-(defun dispatch-winhttp-async-worker (next-state)
-  (setf *winhttp-worker-state* next-state)
-  (start-timer 0 'do-winhttp-async-worker t))
+(defun dispatch-winhttp-async-worker (state conn req callback)
+  (start-timer 0 #'(lambda ()
+                     (do-winhttp-async-worker state conn req callback))
+               t))
 
-(defun do-winhttp-async-worker ()
-  (case *winhttp-worker-state*
+(defun do-winhttp-async-worker (state conn req callback)
+  (let ((next-state (do-winhttp-async-worker1 state conn req callback)))
+    (when (and next-state (not (eq 'done next-state)))
+      (dispatch-winhttp-async-worker next-state conn req callback))))
+
+(defun do-winhttp-async-worker1 (state conn req callback)
+  (case state
     (send-request
      ;; リクエスト送信
-     (winhttp:send-request *winhttp-request* :headers `(:X-Yzzy-Version ,(software-version)))
-     (dispatch-winhttp-async-worker 'receive-response))
+     (winhttp:send-request req :headers `(:X-Yzzy-Version ,(software-version)))
+     'receive-response)
     (receive-response
      ;; レスポンスを待つ
-     (winhttp:receive-response *winhttp-request*)
-     (funcall *winhttp-worker-callback*
-              'on-response *winhttp-request*)
-     (dispatch-winhttp-async-worker 'read-data))
+     (winhttp:receive-response req)
+     (funcall callback 'on-response req)
+     'read-data)
     (read-data
      ;; レスポンスボディを読み込む
-     (let ((n (winhttp:query-data-available *winhttp-request*)))
+     (let ((n (winhttp:query-data-available req)))
        (if (<= n 0)
-           (dispatch-winhttp-async-worker 'end-data)
+           'end-data
          (multiple-value-bind (data n)
-             (winhttp:read-data *winhttp-request* n)
-           (funcall *winhttp-worker-callback*
-                    'on-read-data *winhttp-request* data n)
-           (dispatch-winhttp-async-worker 'read-data)))))
+             (winhttp:read-data req n)
+           (funcall callback
+                    'on-read-data req data n)
+           'read-data))))
     (end-data
      ;; レスポンスボディの読み込み完了
-     (funcall *winhttp-worker-callback*
-              'on-end-data *winhttp-request*)
-     (dispatch-winhttp-async-worker 'cleanup))
+     (funcall callback 'on-end-data req)
+     'cleanup)
     (cleanup
      ;; connection と request ハンドルを閉じる
-     (winhttp:close-handle *winhttp-request*)
-     (winhttp:close-handle *winhttp-connection*)
-     (setf *winhttp-connection* nil
-           *winhttp-request* nil
-           *winhttp-worker-state* nil
-           *winhttp-worker-callback* nil))
+     (winhttp:close-handle req)
+     (winhttp:close-handle conn)
+     'done)
     (t
      ;; バグってる
-     (msgbox "Error: ~S" *winhttp-worker-state*)
-     (dispatch-winhttp-async-worker 'cleanup))))
+     (msgbox "Error: ~S" state)
+     'cleanup)))
 
 
 ;; 非同期ダウンロード
