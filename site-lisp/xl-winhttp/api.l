@@ -123,7 +123,7 @@ an HINTERNET connection handle to an HTTP session for that initial target."
 ;;   __in  LPCWSTR *ppwszAcceptTypes,
 ;;   __in  DWORD dwFlags
 ;; );
-(defun open-request (connection verb object-name &key version referrer accept-types
+(defun open-request (connection verb object-name &key version referrer accept
                                 ;; *open-request-flags*
                                 bypass-proxy-cache
                                 escape-disable
@@ -139,9 +139,10 @@ an HINTERNET connection handle to an HTTP session for that initial target."
   ;; and the Internet Engineering Task Force (IETF) Requests for Comments (RFCs) spell these
   ;; verbs using uppercase characters only.
   (setf verb (string-upcase (string verb)))
-
-  (multiple-value-bind (&accept-types chunks)
-      (make-WSTR-array accept-types :default WINHTTP_DEFAULT_ACCEPT_TYPES)
+  (when (and accept (atom accept))
+    (setf accept (list accept)))
+  (multiple-value-bind (&accept chunks)
+      (make-WSTR-array accept :default WINHTTP_DEFAULT_ACCEPT_TYPES)
     (gc-guard connection chunks)
     (wrap-request
      (WinHttpOpenRequest (connection-handle connection)
@@ -149,7 +150,7 @@ an HINTERNET connection handle to an HTTP session for that initial target."
                          (make-WSTR object-name)
                          (make-WSTR version)
                          (make-WSTR referrer :default WINHTTP_NO_REFERER)
-                         &accept-types
+                         &accept
                          (expand-flags *open-request-flags*)))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384090.aspx

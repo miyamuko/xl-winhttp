@@ -254,6 +254,33 @@
     )
   )
 
+(define-test xl-winhttp/api/open-request-accept
+  (with-open (session :user-agent "xl-winhttp")
+    (with-connect (connection session "www.google.co.jp")
+      (with-open-request (request connection "GET" "/")
+        (send-request request)
+        (receive-response request)
+        (assert-equal nil
+            (query-request-header request :accept))
+        )
+      (with-open-request (request connection "GET" "/foo"
+                                  :accept "*/*")
+        (send-request request)
+        (receive-response request)
+        (assert-equal "*/*"
+            (query-request-header request :accept))
+        )
+      (with-open-request (request connection "GET" "/"
+                                  :accept (list "text/html" "image/png"))
+        (add-request-headers request '(:accept "*/*") :coalesce-with-comma)
+        (send-request request)
+        (receive-response request)
+        (assert-equal "text/html, image/png, */*"
+            (query-request-header request :accept))
+        )
+      ))
+  )
+
 (define-test xl-winhttp/api/send-request-header
   (with-open (session :user-agent "xl-winhttp")
     (with-connect (connection session "www.google.co.jp")

@@ -1,5 +1,12 @@
 2012-01-10  MIYAMUKO Katsuyuki
 
+	* (open-request): Accept タイプの指定を atom でも list でも指定可能とした
+	  (open-request conn "GET" "/" :accept "*/*")
+	  (open-request conn "GET" "/" :accept '("image/jpg" "image/png"))
+
+	* (open-request): Accept タイプを指定するキーワード引数の名前を
+	  add-request-headers とあわせて :accept-types から :accept に変更
+
 	* フラグをキーワードのリストではなくキーワード引数にした
 	  (winhttp:with-open-request (req conn "GET" "/") :secure t)
 	    ...)
