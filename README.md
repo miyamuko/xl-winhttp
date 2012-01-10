@@ -86,12 +86,18 @@
                      (do-winhttp-async-worker state conn req callback))
                t))
 
-(defun do-winhttp-async-worker (state conn req callback)
-  (let ((next-state (do-winhttp-async-worker1 state conn req callback)))
-    (when (and next-state (not (eq 'done next-state)))
-      (dispatch-winhttp-async-worker next-state conn req callback))))
+(defun do-winhttp-async-worker (state conn req callback &optional error)
+  (handler-case
+      (let ((next-state (do-winhttp-async-worker1 state conn req callback)))
+        (when (and next-state (not (eq 'done next-state)))
+          (dispatch-winhttp-async-worker next-state conn req callback)))
+    (quit (c)
+      (do-winhttp-async-worker 'cancel conn req callback))
+    (error (c)
+      (do-winhttp-async-worker 'error conn req callback c))
+    ))
 
-(defun do-winhttp-async-worker1 (state conn req callback)
+(defun do-winhttp-async-worker1 (state conn req callback &optional error)
   (case state
     (send-request
      ;; リクエスト送信
@@ -109,12 +115,19 @@
            'end-data
          (multiple-value-bind (data n)
              (winhttp:read-data req n)
-           (funcall callback
-                    'on-read-data req data n)
+           (funcall callback 'on-read-data req data n)
            'read-data))))
     (end-data
      ;; レスポンスボディの読み込み完了
      (funcall callback 'on-end-data req)
+     'cleanup)
+    (error
+     ;; エラーが発生
+     (funcall callback 'on-error req error)
+     'cleanup)
+    (cancel
+     ;; Ctrl-g でキャンセル
+     (funcall callback 'on-cancel req)
      'cleanup)
     (cleanup
      ;; connection と request ハンドルを閉じる
@@ -144,7 +157,17 @@
                                (progress-message total content-length))
                               (on-end-data
                                (close output)
-                               (funcall callback url localfile))))
+                               (funcall callback url localfile))
+                              (on-cancel
+                               (close output)
+                               (message "Cancel"))
+                              (on-error
+                               (close output)
+                               (message "Error: ~A" data))
+                              (t
+                               (msgbox "Invalid state: ~A" state)
+                               (close output))
+                              ))
                     )))
 
 (defun progress-message (total-read content-length)
