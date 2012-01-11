@@ -48,7 +48,7 @@
 
 
 (defstruct hinternet
-  handle closed-p)
+  description created-on handle closed-p)
 
 (defstruct (session
             (:include hinternet)))
@@ -62,7 +62,7 @@
 (defmacro define-hinternet-wrapper (type)
   (let ((func (intern (format nil "wrap-~A" type)))
         (ctor (intern (format nil "make-~A" type))))
-    `(defmacro ,func ((api &rest args))
+    `(defmacro ,func (desc (api &rest args))
        (let (($args (gensym))
              ($handle (gensym))
              ($r (gensym)))
@@ -70,7 +70,7 @@
             (let ((,$handle (apply ',api ,$args)))
               (when (zerop ,$handle)
                 (raise-winhttp-condition ',api))
-              (let ((,$r (,',ctor :handle ,$handle)))
+              (let ((,$r (,',ctor :desc ,desc :created-on (get-universal-time) :handle ,$handle)))
                 (gc-guard ,$r ,$args)
                 ,$r)
               ))))))

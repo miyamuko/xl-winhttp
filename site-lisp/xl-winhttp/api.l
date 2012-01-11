@@ -85,11 +85,12 @@
 ;;   __in      LPCWSTR pwszProxyBypass,
 ;;   __in      DWORD dwFlags
 ;; );
-(defun open (&key user-agent access-type proxy-name proxy-bypass
+(defun open (&key user-agent proxy-name proxy-bypass (access-type :default-proxy)
                   ;; *open-flags*
                   async)
   "Initializes, for an application, the use of WinHTTP functions and returns a WinHTTP-session handle."
-  (wrap-session
+  (wrap-session (format nil "~@[~A~]~@[ ~A~]~@[ via ~A~]~@[ bypass ~A~]~@[ with async~]"
+                        (or user-agent "<no user-agent>") access-type proxy-name proxy-bypass async)
    (WinHttpOpen (make-WSTR user-agent)
                 (make-flag access-type *access-type* :flags nil)
                 (make-WSTR proxy-name :default WINHTTP_NO_PROXY_NAME)
@@ -108,7 +109,7 @@
 an HINTERNET connection handle to an HTTP session for that initial target."
   (check-valid-handle session session)
   (check-type port port-number)
-  (wrap-connection
+  (wrap-connection (format nil "~A~@[:~A~]" server (if (= port INTERNET_DEFAULT_PORT) nil port))
    (WinHttpConnect (session-handle session)
                    (make-WSTR server)
                    port
@@ -145,7 +146,7 @@ an HINTERNET connection handle to an HTTP session for that initial target."
   (multiple-value-bind (&accept chunks)
       (make-WSTR-array accept :default WINHTTP_DEFAULT_ACCEPT_TYPES)
     (gc-guard connection chunks)
-    (wrap-request
+    (wrap-request (format nil "~A ~A~@[ with secure~]" verb object-name secure)
      (WinHttpOpenRequest (connection-handle connection)
                          (make-WSTR verb)
                          (make-WSTR object-name)
@@ -706,7 +707,7 @@ This function reports the URL of the PAC file, but it does not download the file
 ;; BOOL WINAPI WinHttpSetDefaultProxyConfiguration(
 ;;   __in  WINHTTP_PROXY_INFO *pProxyInfo
 ;; );
-(defun set-default-proxy-configuration (&key proxy-name proxy-bypass access-type)
+(defun set-default-proxy-configuration (&key proxy-name proxy-bypass (access-type :default-proxy))
   "Sets the default WinHTTP proxy configuration in the registry."
   (let ((&proxy-info (make-WINHTTP_PROXY_INFO))
         (&proxy-name (make-WSTR proxy-name :default WINHTTP_NO_PROXY_NAME))

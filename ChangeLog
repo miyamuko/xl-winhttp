@@ -1,5 +1,8 @@
 2012-01-11  MIYAMUKO Katsuyuki
 
+	* (hinternet): デバッグ用に HINTERNET ハンドル作成時のパラメータと
+	作成時刻を構造体に設定するようにした
+
 	* (set-option, query-option): BOOL 型のオプションをサポート
 	WINHTTP_OPTION_ENABLETRACING は MSDN では DWORD 型になっているが、
 	実質は BOOL 型なため、BOOL に変更
