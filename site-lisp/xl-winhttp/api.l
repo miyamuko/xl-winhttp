@@ -787,28 +787,39 @@ This function reports the URL of the PAC file, but it does not download the file
 (defun dispatch-option-handler (operation hinternet option &rest args)
   (let ((option (find-option option)))
     (check-option operation hinternet option)
-    (let ((impl (intern (format nil "~A-~A" operation (option-data-type option))
+    (let ((impl (intern (format nil "~A-~A~@[-~A~]"
+                                operation
+                                (option-data-type option)
+                                (option-data-subtype option))
                         :winhttp)))
       (unless (fboundp impl)
         (error "Not implemented: ~S: ~S" impl option))
       (apply impl
              ;; WINHTTP_OPTION_ENABLETRACING など、ハンドルを指定しなくてもいいオプションがある
              (if hinternet (hinternet-handle hinternet) NULL)
-             (option-value option)
+             option
              args))))
 
 
 ;;; set-option handler
 
-(defun set-option-DWORD (hinternet-handle option-value value)
+(defun set-option-DWORD-type (hinternet-handle option value)
+  (set-option-DWORD-flags hinternet-handle option value :flags nil))
+
+(defun set-option-DWORD-flags (hinternet-handle option value &key (flags t))
+  (set-option-DWORD hinternet-handle option
+                    (make-flag value (option-data-flags-alist option)
+                               :flags flags)))
+
+(defun set-option-DWORD (hinternet-handle option value)
   (check-type value integer)
   (let ((&value (make-DWORD value)))
-    (%set-option hinternet-handle option-value &value *size-of-DWORD*)))
+    (%set-option hinternet-handle option &value *size-of-DWORD*)))
 
-(defun set-option-LPWSTR (hinternet-handle option-value value)
+(defun set-option-LPWSTR (hinternet-handle option value)
   (check-type value string)
   (let ((&value (make-WSTR value)))
-    (%set-option hinternet-handle option-value &value (WSTR-length &value))))
+    (%set-option hinternet-handle option &value (WSTR-length &value))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384114.aspx
 ;; BOOL WINAPI WinHttpSetOption(
@@ -817,11 +828,11 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   __in  LPVOID lpBuffer,
 ;;   __in  DWORD dwBufferLength
 ;; );
-(defun %set-option (hinternet-handle option-value &buffer buffer-length)
+(defun %set-option (hinternet-handle option &buffer buffer-length)
   (check-chunk &buffer)
   (check-type buffer-length integer)
   (assert-BOOL
-   (WinHttpSetOption hinternet-handle option-value &buffer buffer-length)))
+   (WinHttpSetOption hinternet-handle (option-const option) &buffer buffer-length)))
 
 ;; Not implemented option types.
 ;;   BOOL
@@ -836,15 +847,23 @@ This function reports the URL of the PAC file, but it does not download the file
 
 ;;; query-option handler
 
-(defun query-option-DWORD (hinternet-handle option-value)
-  (%query-option hinternet-handle option-value
+(defun query-option-DWORD-type (hinternet-handle option)
+  (query-option-DWORD-flags hinternet-handle option :flags nil))
+
+(defun query-option-DWORD-flags (hinternet-handle option &key (flags t))
+  (unpack-flags (query-option-DWORD hinternet-handle option)
+                (option-data-flags-alist option)
+                :flags flags))
+
+(defun query-option-DWORD (hinternet-handle option)
+  (%query-option hinternet-handle option
                  (make-DWORD) *size-of-DWORD*
                  #'unpack-DWORD))
 
-(defun query-option-LPWSTR (hinternet-handle option-value)
-  (let ((bytes (%option-buffer-length hinternet-handle option-value)))
+(defun query-option-LPWSTR (hinternet-handle option)
+  (let ((bytes (%option-buffer-length hinternet-handle option)))
     (when (< 0 bytes)
-      (%query-option hinternet-handle option-value
+      (%query-option hinternet-handle option
                      (make-WSTR-buffer (bytes->WSTR-length bytes)) bytes
                      #'unpack-WSTR))))
 
@@ -855,19 +874,19 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   __out    LPVOID lpBuffer,
 ;;   __inout  LPDWORD lpdwBufferLength
 ;; );
-(defun %query-option (hinternet-handle option-value &buffer buffer-length unpacker)
+(defun %query-option (hinternet-handle option &buffer buffer-length unpacker)
   (check-chunk &buffer)
   (check-type buffer-length integer)
   (let ((&buffer-length (make-DWORD buffer-length)))
     (assert-BOOL
-     (WinHttpQueryOption hinternet-handle option-value &buffer &buffer-length))
+     (WinHttpQueryOption hinternet-handle (option-const option) &buffer &buffer-length))
     (let ((bytes (unpack-DWORD &buffer-length)))
       (when (< 0 bytes)
         (funcall unpacker &buffer)))))
 
-(defun %option-buffer-length (hinternet-handle option-value)
+(defun %option-buffer-length (hinternet-handle option)
   (let ((&buffer-length (make-DWORD)))
-    (WinHttpQueryOption hinternet-handle option-value NULL &buffer-length)
+    (WinHttpQueryOption hinternet-handle (option-const option) NULL &buffer-length)
     (unpack-DWORD &buffer-length)))
 
 ;; Not implemented option types.

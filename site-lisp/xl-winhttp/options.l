@@ -34,10 +34,80 @@
 (in-package :xl-winhttp)
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384066.aspx
+
+(defvar *option-autologon-policy-type*
+  `(:high                       ,WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH
+    :low                        ,WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW
+    :medium                     ,WINHTTP_AUTOLOGON_SECURITY_LEVEL_MEDIUM
+    ))
+
+(defvar *option-configure-passport-auth-type*
+  `(:disable-auth               ,WINHTTP_DISABLE_PASSPORT_AUTH
+    :disable-keyring            ,WINHTTP_DISABLE_PASSPORT_KEYRING
+    :enable-auth                ,WINHTTP_ENABLE_PASSPORT_AUTH
+    :enable-keyring             ,WINHTTP_ENABLE_PASSPORT_KEYRING
+    ))
+
+(defvar *option-disable-feature-flags*
+  `(:authentication             ,WINHTTP_DISABLE_AUTHENTICATION
+    :cookies                    ,WINHTTP_DISABLE_COOKIES
+    :keep-alive                 ,WINHTTP_DISABLE_KEEP_ALIVE
+    :redirects                  ,WINHTTP_DISABLE_REDIRECTS
+    ))
+
+(defvar *option-enable-feature-type*
+  `(:ssl-revert-impersonation   ,WINHTTP_ENABLE_SSL_REVERT_IMPERSONATION
+    :ssl-revocation             ,WINHTTP_ENABLE_SSL_REVOCATION
+    ))
+
+(defvar *option-handle-type*
+  `(:connection                 ,WINHTTP_HANDLE_TYPE_CONNECT
+    :request                    ,WINHTTP_HANDLE_TYPE_REQUEST
+    :session                    ,WINHTTP_HANDLE_TYPE_SESSION
+    ))
+
+(defvar *option-redirect-policy-type*
+  `(:always                     ,WINHTTP_OPTION_REDIRECT_POLICY_ALWAYS
+    :disallow-https-to-http     ,WINHTTP_OPTION_REDIRECT_POLICY_DISALLOW_HTTPS_TO_HTTP
+    :never                      ,WINHTTP_OPTION_REDIRECT_POLICY_NEVER
+    ))
+
+(defvar *option-secure-protocol-flags*
+  `(:all                        ,WINHTTP_FLAG_SECURE_PROTOCOL_ALL
+    :ssl2                       ,WINHTTP_FLAG_SECURE_PROTOCOL_SSL2
+    :ssl3                       ,WINHTTP_FLAG_SECURE_PROTOCOL_SSL3
+    :tls1                       ,WINHTTP_FLAG_SECURE_PROTOCOL_TLS1
+    ))
+
+(defvar *option-security-flags*
+  `(:ignore-cert-cn-invalid     ,SECURITY_FLAG_IGNORE_CERT_CN_INVALID
+    :ignore-cert-date-invalid   ,SECURITY_FLAG_IGNORE_CERT_DATE_INVALID
+    :ignore-unknown-ca          ,SECURITY_FLAG_IGNORE_UNKNOWN_CA
+    :ignore-cert-wrong-usage    ,SECURITY_FLAG_IGNORE_CERT_WRONG_USAGE
+    :secure                     ,SECURITY_FLAG_SECURE
+    :strength-medium            ,SECURITY_FLAG_STRENGTH_MEDIUM
+    :strength-strong            ,SECURITY_FLAG_STRENGTH_STRONG
+    :strength-weak              ,SECURITY_FLAG_STRENGTH_WEAK
+    ))
+
+(defvar *option-spn-type*
+  `(:disable-spn-server-port    ,WINHTTP_DISABLE_SPN_SERVER_PORT
+    :enable-spn-server-port     ,WINHTTP_ENABLE_SPN_SERVER_PORT
+    ))
+
+;; なにこれ?
+;;
+;; WINHTTP_OPTION_UNLOAD_NOTIFY_EVENT
+;;
+;;   WINHTTP_FLAG_SECURE_PROTOCOL_ALL
+;;   ERROR_WINHTTP_INCORRECT_HANDLE_TYPE
+
+
 (defvar *option-list*
   ;; Option flag                                    Session handle  Request handle  Query option  Set option   Data type
   `((:autologon-policy
-     ,WINHTTP_OPTION_AUTOLOGON_POLICY               nil             t               nil           t            DWORD)
+     ,WINHTTP_OPTION_AUTOLOGON_POLICY               nil             t               nil           t            DWORD
+     type ,*option-autologon-policy-type*)
     (:callback
      ,WINHTTP_OPTION_CALLBACK                       t               t               t             t            LPVOID)
     (:client-cert-context
@@ -47,7 +117,8 @@
     (:codepage
      ,WINHTTP_OPTION_CODEPAGE                       t               nil             nil           t            DWORD)
     (:configure-passport-auth
-     ,WINHTTP_OPTION_CONFIGURE_PASSPORT_AUTH        t               nil             nil           t            DWORD)
+     ,WINHTTP_OPTION_CONFIGURE_PASSPORT_AUTH        t               nil             nil           t            DWORD
+     type ,*option-configure-passport-auth-type*)
 ;    (:connect-info
 ;     ,WINHTTP_OPTION_CONNECT_INFO                   nil             t               t             nil          WINHTTP_CONNECTION_INFO)
     (:connect-retries
@@ -57,9 +128,11 @@
     (:context-value
      ,WINHTTP_OPTION_CONTEXT_VALUE                  t               t               t             t            DWORD_PTR)
     (:disable-feature
-     ,WINHTTP_OPTION_DISABLE_FEATURE                nil             t               nil           t            DWORD)
+     ,WINHTTP_OPTION_DISABLE_FEATURE                nil             t               nil           t            DWORD
+     types ,*option-disable-feature-flags*)
     (:enable-feature
-     ,WINHTTP_OPTION_ENABLE_FEATURE                 t               t               nil           t            DWORD)
+     ,WINHTTP_OPTION_ENABLE_FEATURE                 t               t               nil           t            DWORD
+     type ,*option-enable-feature-type*)
     (:enable-tracing
      ,WINHTTP_OPTION_ENABLETRACING                  nil             nil             t             t            DWORD)
     (:extended-error
@@ -69,7 +142,8 @@
     (:global-server-creds
      ,WINHTTP_OPTION_GLOBAL_SERVER_CREDS            t               t               nil           t            WINHTTP_CREDS_EX)
     (:handle-type
-     ,WINHTTP_OPTION_HANDLE_TYPE                    t               t               t             nil          DWORD)
+     ,WINHTTP_OPTION_HANDLE_TYPE                    t               t               t             nil          DWORD
+     type ,*option-handle-type*)
     (:http-version
      ,WINHTTP_OPTION_HTTP_VERSION                   t               t               t             t            HTTP_VERSION_INFO)
 ;    (:is-proxy-connect-response
@@ -115,7 +189,8 @@
     (:receive-response-timeout
      ,WINHTTP_OPTION_RECEIVE_RESPONSE_TIMEOUT       t               t               t             t            DWORD)
     (:redirect-policy
-     ,WINHTTP_OPTION_REDIRECT_POLICY                t               t               t             t            DWORD)
+     ,WINHTTP_OPTION_REDIRECT_POLICY                t               t               t             t            DWORD
+     type ,*option-redirect-policy-type*)
     (:reject-userpwd-in-url
      ,WINHTTP_OPTION_REJECT_USERPWD_IN_URL          nil             t               nil           t            BOOL)
     (:request-priority
@@ -123,11 +198,13 @@
     (:resolve-timeout
      ,WINHTTP_OPTION_RESOLVE_TIMEOUT                t               t               t             t            DWORD)
     (:secure-protocols
-     ,WINHTTP_OPTION_SECURE_PROTOCOLS               t               nil             nil           t            DWORD)
+     ,WINHTTP_OPTION_SECURE_PROTOCOLS               t               nil             nil           t            DWORD
+     flags ,*option-secure-protocol-flags*)
     (:security-certificate-struct
      ,WINHTTP_OPTION_SECURITY_CERTIFICATE_STRUCT    nil             t               t             nil          WINHTTP_CERTIFICATE_INFO)
     (:security-flags
-     ,WINHTTP_OPTION_SECURITY_FLAGS                 nil             t               t             t            DWORD)
+     ,WINHTTP_OPTION_SECURITY_FLAGS                 nil             t               t             t            DWORD
+     flags ,*option-security-flags*)
     (:security-key-bitness
      ,WINHTTP_OPTION_SECURITY_KEY_BITNESS           nil             t               t             nil          DWORD)
     (:send-timeout
@@ -139,7 +216,8 @@
 ;    (:server-spn-used
 ;     ,WINHTTP_OPTION_SERVER_SPN_USED                nil             t               t             nil          LPWSTR)
     (:spn
-     ,WINHTTP_OPTION_SPN                            nil             t               nil           t            DWORD)
+     ,WINHTTP_OPTION_SPN                            nil             t               nil           t            DWORD
+     type ,*option-spn-type*)
 ;    (:unload-notify-even
 ;     ,WINHTTP_OPTION_UNLOAD_NOTIFY_EVEN             t               nil             nil           t            HINTERNET)
     (:url
@@ -155,6 +233,7 @@
     (:write-buffer-size
      ,WINHTTP_OPTION_WRITE_BUFFER_SIZE              nil             t               t             t            DWORD)
     ))
+
 
 (defun check-option (operation handle option)
   (ecase operation
@@ -180,7 +259,7 @@
 (defun option-name (option)
   (nth 0 option))
 
-(defun option-value (option)
+(defun option-const (option)
   (nth 1 option))
 
 (defun option-accept-session-handle-p (option)
@@ -198,13 +277,19 @@
 (defun option-data-type (option)
   (nth 6 option))
 
-(defun find-option (option-name-or-value)
-  (let ((search-key (etypecase option-name-or-value
+(defun option-data-subtype (option)
+  (nth 7 option))
+
+(defun option-data-flags-alist (option)
+  (nth 8 option))
+
+(defun find-option (option-name-or-const)
+  (let ((search-key (etypecase option-name-or-const
                       (keyword #'option-name)
-                      (integer #'option-value))))
-    (or (find option-name-or-value *option-list* :key search-key)
+                      (integer #'option-const))))
+    (or (find option-name-or-const *option-list* :key search-key)
         (error (format nil "未定義のオプションです: ~S~%有効な値: ~S"
-                       option-name-or-value
+                       option-name-or-const
                        (mapcar #'car *option-list*)
                        )))))
 

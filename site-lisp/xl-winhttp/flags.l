@@ -239,10 +239,10 @@
 (defun unpack-flags (value keyword-flag-alist &key (flags t))
   (check-type value integer)
   (if flags
-      (loop for v in (plist-values keyword-flag-alist)
+      (loop for (k v) on keyword-flag-alist by #'cddr
             when (= v (logand value v))
             collect k)
-    (loop for v in (plist-values keyword-flag-alist)
+    (loop for (k v) on keyword-flag-alist by #'cddr
           when (= v value)
           return k)))
 
