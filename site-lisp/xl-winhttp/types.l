@@ -28,9 +28,24 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "xl-winhttp/package")
   (require "xl-winhttp/conditions")
+  (require "xl-winhttp/ffi")
   )
 
 (in-package :xl-winhttp)
+
+(deftype port-number ()
+  `(integer 0 ,INTERNET_MAX_PORT_NUMBER_VALUE))
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384110.aspx#support_for_greater_than_4-gb_upload
+(deftype content-length ()
+  ;; DWORD
+  `(integer 0 ,(expt 2 32)))
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384116.aspx
+(deftype timeout ()
+  ;; int
+  `(integer -1 ,(expt 2 31)))
+
 
 (defstruct hinternet
   handle closed-p)

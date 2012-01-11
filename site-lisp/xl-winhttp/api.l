@@ -107,6 +107,7 @@
   "Specifies the initial target server of an HTTP request and returns
 an HINTERNET connection handle to an HTTP session for that initial target."
   (check-valid-handle session session)
+  (check-type port port-number)
   (wrap-connection
    (WinHttpConnect (session-handle session)
                    (make-WSTR server)
@@ -180,6 +181,8 @@ an HINTERNET connection handle to an HTTP session for that initial target."
 (defun send-request (request &key data headers total-length context)
   "Sends the specified request to the HTTP server."
   (check-valid-handle request request)
+  (check-type total-length (or null content-length))
+  (check-type context (or null integer))
   (let ((&headers (make-WSTR (format-headers headers) :default WINHTTP_NO_ADDITIONAL_HEADERS))
         (&data (make-CSTR data :default WINHTTP_NO_REQUEST_DATA)))
     (assert-BOOL
@@ -278,10 +281,10 @@ entity body (if any)."
 (defun set-timeouts (hinternet &key (resolve 0) (connect 60000) (send 30000) (receive 30000))
   "Sets time-outs involved with HTTP transactions."
   (check-valid-handle hinternet (or session request))
-  (check-type resolve integer)
-  (check-type connect integer)
-  (check-type send integer)
-  (check-type receive integer)
+  (check-type resolve timeout)
+  (check-type connect timeout)
+  (check-type send timeout)
+  (check-type receive timeout)
   (assert-BOOL
    (WinHttpSetTimeouts (hinternet-handle hinternet) resolve connect send receive)))
 
@@ -296,6 +299,7 @@ entity body (if any)."
 (defun read-data (request num-of-bytes-to-read)
   "Reads data from a handle opened by the winhttp:open-request function."
   (check-valid-handle request request)
+  (check-type num-of-bytes-to-read content-length)
   (let ((&buffer (make-CSTR-buffer num-of-bytes-to-read))
         (&num-of-bytes-read (make-DWORD)))
     (assert-BOOL
@@ -343,25 +347,27 @@ entity body (if any)."
                                 &num-of-bytes-available))
     (unpack-DWORD &num-of-bytes-available)))
 
-(defun query-request-header (request header &key type index)
+(defun query-request-header (request header &key (type :string) (index 0))
   "Retrieves request header information associated with an HTTP request."
   (query-headers request header :direction :request :type type :index index))
 
-(defun query-request-headers (request header &key type)
+(defun query-request-headers (request header &key (type :string))
   "Retrieves all request header information associated with an HTTP request."
   (query-headers request header :direction :request :type type :all t))
 
-(defun query-response-header (request header &key type index)
+(defun query-response-header (request header &key (type :string) (index 0))
   "Retrieves response header information associated with an HTTP request."
   (query-headers request header :direction :response :type type :index index))
 
-(defun query-response-headers (request header &key type)
+(defun query-response-headers (request header &key (type :string))
   "Retrieves all response header information associated with an HTTP request."
   (query-headers request header :direction :response :type type :all t))
 
-(defun query-headers (request header &key direction type index all)
+(defun query-headers (request header &key direction all (type :string) (index 0))
   (check-valid-handle request request)
   (check-type header (or integer string symbol))
+  (check-type index integer)
+  (check-type type (member :string :number :system-time :universal-time))
   (multiple-value-bind (info-level name)
       (cond ((stringp header)
              (values WINHTTP_QUERY_CUSTOM
@@ -369,19 +375,19 @@ entity body (if any)."
             (t
              (values (make-flag header *query-type* :flags nil)
                      WINHTTP_HEADER_NAME_BY_INDEX)))
-    (let ((flags (logior (case type
+    (let ((flags (logior (ecase type
                            (:number WINHTTP_QUERY_FLAG_NUMBER)
                            (:system-time WINHTTP_QUERY_FLAG_SYSTEMTIME)
                            (:universal-time WINHTTP_QUERY_FLAG_SYSTEMTIME)
-                           (t 0))
+                           (:string 0))
                          (ecase direction
                            (:request WINHTTP_QUERY_FLAG_REQUEST_HEADERS)
                            (:response 0))))
-          (impl (case type
+          (impl (ecase type
                   (:number #'query-headers-DWORD)
                   (:system-time #'query-headers-SYSTEMTIME)
                   (:universal-time #'query-headers-universal-time)
-                  (t #'query-headers-LPWSTR))))
+                  (:string #'query-headers-LPWSTR))))
       (setf info-level (logior info-level flags))
       (flet ((query (index)
                (let ((r (funcall impl request info-level name (make-DWORD index))))
@@ -394,7 +400,7 @@ entity body (if any)."
                   for h = (query i)
                   while h
                   collect h)
-          (query (or index WINHTTP_NO_HEADER_INDEX)))))))
+          (query index))))))
 
 (defun query-headers-DWORD (request info-level &name &index)
   (%query-headers request info-level &name &index
@@ -551,12 +557,14 @@ entity body (if any)."
             (URL_COMPONENTS-dwExtraInfoLength &components) (WSTR-length &extra-info)
             (URL_COMPONENTS-nPort &components) port
             )
-      (if (integerp scheme)
-          (setf (URL_COMPONENTS-nScheme &components) scheme)
-        (let ((&scheme (make-WSTR scheme)))
-          (setf (URL_COMPONENTS-dwSchemeLength &components) (WSTR-length &scheme)
-                (URL_COMPONENTS-lpszScheme &components) &scheme
-                )))
+      (etypecase scheme
+        (integer
+         (setf (URL_COMPONENTS-nScheme &components) scheme))
+        (string
+         (let ((&scheme (make-WSTR scheme)))
+           (setf (URL_COMPONENTS-dwSchemeLength &components) (WSTR-length &scheme)
+                 (URL_COMPONENTS-lpszScheme &components) &scheme
+                 ))))
       (setf flags (expand-flags *create-url-flags*))
       (let ((&len (make-DWORD)))
         (WinHttpCreateUrl &components flags NULL &len)
@@ -649,9 +657,7 @@ This function reports the URL of the PAC file, but it does not download the file
   "Retrieves the proxy data for the specified URL."
   (check-type session session)
   (check-type url string)
-  (check-type flags integer)
   (check-type auto-config-url string)
-  (check-type auto-logon-if-challenged (or t nil))
   (let ((&auto-proxy-opts (make-WINHTTP_AUTOPROXY_OPTIONS))
         (&proxy-info (make-WINHTTP_PROXY_INFO))
         (&url (make-WSTR url))
@@ -731,6 +737,7 @@ This function reports the URL of the PAC file, but it does not download the file
 
 (defun time-from-universal-time (universal-time)
   "Formats a universal-time according to the HTTP version 1.0 specification."
+  (check-type universal-time integer)
   (multiple-value-bind (second minute hour date month year day-of-week daylight-p zone)
       (decode-universal-time universal-time 0)
     (let ((&systime (make-SYSTEMTIME))

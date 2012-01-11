@@ -1,6 +1,6 @@
-; -*- mode: lisp; package: xl-winhttp.test.api; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.test.condition; encoding: shift_jis -*-
 
-;;; xl-winhttp/test/test-api.l
+;;; xl-winhttp/test/test-condition.l
 ;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
@@ -30,7 +30,7 @@
 (require "xl-winhttp")
 (require "xl-winhttp/test/helper")
 
-(defpackage :xl-winhttp.test.api
+(defpackage :xl-winhttp.test.condition
   (:use :lisp :editor
    :lisp-unit
    :winhttp
@@ -43,13 +43,13 @@
   )
   )
 
-(in-package :xl-winhttp.test.api)
+(in-package :xl-winhttp.test.condition)
 
-(remove-all-tests :xl-winhttp.test.api)
+(remove-all-tests :xl-winhttp.test.condition)
 
 (define-test xl-winhttp/condition/connect-error
   (with-open (session)
-    (with-connect (connection session "localhost" 1234567)
+    (with-connect (connection session "localhost" 12345)
       (with-open-request (request connection "GET" "/")
         (assert-winhttp-condition (WinHttpSendRequest 12029 ERROR_WINHTTP_CANNOT_CONNECT)
             (send-request request)))))

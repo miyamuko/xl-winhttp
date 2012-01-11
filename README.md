@@ -240,7 +240,6 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
   - Windows 8 で追加された API への対応
 * set-option, query-option
   - DWORD, WSTR, BOOL 型以外のオプションに対応
-* check-type を徹底的に
 
 
 ## KNOWN BUGS
