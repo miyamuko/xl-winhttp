@@ -134,7 +134,7 @@
      ,WINHTTP_OPTION_ENABLE_FEATURE                 t               t               nil           t            DWORD
      type ,*option-enable-feature-type*)
     (:enable-tracing
-     ,WINHTTP_OPTION_ENABLETRACING                  nil             nil             t             t            DWORD)
+     ,WINHTTP_OPTION_ENABLETRACING                  nil             nil             t             t            BOOL)
     (:extended-error
      ,WINHTTP_OPTION_EXTENDED_ERROR                 t               t               t             nil          DWORD)
     (:global-proxy-creds

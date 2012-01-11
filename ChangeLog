@@ -1,5 +1,9 @@
 2012-01-11  MIYAMUKO Katsuyuki
 
+	* (set-option, query-option): BOOL 型のオプションをサポート
+	WINHTTP_OPTION_ENABLETRACING は MSDN では DWORD 型になっているが、
+	実質は BOOL 型なため、BOOL に変更
+
 	* (set-option, query-option): オプション値をキーワードに変換するようにした
 	(winhttp:query-option r :security-flags)
 	;=> (:secure :strength-strong)

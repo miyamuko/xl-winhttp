@@ -239,7 +239,7 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 * reset-auto-proxy, create-proxy-resolver, get-proxy-for-url-ex
   - Windows 8 で追加された API への対応
 * set-option, query-option
-  - DWORD, WSTR 型以外のオプションに対応
+  - DWORD, WSTR, BOOL 型以外のオプションに対応
 * check-type を徹底的に
 
 

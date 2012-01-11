@@ -661,7 +661,7 @@ This function reports the URL of the PAC file, but it does not download the file
     (setf (WINHTTP_AUTOPROXY_OPTIONS-dwFlags &auto-proxy-opts) (expand-flags *auto-proxy-flags*)
           (WINHTTP_AUTOPROXY_OPTIONS-dwAutoDetectFlags &auto-proxy-opts) (expand-flags *auto-detect-type-flags*)
           (WINHTTP_AUTOPROXY_OPTIONS-lpszAutoConfigUrl &auto-proxy-opts) &auto-config-url
-          (WINHTTP_AUTOPROXY_OPTIONS-fAutoLogonIfChallenged &auto-proxy-opts) (if auto-logon-if-challenged winapi:TRUE winapi:FALSE)
+          (WINHTTP_AUTOPROXY_OPTIONS-fAutoLogonIfChallenged &auto-proxy-opts) (pack-BOOL auto-logon-if-challenged)
           )
     (assert-BOOL
      (WinHttpGetProxyForUrl (session-handle session)
@@ -803,6 +803,9 @@ This function reports the URL of the PAC file, but it does not download the file
 
 ;;; set-option handler
 
+(defun set-option-BOOL (hinternet-handle option value)
+  (set-option-DWORD hinternet-handle option (pack-BOOL value)))
+
 (defun set-option-DWORD-type (hinternet-handle option value)
   (set-option-DWORD-flags hinternet-handle option value :flags nil))
 
@@ -846,6 +849,10 @@ This function reports the URL of the PAC file, but it does not download the file
 
 
 ;;; query-option handler
+
+(defun query-option-BOOL (hinternet-handle option)
+  (unpack-BOOL
+   (query-option-DWORD hinternet-handle option)))
 
 (defun query-option-DWORD-type (hinternet-handle option)
   (query-option-DWORD-flags hinternet-handle option :flags nil))

@@ -65,6 +65,7 @@
           convert-internal-to-WSTR
           convert-WSTR-to-internal
 
+          pack-BOOL
           unpack-BOOL
 
           find-error-name
@@ -261,6 +262,9 @@ Value: chunk list
   (when str
     (ed::convert-encoding-from-internal ed::*encoding-utf16le* str)))
 
+
+(defun pack-BOOL (bool)
+  (if (not (nullp bool)) TRUE FALSE))
 
 (defun unpack-BOOL (bool)
   (not (nullp bool)))
