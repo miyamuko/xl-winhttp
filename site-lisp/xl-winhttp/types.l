@@ -33,6 +33,14 @@
 
 (in-package :xl-winhttp)
 
+(export '(hinternet
+          hinternet-p
+          hinternet-description
+          hinternet-created-on
+          hinternet-handle
+          hinternet-closed-p
+          ))
+
 (deftype port-number ()
   `(integer 0 ,INTERNET_MAX_PORT_NUMBER_VALUE))
 
@@ -50,30 +58,32 @@
 (defstruct hinternet
   description created-on handle closed-p)
 
-(defstruct (session
-            (:include hinternet)))
-
-(defstruct (connection
-            (:include hinternet)))
-
-(defstruct (request
-            (:include hinternet)))
-
 (defmacro define-hinternet-wrapper (type)
-  (let ((func (intern (format nil "wrap-~A" type)))
-        (ctor (intern (format nil "make-~A" type))))
-    `(defmacro ,func (desc (api &rest args))
-       (let (($args (gensym))
-             ($handle (gensym))
-             ($r (gensym)))
-         `(let ((,$args (list ,@args)))
-            (let ((,$handle (apply ',api ,$args)))
-              (when (zerop ,$handle)
-                (raise-winhttp-condition ',api))
-              (let ((,$r (,',ctor :desc ,desc :created-on (get-universal-time) :handle ,$handle)))
-                (gc-guard ,$r ,$args)
-                ,$r)
-              ))))))
+  (flet ((sym (&rest args)
+           (intern (format nil "~{~A~}" args))))
+    `(progn
+       (defstruct (,type
+                   (:include hinternet)))
+       (defmacro ,(sym 'wrap- type) (desc (api &rest args))
+         (let (($args (gensym))
+               ($handle (gensym))
+               ($r (gensym)))
+           `(let ((,$args (list ,@args)))
+              (let ((,$handle (apply ',api ,$args)))
+                (when (zerop ,$handle)
+                  (raise-winhttp-condition ',api))
+                (let ((,$r (,',(sym 'make- type) :description ,desc :created-on (get-universal-time) :handle ,$handle)))
+                  (gc-guard ,$r ,$args)
+                  ,$r)
+                ))))
+       (export '(,type
+                 ,(sym type '-p)
+                 ,(sym type '-description)
+                 ,(sym type '-created-on)
+                 ,(sym type '-handle)
+                 ,(sym type '-closed-p)
+                 ))
+       )))
 
 (define-hinternet-wrapper session)
 (define-hinternet-wrapper connection)
