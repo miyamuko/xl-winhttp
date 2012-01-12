@@ -211,10 +211,10 @@
   `(make-flag (list ,@(mapcar #'(lambda (k)
                                   `(when ,(intern (string k) :winhttp)
                                      ,k))
-                              (winhttp::plist-keys (symbol-value plist))))
+                              (plist-keys (symbol-value plist))))
               ,plist))
 
-(defun make-flag (value keyword-flag-alist &key (default 0) (flags t))
+(defun make-flag (value keyword-flag-plist &key (default 0) (flags t))
   (typecase value
     (null default)
     (integer value)
@@ -228,21 +228,21 @@
                           (null 0)
                           (integer flag)
                           (otherwise
-                           (or (getf keyword-flag-alist flag)
+                           (or (getf keyword-flag-plist flag)
                                (error (format nil "未定義のオプションです: ~S~%有効な値: ~S"
-                                              flag (plist-keys keyword-flag-alist)
+                                              flag (plist-keys keyword-flag-plist)
                                               ))))))
                     value)))
     (otherwise
-     (make-flag (list value) keyword-flag-alist))))
+     (make-flag (list value) keyword-flag-plist))))
 
-(defun unpack-flags (value keyword-flag-alist &key (flags t))
+(defun unpack-flags (value keyword-flag-plist &key (flags t))
   (check-type value integer)
   (if flags
-      (loop for (k v) on keyword-flag-alist by #'cddr
+      (loop for (k v) on keyword-flag-plist by #'cddr
             when (= v (logand value v))
             collect k)
-    (loop for (k v) on keyword-flag-alist by #'cddr
+    (loop for (k v) on keyword-flag-plist by #'cddr
           when (= v value)
           return k)))
 
