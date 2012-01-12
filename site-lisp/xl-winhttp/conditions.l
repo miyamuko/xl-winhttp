@@ -36,12 +36,13 @@
           winhttp-condition-api
           winhttp-condition-error-code
           winhttp-condition-error-name
+          winhttp-condition-error-keyword
           ))
 
 ;; network-error のサブコンディションにすると、例外を処理しないと
 ;; いちいちダイアログが出てうざいので simple-error にする
 (define-condition winhttp-condition (simple-error)
-  (api error-code error-name)
+  (api error-code error-name error-keyword)
   (:report (lambda (c s)
              (format s "~A に失敗しました。エラーコード: ~D~@[ (~A)~]"
                      (winhttp-condition-api c)
@@ -50,11 +51,14 @@
                      ))))
 
 (defmacro raise-winhttp-condition (api)
-  `(let ((error-code (GetLastError)))
+  `(multiple-value-bind (error-code error-name error-keyword)
+       (get-last-error)
      (error (make-condition 'winhttp-condition
                             :api ,api
                             :error-code error-code
-                            :error-name (find-error-name error-code)))))
+                            :error-name error-name
+                            :error-keyword error-keyword
+                            ))))
 
 
 (provide "xl-winhttp/conditions")

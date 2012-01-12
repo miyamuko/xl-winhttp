@@ -68,7 +68,7 @@
           pack-BOOL
           unpack-BOOL
 
-          find-error-name
+          get-last-error
           ))
 
 (defparameter *gc-guard* (make-hash-table)
@@ -268,13 +268,27 @@ Value: chunk list
 (defun unpack-BOOL (bool)
   (not (nullp bool)))
 
+(defun get-last-error ()
+  (let* ((error-code (GetLastError))
+         (error-name (find-error-name error-code))
+         (error-keyword (make-error-keyword error-name)))
+    (values error-code error-name error-keyword)))
+
 (defun find-error-name (error-code)
   (unless (zerop error-code)
     (do-external-symbols (sym :winhttp.ffi)
       (when (and (boundp sym)
                  (equal error-code (symbol-value sym))
-                 (string-match "ERROR_" (string sym)))
+                 (string-match "\\`ERROR_" (string sym)))
         (return sym)))))
+
+(defun make-error-keyword (error-name)
+  (when error-name
+    (let ((r (string error-name)))
+      (setf r (substitute-string r "\\`ERROR\\(?:_WINHTTP\\)?_" ""))
+      (setf r (substitute #\- #\_ r))
+      (setf r (string-downcase r))
+      (intern r :keyword))))
 
 
 (provide "xl-winhttp/ffi/utils")

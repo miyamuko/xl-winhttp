@@ -446,7 +446,7 @@ entity body (if any)."
                                        info-level &name
                                        &buffer &buffer-length &index)))
       (if (nullp result)
-          (unless (= ERROR_WINHTTP_HEADER_NOT_FOUND (GetLastError))
+          (unless (= ERROR_WINHTTP_HEADER_NOT_FOUND (get-last-error))
             (raise-winhttp-condition 'WinHttpQueryHeaders))
         (let ((bytes (unpack-DWORD &buffer-length)))
           (when (< 0 bytes)

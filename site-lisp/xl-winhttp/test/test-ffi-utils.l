@@ -154,3 +154,25 @@
   (let ((wstr (make-WSTR nil)))
     (assert-equal nil (unpack-WSTR wstr)))
   )
+
+(define-test xl-winhttp/ffi/find-error-name
+  (assert-equal nil
+      (winhttp.ffi::find-error-name -12345))
+  (assert-equal 'ERROR_INVALID_PARAMETER
+      (winhttp.ffi::find-error-name 87))
+  (assert-equal 'ERROR_WINHTTP_TIMEOUT
+      (winhttp.ffi::find-error-name 12002))
+  (assert-equal 'ERROR_WINHTTP_INVALID_OPTION
+      (winhttp.ffi::find-error-name 12009))
+  )
+
+(define-test xl-winhttp/ffi/make-error-keyword
+  (assert-equal nil
+      (winhttp.ffi::make-error-keyword nil))
+  (assert-equal :invalid-parameter
+      (winhttp.ffi::make-error-keyword 'ERROR_INVALID_PARAMETER))
+  (assert-equal :timeout
+      (winhttp.ffi::make-error-keyword 'ERROR_WINHTTP_TIMEOUT))
+  (assert-equal :invalid-option
+      (winhttp.ffi::make-error-keyword 'ERROR_WINHTTP_INVALID_OPTION))
+  )

@@ -1,5 +1,13 @@
 2012-01-12  MIYAMUKO Katsuyuki
 
+	* (winhttp-condition-error-keyword): エラーの名前をキーワードでも
+	返すようにした
+	error-code  error-name                    error-keyword
+	----------  ----------------------------  ------------------
+	87          ERROR_INVALID_PARAMETER       :invalid-parameter
+	12002       ERROR_WINHTTP_TIMEOUT         :timeout
+	12009       ERROR_WINHTTP_INVALID_OPTION  :invalid-option
+	
 	* (expand-flags): バイトコンパイルしていない場合に
 	エラーになっていたのを修正
 
