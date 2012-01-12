@@ -209,7 +209,7 @@
 
 (defmacro expand-flags (plist)
   `(make-flag (list ,@(mapcar #'(lambda (k)
-                                  `(when ,(intern (string k))
+                                  `(when ,(intern (string k) :winhttp)
                                      ,k))
                               (winhttp::plist-keys (symbol-value plist))))
               ,plist))

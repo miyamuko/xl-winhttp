@@ -1,3 +1,8 @@
+2012-01-12  MIYAMUKO Katsuyuki
+
+	* (expand-flags): バイトコンパイルしていない場合に
+	エラーになっていたのを修正
+
 2012-01-11  MIYAMUKO Katsuyuki
 
 	* (hinternet): デバッグ用に HINTERNET ハンドル作成時のパラメータと
