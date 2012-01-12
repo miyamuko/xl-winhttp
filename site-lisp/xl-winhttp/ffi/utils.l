@@ -160,8 +160,7 @@ Value: chunk list
   (when (nullp chunk)
     (return-from unpack-WSTR nil))
   (check-chunk chunk)
-  (let ((size (* (or wstr-len (WSTR-length chunk)) *size-of-WCHAR*)))
-    (convert-WSTR-to-internal (si:unpack-string chunk 0 size nil))))
+  (unpack-WSTR-pointer (si:chunk-data chunk) wstr-len))
 
 (defun unpack-WSTR-pointer (pointer &optional wstr-len)
   (unless (nullp pointer)

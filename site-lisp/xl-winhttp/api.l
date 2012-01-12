@@ -502,19 +502,13 @@ entity body (if any)."
                       (WSTR-length &url)
                       (expand-flags *crack-url-flags*)
                       &components))
-    (values (unpack-WSTR-pointer (URL_COMPONENTS-lpszScheme &components)
-                                 (URL_COMPONENTS-dwSchemeLength &components))
-            (unpack-WSTR-pointer (URL_COMPONENTS-lpszUserName &components)
-                                 (URL_COMPONENTS-dwUserNameLength &components))
-            (unpack-WSTR-pointer (URL_COMPONENTS-lpszPassword &components)
-                                 (URL_COMPONENTS-dwPasswordLength &components))
-            (unpack-WSTR-pointer (URL_COMPONENTS-lpszHostName &components)
-                                 (URL_COMPONENTS-dwHostNameLength &components))
+    (values (unpack-WSTR &scheme)
+            (unpack-WSTR &username)
+            (unpack-WSTR &password)
+            (unpack-WSTR &hostname)
             (URL_COMPONENTS-nPort &components)
-            (unpack-WSTR-pointer (URL_COMPONENTS-lpszUrlPath &components)
-                                 (URL_COMPONENTS-dwUrlPathLength &components))
-            (unpack-WSTR-pointer (URL_COMPONENTS-lpszExtraInfo &components)
-                                 (URL_COMPONENTS-dwExtraInfoLength &components))
+            (unpack-WSTR &url-path)
+            (unpack-WSTR &extra-info)
             )
     ))
 
@@ -753,8 +747,7 @@ This function reports the URL of the PAC file, but it does not download the file
             )
       (assert-BOOL
        (WinHttpTimeFromSystemTime &systime &time))
-      ;; ç≈å„Ç… NUL ï∂éöÇ™ïtÇ¢Çƒï‘Ç¡ÇƒÇ≠ÇÈÇÃÇ≈çÌèú
-      (delete #\NUL (unpack-WSTR &time)))))
+      (unpack-WSTR &time))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384118.aspx
 ;; BOOL WINAPI WinHttpTimeToSystemTime(

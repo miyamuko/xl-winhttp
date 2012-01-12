@@ -148,7 +148,7 @@
   (let ((wstr (make-WSTR "‚ ‚¢‚¤")))
     (assert-equal "‚ ‚¢‚¤" (unpack-WSTR wstr)))
   (let ((wstr (make-WSTR "")))
-    (assert-equal "" (unpack-WSTR wstr)))
+    (assert-equal nil (unpack-WSTR wstr)))
   (let ((wstr (make-WSTR 0)))
     (assert-equal nil (unpack-WSTR wstr)))
   (let ((wstr (make-WSTR nil)))
