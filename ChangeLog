@@ -1,3 +1,8 @@
+2012-01-13  MIYAMUKO Katsuyuki
+
+	* (src/xl-winhttp-helper): WinHTTP からのコールバックを受け取る
+	ヘルパー DLL を追加
+
 2012-01-12  MIYAMUKO Katsuyuki
 
 	* (winhttp-condition-error-keyword): エラーの名前をキーワードでも

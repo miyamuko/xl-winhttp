@@ -2,3 +2,18 @@
 *#
 *.lc
 XTAGS
+
+# VisualStudio binary
+*.aps
+*.ncb
+*.sln.cache
+*.suo
+*.tmp_*.vcproj
+*.user
+
+# Binary
+src/**/*.bin
+src/**/*.dll
+src/**/*.obj
+src/**/Debug/
+src/**/Release/
