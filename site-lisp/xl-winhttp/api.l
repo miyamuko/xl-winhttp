@@ -91,8 +91,9 @@
                   ;; *open-flags*
                   async)
   "Initializes, for an application, the use of WinHTTP functions and returns a WinHTTP-session handle."
-  (wrap-session (format nil "~@[~A~]~@[ ~A~]~@[ via ~A~]~@[ bypass ~A~]~@[ with async~]"
-                        (or user-agent "<no user-agent>") access-type proxy-name proxy-bypass async)
+  (wrap-session (:description (format nil "~@[~A~]~@[ ~A~]~@[ via ~A~]~@[ bypass ~A~]~@[ with async~]"
+                                      (or user-agent "<no user-agent>") access-type proxy-name proxy-bypass async)
+                 :async-p async)
    (WinHttpOpen (make-WSTR user-agent)
                 (make-flag access-type *access-type* :flags nil)
                 (make-WSTR proxy-name :default WINHTTP_NO_PROXY_NAME)
@@ -111,7 +112,9 @@
 an HINTERNET connection handle to an HTTP session for that initial target."
   (check-valid-handle session session)
   (check-type port port-number)
-  (wrap-connection (format nil "~A~@[:~A~]" server (if (= port INTERNET_DEFAULT_PORT) nil port))
+  (wrap-connection (:description (format nil "~A~@[:~A~]" server (if (= port INTERNET_DEFAULT_PORT) nil port))
+                    :async-p (hinternet-async-p session)
+                    :parent session)
    (WinHttpConnect (session-handle session)
                    (make-WSTR server)
                    port
@@ -148,7 +151,10 @@ an HINTERNET connection handle to an HTTP session for that initial target."
   (multiple-value-bind (&accept chunks)
       (make-WSTR-array accept :default WINHTTP_DEFAULT_ACCEPT_TYPES)
     (gc-guard connection chunks)
-    (wrap-request (format nil "~A ~A~@[ with secure~]" verb object-name secure)
+    (wrap-request (:description (format nil "~A ~A~@[ with secure~]" verb object-name secure)
+                   :secure-p secure
+                   :async-p (hinternet-async-p connection)
+                   :parent connection)
      (WinHttpOpenRequest (connection-handle connection)
                          (make-WSTR verb)
                          (make-WSTR object-name)

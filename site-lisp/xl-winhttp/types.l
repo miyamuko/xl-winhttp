@@ -39,6 +39,8 @@
           hinternet-created-on
           hinternet-handle
           hinternet-closed-p
+          hinternet-async-p
+          hinternet-parent
           ))
 
 (deftype port-number ()
@@ -65,15 +67,24 @@
 
 
 (defstruct hinternet
-  description created-on handle closed-p)
+  description
+  (created-on (get-universal-time))
+  handle
+  closed-p
+  async-p
+  parent
+  )
 
-(defmacro define-hinternet-wrapper (type)
+
+(defmacro define-hinternet-wrapper (type &rest slots)
   (flet ((sym (&rest args)
            (intern (format nil "~{~A~}" args))))
     `(progn
        (defstruct (,type
-                   (:include hinternet)))
-       (defmacro ,(sym 'wrap- type) (desc (api &rest args))
+                   (:include hinternet))
+         ,@slots)
+       (defmacro ,(sym 'wrap- type) ((&rest slot-args)
+                                     (api &rest args))
          (let (($args (gensym))
                ($handle (gensym))
                ($r (gensym)))
@@ -81,7 +92,7 @@
               (let ((,$handle (apply ',api ,$args)))
                 (when (zerop ,$handle)
                   (raise-winhttp-condition ',api))
-                (let ((,$r (,',(sym 'make- type) :description ,desc :created-on (get-universal-time) :handle ,$handle)))
+                (let ((,$r (,',(sym 'make- type) :handle ,$handle ,@slot-args)))
                   (gc-guard ,$r ,$args)
                   ,$r)
                 ))))
@@ -91,12 +102,19 @@
                  ,(sym type '-created-on)
                  ,(sym type '-handle)
                  ,(sym type '-closed-p)
+                 ,(sym type '-async-p)
+                 ,(sym type '-parent)
+                 ,@(mapcar #'(lambda (slot)
+                               (sym type "-" slot))
+                           slots)
                  ))
        )))
+(setf (get 'define-hinternet-wrapper 'ed:lisp-indent-hook) 1)
 
 (define-hinternet-wrapper session)
 (define-hinternet-wrapper connection)
-(define-hinternet-wrapper request)
+(define-hinternet-wrapper request
+  secure-p)
 
 
 (defmacro check-valid-handle (hinternet typespec)
