@@ -205,16 +205,77 @@
     :www-authenticate           ,WINHTTP_QUERY_WWW_AUTHENTICATE
     ))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384115.aspx
+(defvar *notification-flags*
+  `(:all-completions            ,WINHTTP_CALLBACK_FLAG_ALL_COMPLETIONS
+    :all-notifications          ,WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS
+    :resolve-name               ,WINHTTP_CALLBACK_FLAG_RESOLVE_NAME
+    :connect-to-server          ,WINHTTP_CALLBACK_FLAG_CONNECT_TO_SERVER
+    :detecting-proxy            ,WINHTTP_CALLBACK_FLAG_DETECTING_PROXY
+    :data-available             ,WINHTTP_CALLBACK_FLAG_DATA_AVAILABLE
+    :headers-available          ,WINHTTP_CALLBACK_FLAG_HEADERS_AVAILABLE
+    :read-complete              ,WINHTTP_CALLBACK_FLAG_READ_COMPLETE
+    :request-error              ,WINHTTP_CALLBACK_FLAG_REQUEST_ERROR
+    :send-request               ,WINHTTP_CALLBACK_FLAG_SEND_REQUEST
+    :send-request-complete      ,WINHTTP_CALLBACK_FLAG_SENDREQUEST_COMPLETE
+    :write-complete             ,WINHTTP_CALLBACK_FLAG_WRITE_COMPLETE
+    :receive-response           ,WINHTTP_CALLBACK_FLAG_RECEIVE_RESPONSE
+    :close-connection           ,WINHTTP_CALLBACK_FLAG_CLOSE_CONNECTION
+    :handles                    ,WINHTTP_CALLBACK_FLAG_HANDLES
+    :redirect                   ,WINHTTP_CALLBACK_FLAG_REDIRECT
+    :intermediate-response      ,WINHTTP_CALLBACK_FLAG_INTERMEDIATE_RESPONSE
+    :secure-failure             ,WINHTTP_CALLBACK_FLAG_SECURE_FAILURE
+    ))
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa383917.aspx
+(defvar *internet-status-type*
+  `(:closing-connection         ,WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION
+    :connected-to-server        ,WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER
+    :connecting-to-server       ,WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER
+    :connection-closed          ,WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED
+    :data-available             ,WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE
+    :handle-created             ,WINHTTP_CALLBACK_STATUS_HANDLE_CREATED
+    :handle-closing             ,WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING
+    :headers-available          ,WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE
+    :intermediate-response      ,WINHTTP_CALLBACK_STATUS_INTERMEDIATE_RESPONSE
+    :name-resolved              ,WINHTTP_CALLBACK_STATUS_NAME_RESOLVED
+    :read-complete              ,WINHTTP_CALLBACK_STATUS_READ_COMPLETE
+    :receiving-response         ,WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE
+    :redirect                   ,WINHTTP_CALLBACK_STATUS_REDIRECT
+    :request-error              ,WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
+    :request-sent               ,WINHTTP_CALLBACK_STATUS_REQUEST_SENT
+    :resolving-name             ,WINHTTP_CALLBACK_STATUS_RESOLVING_NAME
+    :response-received          ,WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED
+    :secure-failure             ,WINHTTP_CALLBACK_STATUS_SECURE_FAILURE
+    :sending-request            ,WINHTTP_CALLBACK_STATUS_SENDING_REQUEST
+    :send-request-complete      ,WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE
+    :write-complete             ,WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE
+;    :getproxyforurl-complete    ,WINHTTP_CALLBACK_STATUS_GETPROXYFORURL_COMPLETE
+    ))
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa383917.aspx
+;; dwInternetStatus ‚ª WINHTTP_CALLBACK_STATUS_SECURE_FAILURE ‚Ì‚Æ‚«‚Ì lpvStatusInformation
+(defvar *secure-failure-status-infomation-type*
+  `(:cert-rev-failed            ,WINHTTP_CALLBACK_STATUS_FLAG_CERT_REV_FAILED
+    :invalid-cert               ,WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CERT
+    :cert-revoked               ,WINHTTP_CALLBACK_STATUS_FLAG_CERT_REVOKED
+    :invalid-ca                 ,WINHTTP_CALLBACK_STATUS_FLAG_INVALID_CA
+    :cert-cn-invalid            ,WINHTTP_CALLBACK_STATUS_FLAG_CERT_CN_INVALID
+    :cert-date-invalid          ,WINHTTP_CALLBACK_STATUS_FLAG_CERT_DATE_INVALID
+    :security-channel-error     ,WINHTTP_CALLBACK_STATUS_FLAG_SECURITY_CHANNEL_ERROR
+    ))
 
 
-(defmacro expand-flags (plist)
+(defmacro expand-flags (plist &key (default 0))
   `(make-flag (list ,@(mapcar #'(lambda (k)
                                   `(when ,(intern (string k) :winhttp)
                                      ,k))
                               (plist-keys (symbol-value plist))))
-              ,plist))
+              ,plist :default ,default))
 
 (defun make-flag (value keyword-flag-plist &key (default 0) (flags t))
+  (when (listp value)
+    (setf value (remove-if #'null value)))
   (typecase value
     (null default)
     (integer value)

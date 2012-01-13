@@ -31,6 +31,7 @@
 (require "xl-winhttp/ffi/winerror")
 (require "xl-winhttp/ffi/wininet")
 (require "xl-winhttp/ffi/winhttp")
+(require "xl-winhttp/ffi/xl-winhttp-helper")
 (require "xl-winhttp/ffi/utils")
 
 (provide "xl-winhttp/ffi")
