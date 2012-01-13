@@ -7,9 +7,14 @@ XTAGS
 *.aps
 *.ncb
 *.sln.cache
+*.sln.old
 *.suo
+*.suo.old
 *.tmp_*.vcproj
 *.user
+*.sdf
+UpgradeLog.XML
+_UpgradeReport_Files/
 
 # Binary
 src/**/*.bin
