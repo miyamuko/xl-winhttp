@@ -189,6 +189,10 @@ an HINTERNET connection handle to an HTTP session for that initial target."
 ;; );
 (defun send-request (request &key data headers total-length context)
   "Sends the specified request to the HTTP server."
+  ;; TODO async
+  ;; &data を以下のイベントが発生するまで保持
+  ;; - WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE
+  ;; - WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
   (check-valid-handle request request)
   (check-type total-length (or null content-length))
   (check-type context (or null integer))
@@ -212,6 +216,11 @@ an HINTERNET connection handle to an HTTP session for that initial target."
 ;; );
 (defun write-data (request data)
   "Writes request data to an HTTP server."
+  ;; TODO async
+  ;; &written に NULL を指定する
+  ;; &data を以下のイベントが発生するまで保持
+  ;; - WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE
+  ;; - WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
   (check-valid-handle request request)
   (let ((&written (make-DWORD))
         (&data (make-CSTR data)))
@@ -307,6 +316,11 @@ entity body (if any)."
 ;; );
 (defun read-data (request num-of-bytes-to-read)
   "Reads data from a handle opened by the winhttp:open-request function."
+  ;; TODO async
+  ;; &num-of-bytes-read に NULL を指定する
+  ;; &buffer を以下のイベントが発生するまで保持
+  ;; - WINHTTP_CALLBACK_STATUS_READ_COMPLETE
+  ;; - WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
   (check-valid-handle request request)
   (check-type num-of-bytes-to-read content-length)
   (let ((&buffer (make-CSTR-buffer num-of-bytes-to-read))
@@ -349,6 +363,8 @@ entity body (if any)."
 ;; );
 (defun query-data-available (request)
   "Returns the amount of data, in bytes, available to be read with winhttp:read-data."
+  ;; TODO async
+  ;; &num-of-bytes-available に NULL を指定する
   (check-valid-handle request request)
   (let ((&num-of-bytes-available (make-DWORD)))
     (assert-BOOL
