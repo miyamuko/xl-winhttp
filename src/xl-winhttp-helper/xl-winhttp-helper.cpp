@@ -31,7 +31,6 @@
 
 std::queue<LPWINHTTP_STATUS_CALLBACK_INFO> _queue;
 CRITICAL_SECTION _lock;
-BOOL _initialized;
 
 void
 CALLBACK
