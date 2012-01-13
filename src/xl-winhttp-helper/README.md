@@ -1,17 +1,17 @@
-# xl-winhttp-helper - WinHTTP ����̃R�[���o�b�N���󂯎��w���p�[ DLL
+# xl-winhttp-helper - WinHTTP からのコールバックを受け取るヘルパー DLL
 
 ## DESCRIPTION
 
-WinHTTP �̃R�[���o�b�N�� WinHTTP ���̃X���b�h����Ă΂��B
+WinHTTP のコールバックは WinHTTP 内のスレッドから呼ばれる。
 
-c:defun-c-callable �ō쐬�����R�[���o�b�N�֐��̓X���b�h�Z�[�t�ł͂Ȃ�����(?)�A
-WinHTTP �ɓn���ƃR�[���o�b�N���� xyzzy ���N���b�V������ꍇ������B
+c:defun-c-callable で作成したコールバック関数はスレッドセーフではないため(?)、
+WinHTTP に渡すとコールバック時に xyzzy がクラッシュする場合がある。
 
-�����ŁAWinHTTP ����̃R�[���o�b�N���󂯎��֐��� C++ �ō쐬����B
-���̃R�[���o�b�N�֐��ł͎󂯎���������� DLL ���̃L���[�ɕۑ�����B
+そこで、WinHTTP からのコールバックを受け取る関数を C++ で作成する。
+そのコールバック関数では受け取った引数を DLL 内のキューに保存する。
 
-xyzzy ����� start-timer �Ń|�[�����O���ăL���[�̏�Ԃ��Ď����A
-��Ԃ̕ύX����������L���[���������ǂ݂����ď�������悤�ɂ���B
+xyzzy からは start-timer でポーリングしてキューの状態を監視し、
+状態の変更があったらキューから引数を読みだして処理するようにする。
 
 <a href="https://cacoo.com/diagrams/SEHjYu1oCSCjpgkP">
 <img src="https://cacoo.com/diagrams/SEHjYu1oCSCjpgkP-5783A.png">
@@ -20,18 +20,18 @@ xyzzy ����� start-timer �Ń|�[�����O���ăL���[�̏�Ԃ��Ď����A
 
 ## REMARKS
 
-### �|�[�����O�Ԋu
+### ポーリング間隔
 
-start-timer ���g�����|�[�����O�ɂ��C�x���g�Ď��� xml-http-request �ł�
-�s�Ȃ��Ă���B
+start-timer を使ったポーリングによるイベント監視は xml-http-request でも
+行なっている。
 
-xml-http-request �ł� 0.3 �b�Ԋu�ŊĎ����Ă���Bxml-http-request �ł�
-XMLHTTP �I�u�W�F�N�g���Ń��X�|���X�����ׂĎ�M������ɏ�Ԃ��ς�邽�߁A
-0.3 �b�Ԋu�ł����e�͈͓��̒x�����Ǝv����B
+xml-http-request では 0.3 秒間隔で監視している。xml-http-request では
+XMLHTTP オブジェクト内でレスポンスをすべて受信した後に状態が変わるため、
+0.3 秒間隔でも許容範囲内の遅延だと思われる。
 
-WinHTTP �ł̓f�[�^����M���邽�тɃR�[���o�b�N���Ăяo����A
-�R�[���o�b�N������ WinHttpReadData �Ȃǂ��ĂьĂяo���Ȃ���
-���̃C�x���g�����΂��Ȃ��B
+WinHTTP ではデータを受信するたびにコールバックが呼び出され、
+コールバック内から WinHttpReadData などを再び呼び出さないと
+次のイベントが発火しない。
 
-���̂��߁Axml-http-request �Ɠ��� 0.3 �b�Ԋu�ł͒x�������e�ł��Ȃ�
-�͈͂ɂȂ�\�������邽�߁A�|�[�����O�Ԋu�̓A�v�����ƂɎw��\�Ƃ���B
+そのため、xml-http-request と同じ 0.3 秒間隔では遅延が許容できない
+範囲になる可能性があるため、ポーリング間隔はアプリごとに指定可能とする。
