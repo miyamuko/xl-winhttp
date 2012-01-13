@@ -1,5 +1,7 @@
 2012-01-13  MIYAMUKO Katsuyuki
 
+	* (async.l): 非同期用の処理を追加 (まだ未完成)
+
 	* (src/xl-winhttp-helper): WinHTTP からのコールバックを受け取る
 	ヘルパー DLL を追加
 

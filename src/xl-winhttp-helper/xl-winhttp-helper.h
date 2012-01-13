@@ -49,6 +49,7 @@ typedef struct
     DWORD dwInternetStatus;
     LPVOID lpvStatusInformation;
     DWORD dwStatusInformationLength;
+    BOOL bNeedGlobalFree;
 }
 WINHTTP_STATUS_CALLBACK_INFO, * LPWINHTTP_STATUS_CALLBACK_INFO;
 
@@ -57,6 +58,8 @@ extern std::queue<LPWINHTTP_STATUS_CALLBACK_INFO> _queue;
 extern CRITICAL_SECTION _lock;
 
 // ì‡ïîä÷êîêÈåæ
+BOOL
+IsStatusInformationWSTR(DWORD dwInternetStatus);
 void
 DebugCallbackInfo(LPCWCHAR prefix, LPWINHTTP_STATUS_CALLBACK_INFO info);
 void

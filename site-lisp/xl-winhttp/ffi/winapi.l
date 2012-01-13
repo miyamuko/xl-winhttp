@@ -36,7 +36,8 @@
 (c:*define-c-type (c:void *) LPCWSTR)
 (c:*define-c-type (c:void *) LPCVOID)
 (c:*define-c-type (DWORD *) LPDWORD)
-(c:*define-c-type (DWORD *) DWORD_PTR)
+;; 64bit –¢‘Î‰ž
+(c:*define-c-type DWORD DWORD_PTR)
 
 (c:*define-c-struct SYSTEMTIME
   (WORD wYear)

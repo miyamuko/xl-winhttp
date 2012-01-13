@@ -275,9 +275,8 @@ Value: chunk list
 (defun unpack-BOOL (bool)
   (not (nullp bool)))
 
-(defun get-last-error ()
-  (let* ((error-code (GetLastError))
-         (error-name (find-error-name error-code))
+(defun get-last-error (&optional (error-code (GetLastError)))
+  (let* ((error-name (find-error-name error-code))
          (error-keyword (make-error-keyword error-name)))
     (values error-code error-name error-keyword)))
 

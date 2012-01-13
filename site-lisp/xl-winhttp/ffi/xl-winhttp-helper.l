@@ -64,6 +64,7 @@
   (DWORD dwInternetStatus)
   (LPVOID lpvStatusInformation)
   (DWORD dwStatusInformationLength)
+  (BOOL bNeedGlobalFree)
   )
 (c:*define-c-type (WINHTTP_STATUS_CALLBACK_INFO *) LPWINHTTP_STATUS_CALLBACK_INFO)
 

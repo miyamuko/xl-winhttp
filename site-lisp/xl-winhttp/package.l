@@ -53,6 +53,7 @@
        )
       (:shadowing-import-from :ansify
        :check-type
+       :destructuring-bind
        :ecase
        :etypecase
        :typecase

@@ -75,8 +75,6 @@
 
           set-option
           query-option
-
-          set-status-callback
           ))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098.aspx
@@ -170,6 +168,9 @@ an HINTERNET connection handle to an HTTP session for that initial target."
 (defun close-handle (hinternet)
   "Closes a single HINTERNET handle."
   ;; close しているかどうかのチェックはしないので check-valid-handle は呼ばない
+  ;; TODO async
+  ;; WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING イベント受信後に
+  ;; gc-free と closed-p に t を設定する
   (check-type hinternet hinternet)
   (unless (hinternet-closed-p hinternet)
     (assert-BOOL
@@ -931,42 +932,6 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   WINHTTP_CERTIFICATE_INFO
 ;;   WINHTTP_PROXY_INFO
 
-
-;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384115.aspx
-;; WINHTTP_STATUS_CALLBACK WINAPI WinHttpSetStatusCallback(
-;;   __in        HINTERNET hInternet,
-;;   __in        WINHTTP_STATUS_CALLBACK lpfnInternetCallback,
-;;   __in        DWORD dwNotificationFlags,
-;;   __reserved  DWORD_PTR dwReserved
-;; );
-(defun set-status-callback (hinternet callback
-                                      &key
-                                      ;; *notification-flags*
-                                      all-completions
-                                      all-notifications
-                                      resolve-name
-                                      connect-to-server
-                                      detecting-proxy
-                                      data-available
-                                      headers-available
-                                      read-complete
-                                      request-error
-                                      send-request
-                                      send-request-complete
-                                      write-complete
-                                      receive-response
-                                      close-connection
-                                      handles
-                                      redirect
-                                      intermediate-response
-                                      secure-failure)
-  (check-valid-handle hinternet (or session connection request))
-  (check-type callback function-address)
-  (WinHttpSetStatusCallback (hinternet-handle hinternet)
-                            callback
-                            (expand-flags *notification-flags*
-                                          :default WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS)
-                            0))
 
 ;;; private
 

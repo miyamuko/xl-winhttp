@@ -56,14 +56,9 @@
   ;; int
   `(integer -1 ,(expt 2 31)))
 
-(deftype function-address ()
-  `(and
-    ;; DWORD
-    (integer 0 ,(expt 2 32))
-    ;; 4 バイト (?) でアライメントされているはず
-    (satisfies (lambda (x)
-                 (zerop (mod x 4))))
-    ))
+(deftype callable ()
+  `(or function
+       (and symbol (satisfies fboundp))))
 
 
 (defstruct hinternet

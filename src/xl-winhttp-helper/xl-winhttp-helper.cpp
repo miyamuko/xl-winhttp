@@ -44,8 +44,30 @@ WinHttpStatusCallback(HINTERNET hInternet,
     info->hInternet = hInternet;
     info->dwContext = dwContext;
     info->dwInternetStatus = dwInternetStatus;
-    info->lpvStatusInformation = lpvStatusInformation;
-    info->dwStatusInformationLength = dwStatusInformationLength;
+
+    // READ_COMPLETE の場合は WinHttpReadData に指定したバッファなのでコピー不要
+    // それ以外は一時的なバッファなのでコールバックを抜けると解放されるのでコピーしておく
+    if (lpvStatusInformation != 0 && dwInternetStatus != WINHTTP_CALLBACK_STATUS_READ_COMPLETE)
+    {
+        size_t bytes;
+        if (IsStatusInformationWSTR(dwInternetStatus))
+            bytes =dwStatusInformationLength * sizeof(WCHAR);
+        else
+            bytes = dwStatusInformationLength;
+
+        LPVOID copy = GlobalAlloc(GMEM_FIXED, bytes);
+        CopyMemory(copy, lpvStatusInformation, bytes);
+
+        info->lpvStatusInformation = copy;
+        info->dwStatusInformationLength = dwStatusInformationLength;
+        info->bNeedGlobalFree = TRUE;
+    }
+    else
+    {
+        info->lpvStatusInformation = lpvStatusInformation;
+        info->dwStatusInformationLength = dwStatusInformationLength;
+        info->bNeedGlobalFree = FALSE;
+    }
 
     EnterCriticalSection(&_lock);
     _queue.push(info);
@@ -104,12 +126,53 @@ TakeWinHttpStatusCallbackInfo(LPWINHTTP_STATUS_CALLBACK_INFO info)
     info->dwInternetStatus = r->dwInternetStatus;
     info->lpvStatusInformation = r->lpvStatusInformation;
     info->dwStatusInformationLength = r->dwStatusInformationLength;
+    info->bNeedGlobalFree = r->bNeedGlobalFree;
 
     DebugCallbackInfo(L"TakeWinHttpStatusCallbackInfo", info);
 
     delete r;
 
     return TRUE;
+}
+
+// イベント                                      | lpvStatusInformation の型 | 備考
+// --------------------------------------------------------------------------------------
+// WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION    | NULL                      | deprecated
+// WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER   | LPWSTR                    | deprecated
+// WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER  | LPWSTR                    | deprecated
+// WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED     | NULL                      | deprecated
+// WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE        | DWORD                     | 
+// WINHTTP_CALLBACK_STATUS_HANDLE_CREATED        | HINTERNET                 | 
+// WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING        | HINTERNET                 | 
+// WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE     | NULL                      | 
+// WINHTTP_CALLBACK_STATUS_INTERMEDIATE_RESPONSE | DWORD                     | 
+// WINHTTP_CALLBACK_STATUS_NAME_RESOLVED         | LPWSTR                    | deprecated
+// WINHTTP_CALLBACK_STATUS_READ_COMPLETE         | LPVOID                    | WinHttpReadData で指定したバッファ
+// WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE    | NULL                      | deprecated
+// WINHTTP_CALLBACK_STATUS_REDIRECT              | LPWSTR                    | 
+// WINHTTP_CALLBACK_STATUS_REQUEST_ERROR         | WINHTTP_ASYNC_RESULT      | 
+// WINHTTP_CALLBACK_STATUS_REQUEST_SENT          | DWORD                     | deprecated
+// WINHTTP_CALLBACK_STATUS_RESOLVING_NAME        | LPWSTR                    | deprecated
+// WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED     | DWORD                     | deprecated
+// WINHTTP_CALLBACK_STATUS_SECURE_FAILURE        | DWORD                     | WINHTTP_CALLBACK_STATUS_FLAG_XXX が格納
+// WINHTTP_CALLBACK_STATUS_SENDING_REQUEST       | NULL                      | deprecated
+// WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE  | NULL                      | 
+// WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE        | DWORD                     | 
+
+BOOL
+IsStatusInformationWSTR(DWORD dwInternetStatus)
+{
+    switch (dwInternetStatus)
+    {
+    case WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER:
+    case WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER:
+    case WINHTTP_CALLBACK_STATUS_NAME_RESOLVED:
+    case WINHTTP_CALLBACK_STATUS_REDIRECT:
+    case WINHTTP_CALLBACK_STATUS_RESOLVING_NAME:
+        return TRUE;
+    default:
+        return FALSE;
+    }
 }
 
 
