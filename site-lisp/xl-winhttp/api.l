@@ -625,7 +625,7 @@ This function reports the URL of the PAC file, but it does not download the file
     (assert-BOOL
      (WinHttpDetectAutoProxyConfigUrl (expand-flags *auto-detect-type-flags*)
                                       &pointer))
-    (unpack-WSTR-pointer-and-free (unpack-pointer &pointer))))
+    (unpack-WSTR-pointer (unpack-pointer &pointer) nil :free t)))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384095.aspx
 ;; BOOL WINAPI WinHttpGetDefaultProxyConfiguration(
@@ -649,9 +649,9 @@ This function reports the URL of the PAC file, but it does not download the file
     (si:clear-chunk &proxy-config)
     (assert-BOOL
      (WinHttpGetIEProxyConfigForCurrentUser &proxy-config))
-    (values (unpack-WSTR-pointer-and-free (WINHTTP_CURRENT_USER_IE_PROXY_CONFIG-lpszProxy &proxy-config))
-            (unpack-WSTR-pointer-and-free (WINHTTP_CURRENT_USER_IE_PROXY_CONFIG-lpszProxyBypass &proxy-config))
-            (unpack-WSTR-pointer-and-free (WINHTTP_CURRENT_USER_IE_PROXY_CONFIG-lpszAutoConfigUrl &proxy-config))
+    (values (unpack-WSTR-pointer (WINHTTP_CURRENT_USER_IE_PROXY_CONFIG-lpszProxy &proxy-config) nil :free t)
+            (unpack-WSTR-pointer (WINHTTP_CURRENT_USER_IE_PROXY_CONFIG-lpszProxyBypass &proxy-config)  nil :free t)
+            (unpack-WSTR-pointer (WINHTTP_CURRENT_USER_IE_PROXY_CONFIG-lpszAutoConfigUrl &proxy-config)  nil :free t)
             (unpack-BOOL (WINHTTP_CURRENT_USER_IE_PROXY_CONFIG-fAutoDetect &proxy-config))
             )))
 
@@ -971,8 +971,8 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;; private
 
 (defun unpack-proxy-info (proxy-info)
-  (values (unpack-WSTR-pointer-and-free (WINHTTP_PROXY_INFO-lpszProxy proxy-info))
-          (unpack-WSTR-pointer-and-free (WINHTTP_PROXY_INFO-lpszProxyBypass proxy-info))
+  (values (unpack-WSTR-pointer (WINHTTP_PROXY_INFO-lpszProxy proxy-info) nil :free t)
+          (unpack-WSTR-pointer (WINHTTP_PROXY_INFO-lpszProxyBypass proxy-info) nil :free t)
           (unpack-flags (WINHTTP_PROXY_INFO-dwAccessType proxy-info) *access-type* :flags nil)
           ))
 

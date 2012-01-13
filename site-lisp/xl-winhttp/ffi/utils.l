@@ -45,17 +45,18 @@
           make-WSTR-array
           unpack-WSTR
           unpack-WSTR-pointer
-          unpack-WSTR-pointer-and-free
           WSTR-length
           bytes->WSTR-length
 
           make-CSTR
           make-CSTR-buffer
           unpack-CSTR
+          unpack-CSTR-pointer
           CSTR-length
 
           make-DWORD
           unpack-DWORD
+          unpack-DWORD-pointer
           make-pointer
           unpack-pointer
 
@@ -162,18 +163,13 @@ Value: chunk list
   (check-chunk chunk)
   (unpack-WSTR-pointer (si:chunk-data chunk) wstr-len))
 
-(defun unpack-WSTR-pointer (pointer &optional wstr-len)
+(defun unpack-WSTR-pointer (pointer &optional wstr-len &key free)
   (unless (nullp pointer)
     (unless wstr-len
       (setf wstr-len (wcslen pointer)))
     (when (< 0 wstr-len)
-      (convert-WSTR-to-internal (unpack-CSTR-pointer pointer (* wstr-len *size-of-WCHAR*))))))
-
-(defun unpack-WSTR-pointer-and-free (pointer &optional wstr-len)
-  (unless (nullp pointer)
-    (prog1
-        (unpack-WSTR-pointer pointer wstr-len)
-      (GlobalFree pointer))))
+      (convert-WSTR-to-internal
+       (unpack-CSTR-pointer pointer (* wstr-len *size-of-WCHAR*) :free free)))))
 
 (defun bytes->WSTR-length (bytes)
   (identity (floor (/ bytes *size-of-WCHAR*))))
@@ -204,12 +200,15 @@ Value: chunk list
   (let ((size (or bytes (CSTR-length chunk))))
     (si:unpack-string chunk 0 size nil)))
 
-(defun unpack-CSTR-pointer (pointer bytes)
+(defun unpack-CSTR-pointer (pointer bytes &key free)
   (when (or (nullp pointer)
             (nullp bytes))
     (return-from unpack-CSTR-pointer nil))
   (let ((chunk (si:make-chunk nil bytes nil pointer)))
-    (si:unpack-string chunk 0 bytes nil)))
+    (prog1
+        (si:unpack-string chunk 0 bytes nil)
+      (when free
+        (GlobalFree pointer)))))
 
 (defun make-buffer (type size)
   (check-type size integer)
@@ -231,12 +230,20 @@ Value: chunk list
 
 (defun make-DWORD (&optional initial-value)
   (let ((r (si:make-chunk 'DWORD *size-of-DWORD*)))
-    (si:pack-int32 r 0 (or initial-value 0))
+    (si:pack-uint32 r 0 (or initial-value 0))
     r))
 
 (defun unpack-DWORD (chunk)
   (check-chunk chunk)
-  (si:unpack-int32 chunk 0))
+  (si:unpack-uint32 chunk 0))
+
+(defun unpack-DWORD-pointer (pointer bytes &key free)
+  (unless (nullp pointer)
+    (let ((chunk (si:make-chunk nil bytes nil pointer)))
+      (prog1
+          (si:unpack-uint32 chunk 0)
+        (when free
+          (GlobalFree pointer))))))
 
 (setf (symbol-function 'make-pointer)
       (symbol-function 'make-DWORD)
