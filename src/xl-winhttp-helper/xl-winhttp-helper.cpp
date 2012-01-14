@@ -51,16 +51,18 @@ WinHttpStatusCallback(HINTERNET hInternet,
     {
         size_t bytes;
         if (IsStatusInformationWSTR(dwInternetStatus))
-            bytes =dwStatusInformationLength * sizeof(WCHAR);
+            bytes = dwStatusInformationLength * sizeof(WCHAR);
         else
             bytes = dwStatusInformationLength;
 
-        LPVOID copy = GlobalAlloc(GMEM_FIXED, bytes);
+        HGLOBAL copy = GlobalAlloc(GMEM_FIXED, bytes);
         CopyMemory(copy, lpvStatusInformation, bytes);
 
         info->lpvStatusInformation = copy;
         info->dwStatusInformationLength = dwStatusInformationLength;
         info->bNeedGlobalFree = TRUE;
+
+        Debug(L"WinHttpStatusCallback: copy %p -> %p, %d bytes", lpvStatusInformation, copy, bytes);
     }
     else
     {
@@ -180,9 +182,9 @@ void
 DebugCallbackInfo(LPCWCHAR prefix, LPWINHTTP_STATUS_CALLBACK_INFO info)
 {
 #ifdef _DEBUG
-    Debug(L"%s: handle=%p, context=%p, status=%p, info=%p, len=%d",
+    Debug(L"%s: handle=%p, context=%p, status=%p, info=%p, len=%d, needfree=%d",
           prefix, info->hInternet, info->dwContext, info->dwInternetStatus,
-          info->lpvStatusInformation, info->dwStatusInformationLength);
+          info->lpvStatusInformation, info->dwStatusInformationLength, info->bNeedGlobalFree);
 #endif // _DEBUG
 }
 
