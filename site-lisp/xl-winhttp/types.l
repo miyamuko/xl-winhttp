@@ -87,9 +87,7 @@
               (let ((,$handle (apply ',api ,$args)))
                 (when (zerop ,$handle)
                   (raise-winhttp-condition ',api))
-                (let ((,$r (,',(sym 'make- type) :handle ,$handle ,@slot-args)))
-                  (gc-guard ,$r ,$args)
-                  ,$r)
+                (,',(sym 'make- type) :handle ,$handle ,@slot-args)
                 ))))
        (export '(,type
                  ,(sym type '-p)

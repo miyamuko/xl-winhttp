@@ -48,51 +48,6 @@
   (assert-false (nullp (si:make-chunk nil 1)))
   )
 
-(define-test xl-winhttp/ffi/gc-guard
-  (let ((winhttp.ffi::*gc-guard* (make-hash-table))
-        (chunks (list (si:make-chunk nil 10)
-                      (si:make-chunk nil 10)
-                      (si:make-chunk nil 10))))
-    (winhttp.ffi:gc-guard 12345 chunks)
-    (assert-eql 3 (length (gethash 12345 winhttp.ffi::*gc-guard*)))
-    (assert-equalp chunks (gethash 12345 winhttp.ffi::*gc-guard*))
-
-    (winhttp.ffi:gc-guard 123 (car chunks))
-    (assert-eql 1 (length (gethash 123 winhttp.ffi::*gc-guard*)))
-
-    (winhttp.ffi:gc-guard 123 (cdr chunks))
-    (assert-eql 3 (length (gethash 123 winhttp.ffi::*gc-guard*)))
-    (assert-equalp chunks (gethash 123 winhttp.ffi::*gc-guard*))
-
-    (winhttp.ffi:gc-guard 123 nil)
-    (winhttp.ffi:gc-guard 123 10)
-    (winhttp.ffi:gc-guard 123 "")
-    (assert-eql 3 (length (gethash 123 winhttp.ffi::*gc-guard*)))
-    ))
-
-(define-test xl-winhttp/ffi/gc-free
-  (let ((winhttp.ffi::*gc-guard* (make-hash-table))
-        (chunks (list (si:make-chunk nil 10)
-                      (si:make-chunk nil 10)
-                      (si:make-chunk nil 10))))
-    (winhttp.ffi:gc-guard 12345 chunks)
-    (assert-eql 3 (length (gethash 12345 winhttp.ffi::*gc-guard*)))
-    (assert-equalp chunks (gethash 12345 winhttp.ffi::*gc-guard*))
-
-    (winhttp.ffi:gc-guard 123 chunks)
-    (assert-eql 3 (length (gethash 123 winhttp.ffi::*gc-guard*)))
-    (assert-equalp chunks (gethash 123 winhttp.ffi::*gc-guard*))
-
-    (winhttp.ffi:gc-free 123)
-    (assert-eql nil (gethash 123 winhttp.ffi::*gc-guard*))
-    (assert-eql 3 (length (gethash 12345 winhttp.ffi::*gc-guard*)))
-    )
-  (let ((winhttp.ffi::*gc-guard* (make-hash-table)))
-    (winhttp.ffi:gc-free 123)
-    (winhttp.ffi:gc-free 12345)
-    )
-  )
-
 (define-test xl-winhttp/ffi/make-WSTR
   (let ((wstr (make-WSTR "foo"))
         (bytes (* 2 (1+ 3))))

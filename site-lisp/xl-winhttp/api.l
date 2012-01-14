@@ -148,7 +148,6 @@ an HINTERNET connection handle to an HTTP session for that initial target."
     (setf accept (list accept)))
   (multiple-value-bind (&accept chunks)
       (make-WSTR-array accept :default WINHTTP_DEFAULT_ACCEPT_TYPES)
-    (gc-guard connection chunks)
     (wrap-request (:description (format nil "~A ~A~@[ with secure~]" verb object-name secure)
                    :secure-p secure
                    :async-p (hinternet-async-p connection)
@@ -170,12 +169,11 @@ an HINTERNET connection handle to an HTTP session for that initial target."
   ;; close しているかどうかのチェックはしないので check-valid-handle は呼ばない
   ;; TODO async
   ;; WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING イベント受信後に
-  ;; gc-free と closed-p に t を設定する
+  ;; closed-p に t を設定する
   (check-type hinternet hinternet)
   (unless (hinternet-closed-p hinternet)
     (assert-BOOL
      (WinHttpCloseHandle (hinternet-handle hinternet)))
-    (gc-free hinternet)
     (setf (hinternet-closed-p hinternet) t)))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384110.aspx

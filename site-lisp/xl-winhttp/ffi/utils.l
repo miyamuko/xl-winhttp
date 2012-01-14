@@ -37,9 +37,6 @@
 
           nullp
 
-          gc-guard
-          gc-free
-
           make-WSTR
           make-WSTR-buffer
           make-WSTR-array
@@ -73,13 +70,6 @@
           global-free
           ))
 
-(defparameter *gc-guard* (make-hash-table)
-  "GC ‚É‚æ‚è chunk ‚ª‰ğ•ú‚³‚ê‚È‚¢‚æ‚¤‚ÉQÆ‚ğ•Û‚·‚é
-
-Key: Handle
-Value: chunk list
-")
-
 (defparameter *size-of-WCHAR* (c::ctypedef-size (c::expand-c-type 'c:wchar_t)))
 (defparameter *size-of-DWORD* (c::ctypedef-size (c::expand-c-type 'winapi:DWORD)))
 (defparameter *size-of-pointer* (c::ctypedef-size (c::expand-c-type '(c:void *))))
@@ -88,18 +78,6 @@ Value: chunk list
 (defun nullp (v)
   (or (not v)
       (and (numberp v) (zerop v))))
-
-(defun gc-guard (owner chunks)
-  (when (and chunks (atom chunks))
-    (setf chunks (list chunks)))
-  (let ((chunks (remove-if-not #'chunkp chunks)))
-    (when chunks
-      (setf (gethash owner *gc-guard*)
-            (append (gethash owner *gc-guard*) chunks)))))
-
-(defun gc-free (owner)
-  (remhash owner *gc-guard*))
-
 
 (defun make-WSTR (str &key (default NULL))
   (when (nullp str)

@@ -1,5 +1,11 @@
 2012-01-14  MIYAMUKO Katsuyuki
 
+	* (gc-guard, gc-free): 意味がなかったので削除
+	- WinHttpOpen, WinHttpConnect, WinHttpOpenRequest のリファレンスを
+	  読む限り引数のバッファを削除するなとは書いていない
+	- winhttp:open などの後に chunk の中身を書き換えてみても
+	  リクエストには影響はないため内部でコピーしていると思う
+
 	* (toggle-debug): デバッグ出力をビルド時ではなく実行時に切り替え可能とした
 
 2012-01-13  MIYAMUKO Katsuyuki
