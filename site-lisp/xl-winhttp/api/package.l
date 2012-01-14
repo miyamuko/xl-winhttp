@@ -26,6 +26,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "ansi-loop")
   (require "ansify")
+  (require "alexandria")
   (require "xl-winhttp/internal")
 
   (unless (find-package :xl-winhttp.api)
@@ -48,6 +49,10 @@
        :ecase
        :etypecase
        :typecase
+       )
+      (:shadowing-import-from :alexandria
+       :symbolicate
+       :with-gensyms
        )
       ))
   )

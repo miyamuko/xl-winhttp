@@ -30,16 +30,6 @@
 
 (in-package :xl-winhttp.api)
 
-(export '(hinternet
-          hinternet-p
-          hinternet-description
-          hinternet-created-on
-          hinternet-handle
-          hinternet-closed-p
-          hinternet-async-p
-          hinternet-parent
-          ))
-
 (deftype port-number ()
   `(integer 0 ,INTERNET_MAX_PORT_NUMBER_VALUE))
 
@@ -66,39 +56,23 @@
   async-p
   parent
   )
+(export-structure 'hinternet :name t :accessors t :predicate t)
 
 
 (defmacro define-hinternet-wrapper (type &rest slots)
-  (flet ((sym (&rest args)
-           (intern (format nil "~{~A~}" args))))
-    `(progn
-       (defstruct (,type
-                   (:include hinternet))
-         ,@slots)
-       (defmacro ,(sym 'wrap- type) ((&rest slot-args)
-                                     (api &rest args))
-         (let (($args (gensym))
-               ($handle (gensym))
-               ($r (gensym)))
-           `(let ((,$args (list ,@args)))
-              (let ((,$handle (apply ',api ,$args)))
-                (when (zerop ,$handle)
-                  (raise-winhttp-condition ',api))
-                (,',(sym 'make- type) :handle ,$handle ,@slot-args)
-                ))))
-       (export '(,type
-                 ,(sym type '-p)
-                 ,(sym type '-description)
-                 ,(sym type '-created-on)
-                 ,(sym type '-handle)
-                 ,(sym type '-closed-p)
-                 ,(sym type '-async-p)
-                 ,(sym type '-parent)
-                 ,@(mapcar #'(lambda (slot)
-                               (sym type "-" slot))
-                           slots)
-                 ))
-       )))
+  `(progn
+     (defstruct (,type
+                 (:include hinternet))
+       ,@slots)
+     (defmacro ,(symbolicate 'wrap- type) ((&rest slot-args)
+                                           (api &rest args))
+       (with-gensyms ($handle)
+         `(let ((,$handle (,api ,@args)))
+            (when (zerop ,$handle)
+              (raise-winhttp-condition ',api))
+            (,',(symbolicate 'make- type) :handle ,$handle ,@slot-args))))
+     (export-structure ',type :name t :accessors t :predicate t)
+     ))
 (setf (get 'define-hinternet-wrapper 'ed:lisp-indent-hook) 1)
 
 (define-hinternet-wrapper session)

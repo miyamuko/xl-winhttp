@@ -30,6 +30,7 @@
 (require "xl-winhttp/internal/debug")
 (require "xl-winhttp/internal/flags")
 (require "xl-winhttp/internal/options")
+(require "xl-winhttp/internal/struct")
 
 (provide "xl-winhttp/internal")
 

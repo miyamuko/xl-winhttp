@@ -226,7 +226,7 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 ## INSTALL
 
 1. [NetInstaller](http://www7a.biglobe.ne.jp/~hat/xyzzy/ni.html)
-   で xl-winhttp, ansi-loop, ansify をインストールします。
+   で xl-winhttp, xl-alexandria, ansi-loop, ansify, setf-values をインストールします。
 
 2. xl-winhttp はライブラリであるため自動的にロードはされません。
    必要な時点で require してください。
