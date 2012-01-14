@@ -1,4 +1,4 @@
-; -*- mode: lisp; package: xl-winhttp.ffi; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.api; encoding: shift_jis -*-
 
 ;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;
@@ -24,56 +24,29 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/ffi/package")
+  (require "xl-winhttp/api/package")
+  (require "xl-winhttp/api/api")
   )
 
-(in-package :xl-winhttp.ffi)
+(in-package :xl-winhttp.api)
 
-(c:*define NULL 0)
+(defmacro define-with-macro (init-func)
+  (let ((name (intern (format nil "with-~A" init-func))))
+    `(progn
+       (defmacro ,name ((var &rest args) &body body)
+         `(let ((,var (,',init-func ,@args)))
+            (unwind-protect
+                (progn ,@body)
+              (close-handle ,var))))
+       (setf (get ',name 'ed:lisp-indent-hook) 1)
+       (export ',name)
+       )))
 
-(c:*define-c-type (c:void *) LPCWSTR)
-(c:*define-c-type (c:void *) LPCVOID)
-(c:*define-c-type (DWORD *) LPDWORD)
-;; 64bit –¢‘Î‰ž
-(c:*define-c-type DWORD DWORD_PTR)
-
-(c:*define-c-struct SYSTEMTIME
-  (WORD wYear)
-  (WORD wMonth)
-  (WORD wDayOfWeek)
-  (WORD wDay)
-  (WORD wHour)
-  (WORD wMinute)
-  (WORD wSecond)
-  (WORD wMilliseconds)
-  )
-
-(c:*define-dll-entry
-  HGLOBAL
-  GlobalFree (HGLOBAL)
-  "kernel32")
-
-(c:*define-dll-entry
-  DWORD
-  GetLastError ()
-  "kernel32")
-
-(c:*define-dll-entry
-  DWORD
-  GetCurrentThreadId ()
-  "kernel32")
-
-(c:*define-dll-entry
-  c:void
-  OutputDebugString (LPCTSTR)
-  "kernel32" "OutputDebugStringA")
-
-(c:*define-dll-entry
-  c:size_t
-  wcslen ((c:wchar_t *))
-  "msvcrt")
+(define-with-macro open)
+(define-with-macro connect)
+(define-with-macro open-request)
 
 
-(provide "xl-winhttp/ffi/winapi")
+(provide "xl-winhttp/api/macros")
 
 ;;; End

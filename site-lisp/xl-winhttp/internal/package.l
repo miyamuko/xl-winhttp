@@ -1,7 +1,5 @@
-; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: user; encoding: shift_jis -*-
 
-;;; xl-winhttp/debug.l
-;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -26,34 +24,33 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
+  (require "ansi-loop")
+  (require "ansify")
   (require "xl-winhttp/ffi")
+
+  (unless (find-package :xl-winhttp.internal)
+    (defpackage :xl-winhttp.internal
+      (:nicknames :winhttp.internal)
+      (:use
+       :lisp
+       :editor
+       :winapi
+       :xl-winhttp.ffi
+       )
+      (:shadowing-import-from :ansi-loop
+       :loop
+       :loop-finish
+       )
+      (:shadowing-import-from :ansify
+       :check-type
+       :destructuring-bind
+       :ecase
+       :etypecase
+       :typecase
+       )
+      ))
   )
 
-(in-package :xl-winhttp)
-
-(export '(toggle-debug
-          ))
-
-(defvar *debug-prefix* "xl-winhttp:")
-(defvar *debug-enabled-p* nil)
-
-(defun toggle-debug (&optional (arg nil sv))
-  (interactive)
-  (setf *debug-enabled-p* (if sv
-                              arg
-                            (not *debug-enabled-p*)))
-  (ToggleDebugOutput (pack-BOOL *debug-enabled-p*))
-  (message "Debug: ~:[Off~;On~]" *debug-enabled-p*))
-
-(defun debug (fmt &rest args)
-  (when *debug-enabled-p*
-    (let* ((msg (apply 'format nil fmt args))
-           (log (format nil "[~4,'0D] ~A ~A"
-                        (GetCurrentThreadId) *debug-prefix* msg)))
-      (OutputDebugString (si:make-string-chunk log)))))
-
-
-(provide "xl-winhttp/debug")
+(provide "xl-winhttp/internal/package")
 
 ;;; End

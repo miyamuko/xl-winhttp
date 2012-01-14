@@ -1,8 +1,6 @@
-; -*- mode: lisp; package: user; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.internal; encoding: shift_jis -*-
 
-;;; xl-winhttp/package.l
-;;
-;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
+;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
@@ -26,50 +24,34 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "foreign")
-  (require "wip/winapi")
-  (require "ansi-loop")
-  (require "ansify")
-
-  (unless (find-package :xl-winhttp.ffi)
-    (defpackage :xl-winhttp.ffi
-      (:nicknames :winhttp.ffi)
-      (:use
-       :lisp
-       :editor
-       :winapi
-       )))
-  (unless (find-package :xl-winhttp)
-    (defpackage :xl-winhttp
-      (:nicknames :winhttp)
-      (:use
-       :lisp
-       :editor
-       :xl-winhttp.ffi
-       )
-      (:shadowing-import-from :ansi-loop
-       :loop
-       :loop-finish
-       )
-      (:shadowing-import-from :ansify
-       :check-type
-       :destructuring-bind
-       :ecase
-       :etypecase
-       :typecase
-       )
-      ))
+  (require "xl-winhttp/internal/package")
   )
 
-(in-package :xl-winhttp)
+(in-package :xl-winhttp.internal)
 
-(shadow
- '(;; defpackage ‚Å‚Í shadow ‚Æ shadowing-import-from ‚ð“¯Žž‚ÉŽg‚¦‚È‚¢
-   open
-   connect
-   ))
+(export '(toggle-debug
+          debug
+          ))
+
+(defvar *debug-prefix* "xl-winhttp:")
+(defvar *debug-enabled-p* nil)
+
+(defun toggle-debug (&optional (arg nil sv))
+  (interactive)
+  (setf *debug-enabled-p* (if sv
+                              arg
+                            (not *debug-enabled-p*)))
+  (ToggleDebugOutput (pack-BOOL *debug-enabled-p*))
+  (message "Debug: ~:[Off~;On~]" *debug-enabled-p*))
+
+(defun debug (fmt &rest args)
+  (when *debug-enabled-p*
+    (let* ((msg (apply 'format nil fmt args))
+           (log (format nil "[~4,'0D] ~A ~A"
+                        (GetCurrentThreadId) *debug-prefix* msg)))
+      (OutputDebugString (si:make-string-chunk log)))))
 
 
-(provide "xl-winhttp/package")
+(provide "xl-winhttp/internal/debug")
 
 ;;; End

@@ -1,7 +1,5 @@
-; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.api; encoding: shift_jis -*-
 
-;;; xl-winhttp/async.l
-;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -26,11 +24,11 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
-  (require "xl-winhttp/api")
+  (require "xl-winhttp/api/package")
+  (require "xl-winhttp/api/api")
   )
 
-(in-package :xl-winhttp)
+(in-package :xl-winhttp.api)
 
 (export '(set-status-callback
           ))
@@ -245,6 +243,6 @@
           )))
 
 
-(provide "xl-winhttp/async")
+(provide "xl-winhttp/api/async")
 
 ;;; End

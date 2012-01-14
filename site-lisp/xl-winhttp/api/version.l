@@ -1,8 +1,6 @@
-; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.api.api; encoding: shift_jis -*-
 
-;;; xl-winhttp/macros.l
-;;
-;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
+;; Copyright (c) 2011 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
@@ -26,29 +24,20 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
-  (require "xl-winhttp/api")
+  (require "xl-winhttp/api/package")
   )
 
-(in-package :xl-winhttp)
+(in-package :xl-winhttp.api)
 
-(defmacro define-with-macro (init-func)
-  (let ((name (intern (format nil "with-~A" init-func))))
-    `(progn
-       (defmacro ,name ((var &rest args) &body body)
-         `(let ((,var (,',init-func ,@args)))
-            (unwind-protect
-                (progn ,@body)
-              (close-handle ,var))))
-       (setf (get ',name 'ed:lisp-indent-hook) 1)
-       (export ',name)
-       )))
+(export '(xl-winhttp-version
+          ))
 
-(define-with-macro open)
-(define-with-macro connect)
-(define-with-macro open-request)
+(defconstant +xl-winhttp-version+ "0.0.1")
+
+(defun xl-winhttp-version ()
+  +xl-winhttp-version+)
 
 
-(provide "xl-winhttp/macros")
+(provide "xl-winhttp/api/version")
 
 ;;; End

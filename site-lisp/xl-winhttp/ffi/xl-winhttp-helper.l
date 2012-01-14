@@ -1,7 +1,5 @@
 ; -*- mode: lisp; package: xl-winhttp.ffi; encoding: shift_jis -*-
 
-;;; xl-winhttp/ffi/xl-winhttp-helper.l
-;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -26,7 +24,7 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
+  (require "xl-winhttp/ffi/package")
   (require "xl-winhttp/ffi/winhttp")
   )
 

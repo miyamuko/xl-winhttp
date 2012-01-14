@@ -1,7 +1,5 @@
-; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.api; encoding: shift_jis -*-
 
-;;; xl-winhttp/conditions.l
-;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -26,12 +24,10 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
-  (require "xl-winhttp/ffi")
-  (require "xl-winhttp/flags")
+  (require "xl-winhttp/api/package")
   )
 
-(in-package :xl-winhttp)
+(in-package :xl-winhttp.api)
 
 (export '(winhttp-condition
           winhttp-condition-api
@@ -65,6 +61,6 @@
                     )))
 
 
-(provide "xl-winhttp/conditions")
+(provide "xl-winhttp/api/conditions")
 
 ;;; End

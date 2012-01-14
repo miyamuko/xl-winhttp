@@ -1,7 +1,5 @@
 ; -*- mode: lisp; package: user; encoding: shift_jis -*-
 
-;;; xl-winhttp/ffi.l
-;;
 ;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -32,7 +30,6 @@
 (require "xl-winhttp/ffi/wininet")
 (require "xl-winhttp/ffi/winhttp")
 (require "xl-winhttp/ffi/xl-winhttp-helper")
-(require "xl-winhttp/ffi/utils")
 
 (provide "xl-winhttp/ffi")
 

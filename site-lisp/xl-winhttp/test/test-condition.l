@@ -1,7 +1,5 @@
 ; -*- mode: lisp; package: xl-winhttp.test.condition; encoding: shift_jis -*-
 
-;;; xl-winhttp/test/test-condition.l
-;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining

@@ -1,7 +1,5 @@
-; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.api; encoding: shift_jis -*-
 
-;;; xl-winhttp/types.l
-;;
 ;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -26,12 +24,11 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
-  (require "xl-winhttp/conditions")
-  (require "xl-winhttp/ffi")
+  (require "xl-winhttp/api/package")
+  (require "xl-winhttp/api/conditions")
   )
 
-(in-package :xl-winhttp)
+(in-package :xl-winhttp.api)
 
 (export '(hinternet
           hinternet-p
@@ -124,6 +121,6 @@
        (error "Closed HINTERNET handle: ~S" ,hinternet))))
 
 
-(provide "xl-winhttp/types")
+(provide "xl-winhttp/api/types")
 
 ;;; End

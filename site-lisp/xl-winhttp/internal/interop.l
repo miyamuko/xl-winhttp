@@ -1,7 +1,5 @@
-; -*- mode: lisp; package: xl-winhttp.ffi; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.internal; encoding: shift_jis -*-
 
-;;; xl-winhttp/ffi/utils.l
-;;
 ;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -26,10 +24,10 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
+  (require "xl-winhttp/internal/package")
   )
 
-(in-package :xl-winhttp.ffi)
+(in-package :xl-winhttp.internal)
 
 (export '(*size-of-WCHAR*
           *size-of-DWORD*
@@ -282,6 +280,6 @@
     (GlobalFree p)))
 
 
-(provide "xl-winhttp/ffi/utils")
+(provide "xl-winhttp/internal/interop")
 
 ;;; End

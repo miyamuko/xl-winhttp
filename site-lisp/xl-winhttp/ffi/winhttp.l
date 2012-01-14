@@ -1,7 +1,5 @@
 ; -*- mode: lisp; package: xl-winhttp.ffi; encoding: shift_jis -*-
 
-;;; xl-winhttp/ffi/winhttp.l
-;;
 ;; /*++
 ;;
 ;; Copyright (c) Microsoft Corporation. All rights reserved.
@@ -19,7 +17,7 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
+  (require "xl-winhttp/ffi/package")
   (require "xl-winhttp/ffi/winapi")
   )
 

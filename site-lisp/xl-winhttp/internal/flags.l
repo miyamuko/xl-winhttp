@@ -1,7 +1,5 @@
-; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.internal; encoding: shift_jis -*-
 
-;;; xl-winhttp/flags.l
-;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -26,12 +24,33 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
-  (require "xl-winhttp/ffi")
-  (require "xl-winhttp/utils")
+  (require "xl-winhttp/internal/package")
+  (require "xl-winhttp/internal/utils")
   )
 
-(in-package :xl-winhttp)
+(in-package :xl-winhttp.internal)
+
+(export '(*open-flags*
+          *open-request-flags*
+          *add-request-flags*
+          *crack-url-flags*
+          *create-url-flags*
+          *auto-proxy-flags*
+          *auto-detect-type-flags*
+          *auth-target-flags*
+          *auth-scheme-flags*
+          *query-flags*
+          *access-type*
+          *scheme-type*
+          *query-type*
+          *notification-flags*
+          *internet-status-type*
+          *secure-failure-status-infomation-type*
+
+          expand-flags
+          make-flag
+          unpack-flags
+          ))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098.aspx
 (defvar *open-flags*
@@ -308,6 +327,6 @@
           return k)))
 
 
-(provide "xl-winhttp/flags")
+(provide "xl-winhttp/internal/flags")
 
 ;;; End

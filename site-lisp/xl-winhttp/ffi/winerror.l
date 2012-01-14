@@ -1,7 +1,5 @@
 ; -*- mode: lisp; package: xl-winhttp.ffi; encoding: shift_jis -*-
 
-;;; xl-winhttp/ffi/winerror.l
-;;
 ;; /************************************************************************
 ;; *                                                                       *
 ;; *   winerror.h --  error code definitions for the Win32 API functions   *
@@ -13,7 +11,7 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
+  (require "xl-winhttp/ffi/package")
   (require "xl-winhttp/ffi/winapi")
   )
 

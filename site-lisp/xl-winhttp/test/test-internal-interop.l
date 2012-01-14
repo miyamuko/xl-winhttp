@@ -1,7 +1,5 @@
-; -*- mode: lisp; package: xl-winhttp.test.ffi-utils; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.test.internal.interop; encoding: shift_jis -*-
 
-;;; xl-winhttp/test/test-ffi-utils.l
-;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -29,15 +27,17 @@
 
 (require "xl-winhttp")
 
-(defpackage :xl-winhttp.test.ffi-utils
+(defpackage :xl-winhttp.test.internal.interop
   (:use :lisp :editor
    :lisp-unit
+   :winapi
    :winhttp.ffi
+   :winhttp.internal
    ))
 
-(in-package :xl-winhttp.test.ffi-utils)
+(in-package :xl-winhttp.test.internal.interop)
 
-(remove-all-tests :xl-winhttp.test.ffi-utils)
+(remove-all-tests :xl-winhttp.test.internal.interop)
 
 (define-test xl-winhttp/ffi/nullp
   (assert-true (nullp 0))
@@ -70,11 +70,11 @@
 (define-test xl-winhttp/ffi/make-WSTR-buffer
   (let ((buffer (make-WSTR-buffer 10)))
     (assert-eql 20 (si:chunk-size buffer))
-    (assert-eql 'winhttp.ffi::wstr (si:chunk-type buffer))
+    (assert-eql 'winhttp.internal::wstr (si:chunk-type buffer))
     )
   (let ((buffer (make-WSTR-buffer 0)))
     (assert-eql 0 (si:chunk-size buffer))
-    (assert-eql 'winhttp.ffi::wstr (si:chunk-type buffer))
+    (assert-eql 'winhttp.internal::wstr (si:chunk-type buffer))
     )
   )
 
@@ -110,24 +110,57 @@
     (assert-equal nil (unpack-WSTR wstr)))
   )
 
+(define-test xl-winhttp/ffi/nullp
+  (assert-eql nil (nullp t))
+  (assert-eql nil (nullp 1))
+  (assert-eql nil (nullp TRUE))
+  (assert-eql nil (nullp ""))
+
+  (assert-eql t (nullp nil))
+  (assert-eql t (nullp 0))
+  (assert-eql t (nullp FALSE))
+  )
+
+(define-test xl-winhttp/ffi/pack-BOOL
+  (assert-eql TRUE (pack-BOOL t))
+  (assert-eql TRUE (pack-BOOL 1))
+  (assert-eql TRUE (pack-BOOL TRUE))
+  (assert-eql TRUE (pack-BOOL ""))
+
+  (assert-eql FALSE (pack-BOOL nil))
+  (assert-eql FALSE (pack-BOOL 0))
+  (assert-eql FALSE (pack-BOOL FALSE))
+  )
+
+(define-test xl-winhttp/ffi/unpack-BOOL
+  (assert-eql t (unpack-BOOL t))
+  (assert-eql t (unpack-BOOL 1))
+  (assert-eql t (unpack-BOOL TRUE))
+  (assert-eql t (unpack-BOOL ""))
+
+  (assert-eql nil (unpack-BOOL nil))
+  (assert-eql nil (unpack-BOOL 0))
+  (assert-eql nil (unpack-BOOL FALSE))
+  )
+
 (define-test xl-winhttp/ffi/find-error-name
   (assert-equal nil
-      (winhttp.ffi::find-error-name -12345))
+      (winhttp.internal::find-error-name -12345))
   (assert-equal 'ERROR_INVALID_PARAMETER
-      (winhttp.ffi::find-error-name 87))
+      (winhttp.internal::find-error-name 87))
   (assert-equal 'ERROR_WINHTTP_TIMEOUT
-      (winhttp.ffi::find-error-name 12002))
+      (winhttp.internal::find-error-name 12002))
   (assert-equal 'ERROR_WINHTTP_INVALID_OPTION
-      (winhttp.ffi::find-error-name 12009))
+      (winhttp.internal::find-error-name 12009))
   )
 
 (define-test xl-winhttp/ffi/make-error-keyword
   (assert-equal nil
-      (winhttp.ffi::make-error-keyword nil))
+      (winhttp.internal::make-error-keyword nil))
   (assert-equal :invalid-parameter
-      (winhttp.ffi::make-error-keyword 'ERROR_INVALID_PARAMETER))
+      (winhttp.internal::make-error-keyword 'ERROR_INVALID_PARAMETER))
   (assert-equal :timeout
-      (winhttp.ffi::make-error-keyword 'ERROR_WINHTTP_TIMEOUT))
+      (winhttp.internal::make-error-keyword 'ERROR_WINHTTP_TIMEOUT))
   (assert-equal :invalid-option
-      (winhttp.ffi::make-error-keyword 'ERROR_WINHTTP_INVALID_OPTION))
+      (winhttp.internal::make-error-keyword 'ERROR_WINHTTP_INVALID_OPTION))
   )

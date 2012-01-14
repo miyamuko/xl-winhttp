@@ -1,7 +1,5 @@
-; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.internal; encoding: shift_jis -*-
 
-;;; xl-winhttp/utils.l
-;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -26,10 +24,15 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
+  (require "xl-winhttp/internal/package")
   )
 
-(in-package :xl-winhttp)
+(in-package :xl-winhttp.internal)
+
+(export '(plist-keys
+          plist-values
+          format-headers
+          ))
 
 (defconstant +CRLF+ (format nil "~C~C" (code-char #x0d) (code-char #x0a)))
 
@@ -81,6 +84,6 @@
                      (to-alist header))))))
 
 
-(provide "xl-winhttp/utils")
+(provide "xl-winhttp/internal/utils")
 
 ;;; End

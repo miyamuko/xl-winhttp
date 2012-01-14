@@ -1,5 +1,10 @@
 2012-01-14  MIYAMUKO Katsuyuki
 
+	* パッケージ構造・ファイル構造を整理
+	- xl-winhttp パッケージを xl-winhttp.internal と xl-winhttp.api
+	  パッケージに分割
+	- winhttp は xl-winhttp.api パッケージのニックネームにした
+
 	* (gc-guard, gc-free): 意味がなかったので削除
 	- WinHttpOpen, WinHttpConnect, WinHttpOpenRequest のリファレンスを
 	  読む限り引数のバッファを削除するなとは書いていない

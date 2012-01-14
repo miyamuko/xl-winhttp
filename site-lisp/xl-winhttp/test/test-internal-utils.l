@@ -1,7 +1,5 @@
 ; -*- mode: lisp; package: xl-winhttp.test.utils; encoding: shift_jis -*-
 
-;;; xl-winhttp/test/test-utils.l
-;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -43,66 +41,66 @@
 
 (define-test xl-winhttp/plist-keys
   (assert-equal nil
-      (winhttp::plist-keys nil))
+      (winhttp.internal::plist-keys nil))
   (assert-equal '(:foo :bar :baz)
-      (winhttp::plist-keys '(:foo 1 :bar 2 :baz 3)))
+      (winhttp.internal::plist-keys '(:foo 1 :bar 2 :baz 3)))
   )
 
 (define-test xl-winhttp/plist-values
   (assert-equal nil
-      (winhttp::plist-values nil))
+      (winhttp.internal::plist-values nil))
   (assert-equal '(1 2 3)
-      (winhttp::plist-values '(:foo 1 :bar 2 :baz 3)))
+      (winhttp.internal::plist-values '(:foo 1 :bar 2 :baz 3)))
   )
 
 (define-test xl-winhttp/dotp
-  (assert-equal nil (winhttp::dotp nil))
-  (assert-equal nil (winhttp::dotp '(1)))
-  (assert-equal nil (winhttp::dotp '(1 2)))
-  (assert-equal t (winhttp::dotp '(1 . 2)))
+  (assert-equal nil (winhttp.internal::dotp nil))
+  (assert-equal nil (winhttp.internal::dotp '(1)))
+  (assert-equal nil (winhttp.internal::dotp '(1 2)))
+  (assert-equal t (winhttp.internal::dotp '(1 . 2)))
   )
 
 (define-test xl-winhttp/to-alist
   (assert-equal nil
-      (winhttp::to-alist nil))
+      (winhttp.internal::to-alist nil))
   (assert-equal '((:foo . 1))
-      (winhttp::to-alist '((:foo . 1))))
+      (winhttp.internal::to-alist '((:foo . 1))))
   (assert-equal '((:foo . 1))
-      (winhttp::to-alist '((:foo 1))))
+      (winhttp.internal::to-alist '((:foo 1))))
   (assert-equal '((:foo . 1))
-      (winhttp::to-alist '(:foo . 1)))
+      (winhttp.internal::to-alist '(:foo . 1)))
   (assert-equal '((:foo . 1))
-      (winhttp::to-alist '(:foo 1)))
+      (winhttp.internal::to-alist '(:foo 1)))
 
   (assert-equal '((:foo . 1) (:bar . 2) (:baz . 3))
-      (winhttp::to-alist '((:foo . 1) (:bar . 2) (:baz . 3))))
+      (winhttp.internal::to-alist '((:foo . 1) (:bar . 2) (:baz . 3))))
   (assert-equal '((:foo . 1) (:bar . 2) (:baz . 3))
-      (winhttp::to-alist '((:foo 1) (:bar 2) (:baz 3))))
+      (winhttp.internal::to-alist '((:foo 1) (:bar 2) (:baz 3))))
   (assert-equal '((:foo . 1) (:bar . 2) (:baz . 3))
-      (winhttp::to-alist '(:foo 1 :bar 2 :baz 3)))
+      (winhttp.internal::to-alist '(:foo 1 :bar 2 :baz 3)))
   (assert-equal '((:foo . 1) (:bar . 2) (:baz . 3))
-      (winhttp::to-alist '((:foo . 1) :bar 2 :baz 3)))
+      (winhttp.internal::to-alist '((:foo . 1) :bar 2 :baz 3)))
   (assert-equal '((:foo . 1) (:bar . 2) (:baz . 3))
-      (winhttp::to-alist '((:foo . 1) (:bar 2) :baz 3)))
+      (winhttp.internal::to-alist '((:foo . 1) (:bar 2) :baz 3)))
   )
 
 (define-test xl-winhttp/format-headers
   (assert-equal nil
-      (winhttp::format-headers nil))
+      (winhttp.internal::format-headers nil))
   (assert-equal nil
-      (winhttp::format-headers ""))
+      (winhttp.internal::format-headers ""))
   (assert-equal "User-Agent: foo"
-      (winhttp::format-headers "User-Agent: foo"))
+      (winhttp.internal::format-headers "User-Agent: foo"))
 
   (assert-equal "User-Agent: foo\r\n"
-      (winhttp::format-headers '("User-Agent" "foo")))
+      (winhttp.internal::format-headers '("User-Agent" "foo")))
   (assert-equal "User-Agent: foo\r\n"
-      (winhttp::format-headers '((:User-Agent "foo"))))
+      (winhttp.internal::format-headers '((:User-Agent "foo"))))
   (assert-equal "User-Agent: foo\r\n"
-      (winhttp::format-headers '((:User-Agent . :foo))))
+      (winhttp.internal::format-headers '((:User-Agent . :foo))))
 
   (assert-equal "User-Agent: foo\r\nX-Number: 1\r\nX-Number: 2\r\n"
-      (winhttp::format-headers '(:User-Agent :foo :X-Number 1 :X-Number 2)))
+      (winhttp.internal::format-headers '(:User-Agent :foo :X-Number 1 :X-Number 2)))
   (assert-equal "User-Agent: foo\r\nX-Number: 1\r\nX-Number: 2\r\n"
-      (winhttp::format-headers '((:User-Agent . :foo) (:X-Number 1) :X-Number 2)))
+      (winhttp.internal::format-headers '((:User-Agent . :foo) (:X-Number 1) :X-Number 2)))
   )

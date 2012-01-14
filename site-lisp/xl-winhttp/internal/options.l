@@ -1,7 +1,5 @@
-; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.internal; encoding: shift_jis -*-
 
-;;; xl-winhttp/options.l
-;;
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
@@ -26,12 +24,34 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
-  (require "xl-winhttp/ffi")
-  (require "xl-winhttp/utils")
+  (require "xl-winhttp/internal/package")
+  (require "xl-winhttp/internal/utils")
   )
 
-(in-package :xl-winhttp)
+(in-package :xl-winhttp.internal)
+
+(export '(*option-autologon-policy-type*
+          *option-configure-passport-auth-type*
+          *option-disable-feature-flags*
+          *option-enable-feature-type*
+          *option-handle-type*
+          *option-redirect-policy-type*
+          *option-secure-protocol-flags*
+          *option-security-flags*
+          *option-spn-type*
+          *option-list*
+          check-option
+          option-name
+          option-const
+          option-accept-session-handle-p
+          option-accept-request-handle-p
+          option-can-query-p
+          option-can-set-p
+          option-data-type
+          option-data-subtype
+          option-data-flags-alist
+          find-option
+          ))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384066.aspx
 
@@ -239,27 +259,6 @@
     ))
 
 
-(defun check-option (operation handle option)
-  (ecase operation
-    (:set-option
-     (unless (option-can-set-p option)
-       (error (format nil "~S オプションは設定できません。" (option-name option)))))
-    (:query-option
-     (unless (option-can-query-p option)
-       (error (format nil "~S オプションは取得できません。" (option-name option)))))
-    )
-  ;; WINHTTP_OPTION_ENABLETRACING など、ハンドルを指定しなくてもいいオプションがある
-  (when handle
-    (etypecase handle
-      (session
-       (unless (option-accept-session-handle-p option)
-         (error (format nil "~S オプションは session ハンドルには指定できません。" (option-name option)))))
-      (request
-       (unless (option-accept-request-handle-p option)
-         (error (format nil "~S オプションは request ハンドルには指定できません。" (option-name option)))))
-      ))
-  )
-
 (defun option-name (option)
   (nth 0 option))
 
@@ -298,6 +297,6 @@
                        )))))
 
 
-(provide "xl-winhttp/options")
+(provide "xl-winhttp/internal/options")
 
 ;;; End

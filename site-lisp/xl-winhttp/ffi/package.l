@@ -1,4 +1,4 @@
-; -*- mode: lisp; package: xl-winhttp.ffi; encoding: shift_jis -*-
+; -*- mode: lisp; package: user; encoding: shift_jis -*-
 
 ;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;
@@ -24,56 +24,20 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/ffi/package")
+  (require "foreign")
+  (require "wip/winapi")
+
+  (unless (find-package :xl-winhttp.ffi)
+    (defpackage :xl-winhttp.ffi
+      (:nicknames :winhttp.ffi)
+      (:use
+       :lisp
+       :editor
+       :winapi
+       )))
   )
 
-(in-package :xl-winhttp.ffi)
 
-(c:*define NULL 0)
-
-(c:*define-c-type (c:void *) LPCWSTR)
-(c:*define-c-type (c:void *) LPCVOID)
-(c:*define-c-type (DWORD *) LPDWORD)
-;; 64bit –¢‘Î‰ž
-(c:*define-c-type DWORD DWORD_PTR)
-
-(c:*define-c-struct SYSTEMTIME
-  (WORD wYear)
-  (WORD wMonth)
-  (WORD wDayOfWeek)
-  (WORD wDay)
-  (WORD wHour)
-  (WORD wMinute)
-  (WORD wSecond)
-  (WORD wMilliseconds)
-  )
-
-(c:*define-dll-entry
-  HGLOBAL
-  GlobalFree (HGLOBAL)
-  "kernel32")
-
-(c:*define-dll-entry
-  DWORD
-  GetLastError ()
-  "kernel32")
-
-(c:*define-dll-entry
-  DWORD
-  GetCurrentThreadId ()
-  "kernel32")
-
-(c:*define-dll-entry
-  c:void
-  OutputDebugString (LPCTSTR)
-  "kernel32" "OutputDebugStringA")
-
-(c:*define-dll-entry
-  c:size_t
-  wcslen ((c:wchar_t *))
-  "msvcrt")
-
-
-(provide "xl-winhttp/ffi/winapi")
+(provide "xl-winhttp/ffi/package")
 
 ;;; End

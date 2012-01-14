@@ -1,8 +1,6 @@
-; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.api; encoding: shift_jis -*-
 
-;;; xl-winhttp/version.l
-;;
-;; Copyright (c) 2011 MIYAMUKO Katsuyuki.
+;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
@@ -26,20 +24,33 @@
 ;;; Code:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (require "xl-winhttp/package")
+  (require "xl-winhttp/api/package")
+  (require "xl-winhttp/api/types")
   )
 
-(in-package :xl-winhttp)
+(in-package :xl-winhttp.api)
 
-(export '(xl-winhttp-version
-          ))
+(defun check-option (operation handle option)
+  (ecase operation
+    (:set-option
+     (unless (option-can-set-p option)
+       (error (format nil "~S オプションは設定できません。" (option-name option)))))
+    (:query-option
+     (unless (option-can-query-p option)
+       (error (format nil "~S オプションは取得できません。" (option-name option)))))
+    )
+  ;; WINHTTP_OPTION_ENABLETRACING など、ハンドルを指定しなくてもいいオプションがある
+  (when handle
+    (etypecase handle
+      (session
+       (unless (option-accept-session-handle-p option)
+         (error (format nil "~S オプションは session ハンドルには指定できません。" (option-name option)))))
+      (request
+       (unless (option-accept-request-handle-p option)
+         (error (format nil "~S オプションは request ハンドルには指定できません。" (option-name option)))))
+      ))
+  )
 
-(defconstant +xl-winhttp-version+ "0.0.1")
-
-(defun xl-winhttp-version ()
-  +xl-winhttp-version+)
-
-
-(provide "xl-winhttp/version")
+(provide "xl-winhttp/api/options")
 
 ;;; End
