@@ -27,26 +27,11 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "xl-winhttp/package")
-  (require "xl-winhttp/conditions")
   )
 
 (in-package :xl-winhttp)
 
 (defconstant +CRLF+ (format nil "~C~C" (code-char #x0d) (code-char #x0a)))
-
-(defmacro assert-BOOL (&body body)
-  (let ((result (gensym)))
-    `(let ((,result (progn ,@body)))
-       (when (nullp ,result)
-         (raise-winhttp-condition ',(caar body)))
-       t)))
-
-(defmacro assert-SUCCESS (&body body)
-  (let ((result (gensym)))
-    `(let ((,result (progn ,@body)))
-       (when (/= ,result ERROR_SUCCESS)
-         (raise-winhttp-condition ',(caar body)))
-       t)))
 
 (defun plist-keys (plist)
   (loop for (k v) on plist by #'cddr

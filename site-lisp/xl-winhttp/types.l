@@ -112,6 +112,13 @@
   secure-p)
 
 
+(defmacro assert-BOOL (&body body)
+  (let ((result (gensym)))
+    `(let ((,result (progn ,@body)))
+       (when (nullp ,result)
+         (raise-winhttp-condition ',(caar body)))
+       t)))
+
 (defmacro check-valid-handle (hinternet typespec)
   `(progn
      (check-type ,hinternet ,typespec)
