@@ -28,6 +28,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "xl-winhttp/package")
   (require "xl-winhttp/ffi")
+  (require "xl-winhttp/flags")
   )
 
 (in-package :xl-winhttp)
@@ -50,15 +51,18 @@
                      (winhttp-condition-error-name c)
                      ))))
 
-(defmacro raise-winhttp-condition (api)
-  `(multiple-value-bind (error-code error-name error-keyword)
-       (get-last-error)
-     (error (make-condition 'winhttp-condition
-                            :api ,api
-                            :error-code error-code
-                            :error-name error-name
-                            :error-keyword error-keyword
-                            ))))
+(defun raise-winhttp-condition (api)
+  (error (create-winhttp-condition api)))
+
+(defun create-winhttp-condition (api &optional error-code)
+  (multiple-value-bind (error-code error-name error-keyword)
+      (get-last-error error-code)
+    (make-condition 'winhttp-condition
+                    :api api
+                    :error-code error-code
+                    :error-name error-name
+                    :error-keyword error-keyword
+                    )))
 
 
 (provide "xl-winhttp/conditions")
