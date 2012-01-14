@@ -70,6 +70,7 @@
           unpack-BOOL
 
           get-last-error
+          global-free
           ))
 
 (defparameter *gc-guard* (make-hash-table)
@@ -208,7 +209,7 @@ Value: chunk list
     (prog1
         (si:unpack-string chunk 0 bytes nil)
       (when free
-        (GlobalFree pointer)))))
+        (global-free pointer)))))
 
 (defun make-buffer (type size)
   (check-type size integer)
@@ -243,7 +244,7 @@ Value: chunk list
       (prog1
           (si:unpack-uint32 chunk 0)
         (when free
-          (GlobalFree pointer))))))
+          (global-free pointer))))))
 
 (setf (symbol-function 'make-pointer)
       (symbol-function 'make-DWORD)
@@ -295,6 +296,11 @@ Value: chunk list
       (setf r (substitute #\- #\_ r))
       (setf r (string-downcase r))
       (intern r :keyword))))
+
+
+(defun global-free (p)
+  (unless (nullp p)
+    (GlobalFree p)))
 
 
 (provide "xl-winhttp/ffi/utils")
