@@ -146,30 +146,6 @@ ToggleDebugOutput(BOOL enable)
     Debug(L"ToggleDebugOutput: enable=%d", enable);
 }
 
-// イベント                                      | lpvStatusInformation の型 | 備考
-// --------------------------------------------------------------------------------------
-// WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION    | NULL                      | deprecated
-// WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER   | LPWSTR                    | deprecated
-// WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER  | LPWSTR                    | deprecated
-// WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED     | NULL                      | deprecated
-// WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE        | DWORD                     | 
-// WINHTTP_CALLBACK_STATUS_HANDLE_CREATED        | HINTERNET                 | 
-// WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING        | HINTERNET                 | 
-// WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE     | NULL                      | 
-// WINHTTP_CALLBACK_STATUS_INTERMEDIATE_RESPONSE | DWORD                     | 
-// WINHTTP_CALLBACK_STATUS_NAME_RESOLVED         | LPWSTR                    | deprecated
-// WINHTTP_CALLBACK_STATUS_READ_COMPLETE         | LPVOID                    | WinHttpReadData で指定したバッファ
-// WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE    | NULL                      | deprecated
-// WINHTTP_CALLBACK_STATUS_REDIRECT              | LPWSTR                    | 
-// WINHTTP_CALLBACK_STATUS_REQUEST_ERROR         | WINHTTP_ASYNC_RESULT      | 
-// WINHTTP_CALLBACK_STATUS_REQUEST_SENT          | DWORD                     | deprecated
-// WINHTTP_CALLBACK_STATUS_RESOLVING_NAME        | LPWSTR                    | deprecated
-// WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED     | DWORD                     | deprecated
-// WINHTTP_CALLBACK_STATUS_SECURE_FAILURE        | DWORD                     | WINHTTP_CALLBACK_STATUS_FLAG_XXX が格納
-// WINHTTP_CALLBACK_STATUS_SENDING_REQUEST       | NULL                      | deprecated
-// WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE  | NULL                      | 
-// WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE        | DWORD                     | 
-
 BOOL
 IsStatusInformationWSTR(DWORD dwInternetStatus)
 {
