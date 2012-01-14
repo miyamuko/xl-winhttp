@@ -83,6 +83,11 @@
   TakeWinHttpStatusCallbackInfo (LPWINHTTP_STATUS_CALLBACK_INFO)
   (helper-dll))
 
+(c:*define-dll-entry
+  c:void
+  ToggleDebugOutput (BOOL)
+  (helper-dll))
+
 
 (provide "xl-winhttp/ffi/xl-winhttp-helper")
 

@@ -82,6 +82,9 @@ XLWINHTTPHELPER_API
 BOOL
 TakeWinHttpStatusCallbackInfo(LPWINHTTP_STATUS_CALLBACK_INFO info);
 
+XLWINHTTPHELPER_API
+VOID
+ToggleDebugOutput(BOOL enable);
 #ifdef __cplusplus
 }
 #endif

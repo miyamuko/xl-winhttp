@@ -2,15 +2,15 @@
 setlocal
 
 if not "%1"=="" (
-  set TARGET=%1
+  set SLN=%1
 ) else (
-  set TARGET=Release
+  set SLN=xl-winhttp-helper.sln
 )
 
 if not "%2"=="" (
-  set SLN=%2
+  set TARGET=%2
 ) else (
-  set SLN=xl-winhttp-helper.sln
+  set TARGET=Release
 )
 
 set _CD=%CD%

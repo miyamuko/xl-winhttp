@@ -1,8 +1,8 @@
-; -*- mode: lisp; package: xl-winhttp.ffi; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp; encoding: shift_jis -*-
 
-;;; xl-winhttp/ffi/winapi.l
+;;; xl-winhttp/debug.l
 ;;
-;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
+;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
@@ -27,55 +27,33 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "xl-winhttp/package")
+  (require "xl-winhttp/ffi")
   )
 
-(in-package :xl-winhttp.ffi)
+(in-package :xl-winhttp)
 
-(c:*define NULL 0)
+(export '(toggle-debug
+          ))
 
-(c:*define-c-type (c:void *) LPCWSTR)
-(c:*define-c-type (c:void *) LPCVOID)
-(c:*define-c-type (DWORD *) LPDWORD)
-;; 64bit –¢‘Î‰ž
-(c:*define-c-type DWORD DWORD_PTR)
+(defvar *debug-prefix* "xl-winhttp:")
+(defvar *debug-enabled-p* nil)
 
-(c:*define-c-struct SYSTEMTIME
-  (WORD wYear)
-  (WORD wMonth)
-  (WORD wDayOfWeek)
-  (WORD wDay)
-  (WORD wHour)
-  (WORD wMinute)
-  (WORD wSecond)
-  (WORD wMilliseconds)
-  )
+(defun toggle-debug (&optional (arg nil sv))
+  (interactive)
+  (setf *debug-enabled-p* (if sv
+                              arg
+                            (not *debug-enabled-p*)))
+  (ToggleDebugOutput (pack-BOOL *debug-enabled-p*))
+  (message "Debug: ~:[Off~;On~]" *debug-enabled-p*))
 
-(c:*define-dll-entry
-  HGLOBAL
-  GlobalFree (HGLOBAL)
-  "kernel32")
-
-(c:*define-dll-entry
-  DWORD
-  GetLastError ()
-  "kernel32")
-
-(c:*define-dll-entry
-  DWORD
-  GetCurrentThreadId ()
-  "kernel32")
-
-(c:*define-dll-entry
-  c:void
-  OutputDebugString (LPCTSTR)
-  "kernel32" "OutputDebugStringA")
-
-(c:*define-dll-entry
-  c:size_t
-  wcslen ((c:wchar_t *))
-  "msvcrt")
+(defun debug (fmt &rest args)
+  (when *debug-enabled-p*
+    (let* ((msg (apply 'format nil fmt args))
+           (log (format nil "[~4,'0D] ~A ~A"
+                        (GetCurrentThreadId) *debug-prefix* msg)))
+      (OutputDebugString (si:make-string-chunk log)))))
 
 
-(provide "xl-winhttp/ffi/winapi")
+(provide "xl-winhttp/debug")
 
 ;;; End

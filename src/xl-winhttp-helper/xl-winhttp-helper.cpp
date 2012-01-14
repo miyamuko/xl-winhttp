@@ -31,6 +31,7 @@
 
 std::queue<LPWINHTTP_STATUS_CALLBACK_INFO> _queue;
 CRITICAL_SECTION _lock;
+BOOL _debug;
 
 void
 CALLBACK
@@ -137,6 +138,14 @@ TakeWinHttpStatusCallbackInfo(LPWINHTTP_STATUS_CALLBACK_INFO info)
     return TRUE;
 }
 
+XLWINHTTPHELPER_API
+VOID
+ToggleDebugOutput(BOOL enable)
+{
+    _debug = enable;
+    Debug(L"ToggleDebugOutput: enable=%d", enable);
+}
+
 // イベント                                      | lpvStatusInformation の型 | 備考
 // --------------------------------------------------------------------------------------
 // WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION    | NULL                      | deprecated
@@ -181,22 +190,20 @@ IsStatusInformationWSTR(DWORD dwInternetStatus)
 void
 DebugCallbackInfo(LPCWCHAR prefix, LPWINHTTP_STATUS_CALLBACK_INFO info)
 {
-#ifdef _DEBUG
+    if (!_debug) return;
     Debug(L"%s: handle=%p, context=%p, status=%p, info=%p, len=%d, needfree=%d",
           prefix, info->hInternet, info->dwContext, info->dwInternetStatus,
           info->lpvStatusInformation, info->dwStatusInformationLength, info->bNeedGlobalFree);
-#endif // _DEBUG
 }
 
 void
 Debug(LPCWCHAR format, ...)
 {
-#ifdef _DEBUG
     va_list ap;
+    if (!_debug) return;
 
 #define BUF_SIZE 512
     WCHAR buf[BUF_SIZE];
-
     int prefix = swprintf_s(buf, BUF_SIZE, L"[%04d] xl-winhttp-helper: ", GetCurrentThreadId());
 
     va_start(ap,format);
@@ -204,7 +211,6 @@ Debug(LPCWCHAR format, ...)
     va_end(ap);
 
     OutputDebugString(buf);
-#endif // _DEBUG
 }
 
 /// End
