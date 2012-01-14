@@ -144,8 +144,11 @@ XLWINHTTPHELPER_API
 VOID
 ToggleDebugOutput(BOOL enable)
 {
-    _debug = enable;
+    // ƒƒO‚ğo—Í‚·‚é‚½‚ßˆê“I‚É TRUE ‚É‚·‚é
+    _debug = TRUE;
     Debug(L"ToggleDebugOutput: enable=%d", enable);
+
+    _debug = enable;
 }
 
 BOOL
