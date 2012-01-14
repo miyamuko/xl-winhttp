@@ -1,6 +1,6 @@
 ; -*- mode: lisp; package: xl-winhttp.ffi; encoding: shift_jis -*-
 
-;;; xl-winhttp/ffi/winapi.l
+;;; xl-winhttp/ffi/utils.l
 ;;
 ;; Copyright (c) 2011-2012 MIYAMUKO Katsuyuki.
 ;;

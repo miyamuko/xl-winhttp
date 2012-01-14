@@ -1,6 +1,6 @@
 ; -*- mode: lisp; package: xl-winhttp.ffi; encoding: shift_jis -*-
 
-;;; xl-winhttp/ffi/winhttp.l
+;;; xl-winhttp/ffi/wininet.l
 ;;
 ;; /*++
 ;;
