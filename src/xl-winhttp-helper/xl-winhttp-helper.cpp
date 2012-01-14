@@ -97,7 +97,9 @@ QueryWinHttpStatusCallbackInfoAvailable()
     BOOL r = !_queue.empty();
     LeaveCriticalSection(&_lock);
 
-    Debug(L"QueryWinHttpStatusCallbackInfoAvailable: %d", r);
+    // 毎回出力するのは冗長すぎるのでデータがある場合のみ
+    if (r) Debug(L"QueryWinHttpStatusCallbackInfoAvailable: %d", r);
+
     return r;
 }
 
