@@ -25,222 +25,155 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "xl-winhttp/api/package")
-  (require "xl-winhttp/api/api")
   )
 
 (in-package :xl-winhttp.api)
 
-(export '(set-status-callback
-          ))
+;;; hinternet ‚ÌŠÇ—
+
+(defvar *async-hinternet-registry* (make-hash-table)
+  "handle ‚©‚ç hinternet ‚ğæ“¾‚·‚é‚½‚ß‚Éì¬‚µ‚½ hinternet ‚ğ•Û‘¶‚·‚é
+
+Key: HINTERNET handle
+Value: hinternet struct
+")
+
+(defun register-async-hinternet (hinternet callback)
+  (setf (hinternet-callback hinternet) callback)
+  (setf (gethash (hinternet-handle hinternet)
+                 *async-hinternet-registry*)
+        hinternet)
+  (debug "register-async-hinternet: ~S" hinternet))
+
+(defun unregister-async-hinternet (hinternet)
+  (remhash (hinternet-handle hinternet)
+           *async-hinternet-registry*)
+  (debug "unregister-async-hinternet: ~S" hinternet))
+
+(defun find-async-hinternet (handle)
+  (gethash handle *async-hinternet-registry*))
+
+(defun async-hinternet-available-p ()
+  (< 0 (hash-table-count *async-hinternet-registry*)))
+
+
+;;; ƒCƒxƒ“ƒgˆ—
 
 (defparameter *event-dispatch-interval* 0.1)
 
-;; Key:   handle
-;; Value: (hinternet . callback)
-(defparameter *callbacks* (make-hash-table))
-(defparameter *callback-info* (make-WINHTTP_STATUS_CALLBACK_INFO))
+(defun dispatch-event-later (&optional (interval *event-dispatch-interval*))
+  (when (async-hinternet-available-p)
+    (start-timer interval 'dispatch-event t)))
 
-;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384115.aspx
-;; WINHTTP_STATUS_CALLBACK WINAPI WinHttpSetStatusCallback(
-;;   __in        HINTERNET hInternet,
-;;   __in        WINHTTP_STATUS_CALLBACK lpfnInternetCallback,
-;;   __in        DWORD dwNotificationFlags,
-;;   __reserved  DWORD_PTR dwReserved
-;; );
-(defun set-status-callback (hinternet callback
-                                      &key
-                                      ;; *notification-flags*
-                                      all-completions
-                                      all-notifications
-                                      resolve-name
-                                      connect-to-server
-                                      detecting-proxy
-                                      data-available
-                                      headers-available
-                                      read-complete
-                                      request-error
-                                      send-request
-                                      send-request-complete
-                                      write-complete
-                                      receive-response
-                                      close-connection
-                                      handles
-                                      redirect
-                                      intermediate-response
-                                      secure-failure)
-  (check-valid-handle hinternet (or session connection request))
-  (check-type callback callable)
-  (let ((handle (hinternet-handle hinternet)))
-    (setf (gethash handle *callbacks*) (list hinternet callback))
-    (WinHttpSetStatusCallback handle
-                              (GetWinHttpStatusCallbackAddress)
-                              (expand-flags *notification-flags*
-                                            :default WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS)
-                              0)
-    (dispatch-later)
-    ))
-
-(defun dispatch-later (&optional (interval *event-dispatch-interval*))
-  (when (< 0 (hash-table-count *callbacks*))
-    (message "~S" interval)
-    (start-timer interval 'event-dispatch t)))
-
-(defun event-dispatch ()
-  (when (< 0 (hash-table-count *callbacks*))
+(defun dispatch-event ()
+  (when (async-hinternet-available-p)
     (while (callback-info-available-p)
-      (message "fire")
-      (let ((info (take-callback-info)))
-        (when info
-          (ignore-errors
-           (apply #'fire-event info)))))
-    (dispatch-later)))
+      (handler-case
+          (dispatch-event1)
+        (error (c)
+          (debug "Error in dispatcher: ~A" c)
+          (message  "Error in dispatcher: ~A" c))))
+    (dispatch-event-later)))
 
-(defun fire-event (handle context status info size need-free-p)
-  (let ((entry (gethash handle *callbacks*)))
-    (when entry
-      (destructuring-bind (hinternet callback) entry
-        (let* ((status (unpack-flags status *internet-status-type* :flags nil))
-               (info (unpack-info status info size need-free-p)))
-          (when (and info (atom info))
-            (setf info (list info)))
-          (apply callback hinternet status info)
-          )))))
-
-(defun unpack-info (status info size need-free-p)
-  (flet ((CSTR ()
-           (unpack-CSTR-pointer info size :free need-free-p))
-         (WSTR ()
-           (unpack-WSTR-pointer info (1- size) :free need-free-p))
-         (DWORD ()
-           (unpack-DWORD-pointer info size :free need-free-p)))
-    (ecase status
-      ;; Closing the connection to the server. The lpvStatusInformation parameter
-      ;; is NULL. This flag has been deprecated.
-      (:closing-connection nil)
-
-      ;; Successfully connected to the server. The lpvStatusInformation parameter
-      ;; contains a pointer to an LPWSTR that indicates the IP address of the
-      ;; server in dotted notation. This flag has been deprecated.
-      (:connected-to-server (WSTR))
-
-      ;; Connecting to the server. The lpvStatusInformation parameter contains a
-      ;; pointer to an LPWSTR that indicates the IP address of the server in
-      ;; dotted notation. This flag has been deprecated.
-      (:connecting-to-server (WSTR))
-
-      ;; Successfully closed the connection to the server. The
-      ;; lpvStatusInformation parameter is NULL. This flag has been deprecated.
-      (:connection-closed nil)
-
-      ;; Data is available to be retrieved with WinHttpReadData. The
-      ;; lpvStatusInformation parameter points to a DWORD that contains the
-      ;; number of bytes of data available. The dwStatusInformationLength
-      ;; parameter itself is 4 (the size of a DWORD).
-      (:data-available (DWORD))
-
-      ;; An HINTERNET handle has been created. The lpvStatusInformation parameter
-      ;; contains a pointer to the HINTERNET handle.
-      (:handle-created (DWORD))
-
-      ;; This handle value has been terminated. The lpvStatusInformation
-      ;; parameter contains a pointer to the HINTERNET handle. There will be no
-      ;; more callbacks for this handle.
-      (:handle-closing (DWORD))
-
-      ;; The response header has been received and is available with
-      ;; WinHttpQueryHeaders. The lpvStatusInformation parameter is NULL.
-      (:headers-available nil)
-
-      ;; Received an intermediate (100 level) status code message from the server.
-      ;; The lpvStatusInformation parameter contains a pointer to a DWORD that
-      ;; indicates the status code.
-      (:intermediate-response (DWORD))
-
-      ;; Successfully found the IP address of the server. The
-      ;; lpvStatusInformation parameter contains a pointer to a LPWSTR that
-      ;; indicates the name that was resolved. This flag has been deprecated.
-      (:name-resolved (WSTR))
-
-      ;; Data was successfully read from the server. The lpvStatusInformation
-      ;; parameter contains a pointer to the buffer specified in the call to
-      ;; WinHttpReadData. The dwStatusInformationLength parameter contains the
-      ;; number of bytes read.
-      (:read-complete (CSTR))
-
-      ;; Waiting for the server to respond to a request. The lpvStatusInformation
-      ;; parameter is NULL. This flag has been deprecated.
-      (:receiving-response nil)
-
-      ;; An HTTP request is about to automatically redirect the request. The
-      ;; lpvStatusInformation parameter contains a pointer to an LPWSTR
-      ;; indicating the new URL. At this point, the application can read any data
-      ;; returned by the server with the redirect response and can query the
-      ;; response headers. It can also cancel the operation by closing the handle.
-      (:redirect (WSTR))
-
-      ;; An error occurred while sending an HTTP request. The
-      ;; lpvStatusInformation parameter contains a pointer to a
-      ;; WINHTTP_ASYNC_RESULT structure, of which the dwResult member indicates
-      ;; the return value of the function and any error codes that apply.
-      (:request-error
-       (let ((&result (make-WINHTTP_ASYNC_RESULT nil info)))
-         (cons (ecase (WINHTTP_ASYNC_RESULT-dwResult &result)
-                 (API_RECEIVE_RESPONSE 'receive-response)
-                 (API_QUERY_DATA_AVAILABLE 'query-data-available)
-                 (API_READ_DATA 'read-data)
-                 (API_WRITE_DATA 'write-data)
-                 (API_SEND_REQUEST 'send-request))
-               (multiple-value-list
-                (get-last-error (WINHTTP_ASYNC_RESULT-dwError &result))))))
-      ;; Successfully sent the information request to the server. The
-      ;; lpvStatusInformation parameter contains a pointer to a DWORD indicating
-      ;; the number of bytes sent. This flag has been deprecated.
-      (:request-sent (DWORD))
-
-      ;; Looking up the IP address of a server name. The lpvStatusInformation
-      ;; parameter contains a pointer to the server name being resolved. This
-      ;; flag has been deprecated.
-      (:resolving-name (WSTR))
-
-      ;; Successfully received a response from the server. The
-      ;; lpvStatusInformation parameter contains a pointer to a DWORD indicating
-      ;; the number of bytes received. This flag has been deprecated.
-      (:response-received (DWORD))
-
-      ;; One or more errors were encountered while retrieving a Secure Sockets
-      ;; Layer (SSL) certificate from the server. The lpvStatusInformation
-      ;; parameter contains a flag. For more information, see the description for
-      ;; lpvStatusInformation.
-      (:secure-failure (unpack-flags info *secure-failure-infomation-type*))
-
-      ;; Sending the information request to the server. The lpvStatusInformation
-      ;; parameter is NULL. This flag has been deprecated.
-      (:sending-request nil)
-
-      ;; The request completed successfully. The lpvStatusInformation parameter
-      ;; is NULL.
-      (:send-request-complete nil)
-
-      ;; Data was successfully written to the server. The lpvStatusInformation
-      ;; parameter contains a pointer to a DWORD that indicates the number of
-      ;; bytes written.
-      (:write-complete (DWORD))
-
-;      (:getproxyforurl-complete)
+(defun dispatch-event1 ()
+  (when-let (cb (take-callback-info))
+    (multiple-value-bind (event hinternet args)
+        (apply #'unpack-callback-info cb)
+      (unless hinternet
+        (error (format nil "Unmanaged HINTERNET event received: ~S" cb)))
+      (unwind-protect
+          (let ((fn (hinternet-callback hinternet)))
+            (handler-case
+                (apply fn event hinternet args)
+              (quit (c)
+                (apply fn :callback-quit hinternet c))
+              (error (c)
+                (apply fn :callback-error hinternet c))
+              ))
+        (when (eq :handle-closing event)
+         ;; see close-handle at api.l
+          (setf (hinternet-closed-p hinternet) t)
+          (unregister-async-hinternet hinternet)))
       )))
+
+
+;;; WINHTTP_STATUS_CALLBACK_INFO
+
+(defparameter *callback-info-buffer* (make-WINHTTP_STATUS_CALLBACK_INFO))
 
 (defun callback-info-available-p ()
   (unpack-BOOL (QueryWinHttpStatusCallbackInfoAvailable)))
 
-(defun take-callback-info ()
-  (when (unpack-BOOL (TakeWinHttpStatusCallbackInfo *callback-info*))
-    (list (WINHTTP_STATUS_CALLBACK_INFO-hInternet *callback-info*)
-          (WINHTTP_STATUS_CALLBACK_INFO-dwContext *callback-info*)
-          (WINHTTP_STATUS_CALLBACK_INFO-dwInternetStatus *callback-info*)
-          (WINHTTP_STATUS_CALLBACK_INFO-lpvStatusInformation *callback-info*)
-          (WINHTTP_STATUS_CALLBACK_INFO-dwStatusInformationLength *callback-info*)
-          (unpack-BOOL (WINHTTP_STATUS_CALLBACK_INFO-bNeedGlobalFree *callback-info*))
+(defun take-callback-info (&optional (buffer *callback-info-buffer*))
+  (when (unpack-BOOL (TakeWinHttpStatusCallbackInfo buffer))
+    (list (WINHTTP_STATUS_CALLBACK_INFO-hInternet buffer)
+          (WINHTTP_STATUS_CALLBACK_INFO-dwContext buffer)
+          (WINHTTP_STATUS_CALLBACK_INFO-dwInternetStatus buffer)
+          (WINHTTP_STATUS_CALLBACK_INFO-lpvStatusInformation buffer)
+          (WINHTTP_STATUS_CALLBACK_INFO-dwStatusInformationLength buffer)
+          (unpack-BOOL (WINHTTP_STATUS_CALLBACK_INFO-bNeedGlobalFree buffer))
           )))
+
+(defun unpack-callback-info (handle context status info size need-free-p)
+  (when-let ((hinternet (find-async-hinternet handle)))
+    (let* ((event (unpack-flags status *internet-status-type* :flags nil))
+           (args (unless (nullp info)
+                   (unwind-protect
+                       (ensure-list
+                        (unpack-status-infomation event info size))
+                     (when need-free-p
+                       (global-free info))))))
+      (values event hinternet args)
+      )))
+
+(defun unpack-status-infomation (status info size)
+  (labels ((LPCSTR ()
+             (list (unpack-CSTR-pointer info size) size))
+           (LPWSTR ()
+             ;; size ‚Í NULL •¶š‚ğŠÜ‚Ş
+             (unpack-WSTR-pointer info (1- size)))
+           (LPDWORD ()
+             (unpack-DWORD-pointer info size))
+           (LPHINTERNET ()
+             (LPDWORD))
+           (LPWINHTTP_ASYNC_RESULT ()
+             (multiple-value-bind (type error-code)
+                 (unpack-WINHTTP_ASYNC_RESULT (make-WINHTTP_ASYNC_RESULT nil info))
+               (list type
+                     (create-winhttp-condition (ecase type
+                                                 (:receive-response 'WinHttpReceiveResponse)
+                                                 (:query-data-available 'WinHttpQueryDataAvailable)
+                                                 (:read-data 'WinHttpReadData)
+                                                 (:write-data 'WinHttpWriteData)
+                                                 (:send-request 'WinHttpSendRequest))
+                                               error-code))))
+           (SECURE_FAILURE ()
+             (unpack-flags info *secure-failure-infomation-type*))
+           )
+    (ecase status
+      (:closing-connection nil)
+      (:connected-to-server (LPWSTR))
+      (:connecting-to-server (LPWSTR))
+      (:connection-closed nil)
+      (:data-available (LPDWORD))
+      (:handle-created (LPHINTERNET))
+      (:handle-closing (LPHINTERNET))
+      (:headers-available nil)
+      (:intermediate-response (LPDWORD))
+      (:name-resolved (LPWSTR))
+      (:read-complete (LPCSTR))
+      (:receiving-response nil)
+      (:redirect (LPWSTR))
+      (:request-error (LPWINHTTP_ASYNC_RESULT))
+      (:request-sent (LPDWORD))
+      (:resolving-name (LPWSTR))
+      (:response-received (LPDWORD))
+      (:secure-failure (SECURE_FAILURE))
+      (:sending-request nil)
+      (:send-request-complete nil)
+      (:write-complete (LPDWORD))
+      ;(:getproxyforurl-complete)
+      )))
 
 
 (provide "xl-winhttp/api/async")

@@ -51,7 +51,10 @@
        :typecase
        )
       (:shadowing-import-from :alexandria
+       :ensure-car
+       :ensure-list
        :symbolicate
+       :when-let
        :with-gensyms
        )
       ))

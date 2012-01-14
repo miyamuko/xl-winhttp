@@ -28,6 +28,7 @@
   (require "xl-winhttp/api/types")
   (require "xl-winhttp/api/options")
   (require "xl-winhttp/api/conditions")
+  (require "xl-winhttp/api/async")
   )
 
 (in-package :xl-winhttp.api)
@@ -70,6 +71,8 @@
 
           set-option
           query-option
+
+          set-status-callback
           ))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384098.aspx
@@ -159,17 +162,22 @@ an HINTERNET connection handle to an HTTP session for that initial target."
 ;; BOOL WINAPI WinHttpCloseHandle(
 ;;   __in  HINTERNET hInternet
 ;; );
+;; async の場合:
+;; - WinHttpCloseHandle 後も他のイベントが呼ばれるかもしれないので
+;;   WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING イベントを受信するまで
+;;   request を保持
 (defun close-handle (hinternet)
   "Closes a single HINTERNET handle."
   ;; close しているかどうかのチェックはしないので check-valid-handle は呼ばない
-  ;; TODO async
-  ;; WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING イベント受信後に
-  ;; closed-p に t を設定する
   (check-type hinternet hinternet)
   (unless (hinternet-closed-p hinternet)
+    (setf (hinternet-closed-p hinternet) t)
     (assert-BOOL
      (WinHttpCloseHandle (hinternet-handle hinternet)))
-    (setf (hinternet-closed-p hinternet) t)))
+    ;; see async.l
+    (unless (hinternet-async-p hinternet)
+      (unregister-async-hinternet hinternet))
+    t))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384110.aspx
 ;; BOOL WINAPI WinHttpSendRequest(
@@ -181,15 +189,15 @@ an HINTERNET connection handle to an HTTP session for that initial target."
 ;;   __in      DWORD dwTotalLength,
 ;;   __in      DWORD_PTR dwContext
 ;; );
-(defun send-request (request &key data headers total-length context)
+;; async の場合:
+;; - lpOptional を以下のイベントが発生するまで保持
+;;   - WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE
+;;   - WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
+;; - pwszHeaders は保持する必要はない
+(defun send-request (request &key data headers total-length)
   "Sends the specified request to the HTTP server."
-  ;; TODO async
-  ;; &data を以下のイベントが発生するまで保持
-  ;; - WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE
-  ;; - WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
   (check-valid-handle request request)
   (check-type total-length (or null content-length))
-  (check-type context (or null integer))
   (let ((&headers (make-WSTR (format-headers headers) :default WINHTTP_NO_ADDITIONAL_HEADERS))
         (&data (make-CSTR data :default WINHTTP_NO_REQUEST_DATA)))
     (assert-BOOL
@@ -199,7 +207,11 @@ an HINTERNET connection handle to an HTTP session for that initial target."
                          &data
                          (CSTR-length &data)
                          (or total-length (CSTR-length &data))
-                         (or context NULL)))))
+                         ;; context は hinternet 構造体に設定する
+                         NULL))
+    (when (request-async-p request)
+      (setf (request-send-buffer request) &data))
+    t))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384120.aspx
 ;; BOOL WINAPI WinHttpWriteData(
@@ -208,22 +220,28 @@ an HINTERNET connection handle to an HTTP session for that initial target."
 ;;   __in   DWORD dwNumberOfBytesToWrite,
 ;;   __out  LPDWORD lpdwNumberOfBytesWritten
 ;; );
+;; async の場合:
+;; - lpdwNumberOfBytesWritten に NULL を指定する
+;; - lpBuffer を以下のイベントが発生するまで保持
+;;   - WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE
+;;   - WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
 (defun write-data (request data)
   "Writes request data to an HTTP server."
-  ;; TODO async
-  ;; &written に NULL を指定する
-  ;; &data を以下のイベントが発生するまで保持
-  ;; - WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE
-  ;; - WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
   (check-valid-handle request request)
-  (let ((&written (make-DWORD))
-        (&data (make-CSTR data)))
+  (let ((&data (make-CSTR data))
+        (&written (if (request-async-p request)
+                      NULL
+                    (make-DWORD))))
     (assert-BOOL
      (WinHttpWriteData (request-handle request)
                        &data
                        (CSTR-length &data)
                        &written))
-    (unpack-DWORD &written)))
+    (if (request-async-p request)
+        (progn
+          (setf (request-send-buffer request) &data)
+          t)
+      (unpack-DWORD &written))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384105.aspx
 ;; BOOL WINAPI WinHttpReceiveResponse(
@@ -308,25 +326,31 @@ entity body (if any)."
 ;;   __in   DWORD dwNumberOfBytesToRead,
 ;;   __out  LPDWORD lpdwNumberOfBytesRead
 ;; );
+;; async の場合:
+;; - lpdwNumberOfBytesRead に NULL を指定する
+;; - lpBuffer を以下のイベントが発生するまで保持
+;;   - WINHTTP_CALLBACK_STATUS_READ_COMPLETE
+;;   - WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
 (defun read-data (request num-of-bytes-to-read)
   "Reads data from a handle opened by the winhttp:open-request function."
-  ;; TODO async
-  ;; &num-of-bytes-read に NULL を指定する
-  ;; &buffer を以下のイベントが発生するまで保持
-  ;; - WINHTTP_CALLBACK_STATUS_READ_COMPLETE
-  ;; - WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
   (check-valid-handle request request)
   (check-type num-of-bytes-to-read content-length)
   (let ((&buffer (make-CSTR-buffer num-of-bytes-to-read))
-        (&num-of-bytes-read (make-DWORD)))
+        (&num-of-bytes-read (if (request-async-p request)
+                                NULL
+                              (make-DWORD))))
     (assert-BOOL
      (WinHttpReadData (request-handle request)
                       &buffer
                       num-of-bytes-to-read
                       &num-of-bytes-read))
-    (let ((bytes (unpack-DWORD &num-of-bytes-read)))
-      (values (unpack-CSTR &buffer bytes)
-              bytes))))
+    (if (request-async-p request)
+        (progn
+          (setf (request-read-buffer request) &buffer)
+          t)
+      (let ((bytes (unpack-DWORD &num-of-bytes-read)))
+        (values (unpack-CSTR &buffer bytes)
+                bytes)))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384100.aspx
 ;; BOOL WINAPI WinHttpQueryAuthSchemes(
@@ -355,16 +379,20 @@ entity body (if any)."
 ;;   __in   HINTERNET hRequest,
 ;;   __out  LPDWORD lpdwNumberOfBytesAvailable
 ;; );
+;; async の場合
+;; - lpdwNumberOfBytesAvailable に NULL を指定
 (defun query-data-available (request)
   "Returns the amount of data, in bytes, available to be read with winhttp:read-data."
-  ;; TODO async
-  ;; &num-of-bytes-available に NULL を指定する
   (check-valid-handle request request)
-  (let ((&num-of-bytes-available (make-DWORD)))
+  (let ((&num-of-bytes-available (if (request-async-p request)
+                                     NULL
+                                   (make-DWORD))))
     (assert-BOOL
      (WinHttpQueryDataAvailable (request-handle request)
                                 &num-of-bytes-available))
-    (unpack-DWORD &num-of-bytes-available)))
+    (if (request-async-p request)
+        t
+      (unpack-DWORD &num-of-bytes-available))))
 
 (defun query-request-header (request header &key (type :string) (index 0))
   "Retrieves request header information associated with an HTTP request."
@@ -928,6 +956,46 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   SecPkgContext_IssuerListInfoEx*
 ;;   WINHTTP_CERTIFICATE_INFO
 ;;   WINHTTP_PROXY_INFO
+
+
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384115.aspx
+;; WINHTTP_STATUS_CALLBACK WINAPI WinHttpSetStatusCallback(
+;;   __in        HINTERNET hInternet,
+;;   __in        WINHTTP_STATUS_CALLBACK lpfnInternetCallback,
+;;   __in        DWORD dwNotificationFlags,
+;;   __reserved  DWORD_PTR dwReserved
+;; );
+(defun set-status-callback (hinternet callback
+                                      &key
+                                      ;; *notification-flags*
+                                      all-completions
+                                      all-notifications
+                                      resolve-name
+                                      connect-to-server
+                                      detecting-proxy
+                                      data-available
+                                      headers-available
+                                      read-complete
+                                      request-error
+                                      send-request
+                                      send-request-complete
+                                      write-complete
+                                      receive-response
+                                      close-connection
+                                      handles
+                                      redirect
+                                      intermediate-response
+                                      secure-failure)
+  (check-valid-handle hinternet (or session connection request))
+  (check-type callback callable)
+  (register-async-hinternet hinternet callback)
+  (WinHttpSetStatusCallback (hinternet-handle hinternet)
+                            (GetWinHttpStatusCallbackAddress)
+                            (expand-flags *notification-flags*
+                                          :default :all-notifications)
+                            0)
+  (dispatch-event-later)
+  )
 
 
 ;;; private

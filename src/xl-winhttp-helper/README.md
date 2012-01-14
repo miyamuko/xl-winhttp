@@ -44,136 +44,136 @@ WinHTTP ではデータを受信するたびにコールバックが呼び出さ
 
 <table>
   <tr>
-    <th>イベント</th>
+    <th rowspan="3">イベント</th>
     <th>lpvStatusInformation の型</th>
-    <th>lpvStatusInformation の値</th>
-    <th>備考</th>
   </tr>
+  <tr><th>lpvStatusInformation の値</th></tr>
+  <tr><th>備考</th></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION</td>
     <td>-</td>
-    <td>NULL</td>
-    <td>deprecated</td>
   </tr>
+  <tr><td>NULL</td></tr>
+  <tr><td>deprecated</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER</td>
     <td>LPWSTR</td>
-    <td>IP アドレス</td>
-    <td>deprecated</td>
   </tr>
+  <tr><td>IP アドレス</td></tr>
+  <tr><td>deprecated</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER</td>
     <td>LPWSTR</td>
-    <td>IP アドレス</td>
-    <td>deprecated</td>
   </tr>
+  <tr><td>IP アドレス</td></tr>
+  <tr><td>deprecated</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED</td>
     <td>-</td>
-    <td>NULL</td>
-    <td>deprecated</td>
   </tr>
+  <tr><td>NULL</td></tr>
+  <tr><td>deprecated</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE</td>
     <td>LPDWORD</td>
-    <td>読み込み可能なバイト数</td>
-    <td>-</td>
   </tr>
+  <tr><td>読み込み可能なバイト数</td></tr>
+  <tr><td>-</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_HANDLE_CREATED</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_HANDLE_CREATED</td>
     <td>LPHINTERNET</td>
-    <td>ハンドル</td>
-    <td>-</td>
   </tr>
+  <tr><td>ハンドル</td></tr>
+  <tr><td>-</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING</td>
     <td>LPHINTERNET</td>
-    <td>ハンドル</td>
+  </tr>
+  <tr><td>ハンドル</td></tr>
+  <tr><td>-</td></tr>
+  <tr>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE</td>
     <td>-</td>
   </tr>
+  <tr><td>NULL</td></tr>
+  <tr><td>WinHttpQueryHeaders で読み取り可能</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE</td>
-    <td>-</td>
-    <td>NULL</td>
-    <td>WinHttpQueryHeaders で読み取り可能</td>
-  </tr>
-  <tr>
-    <td>WINHTTP_CALLBACK_STATUS_INTERMEDIATE_RESPONSE</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_INTERMEDIATE_RESPONSE</td>
     <td>LPDWORD</td>
-    <td>HTTP ステータスコード</td>
-    <td>100 番台の場合</td>
   </tr>
+  <tr><td>HTTP ステータスコード</td></tr>
+  <tr><td>100 番台の場合</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_NAME_RESOLVED</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_NAME_RESOLVED</td>
     <td>LPWSTR</td>
-    <td>IP アドレス</td>
-    <td>deprecated</td>
   </tr>
+  <tr><td>IP アドレス</td></tr>
+  <tr><td>deprecated</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_READ_COMPLETE</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_READ_COMPLETE</td>
     <td>LPVOID</td>
-    <td>WinHttpReadData で指定したバッファ</td>
+  </tr>
+  <tr><td>WinHttpReadData で指定したバッファ</td></tr>
+  <tr><td>-</td></tr>
+  <tr>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE</td>
     <td>-</td>
   </tr>
+  <tr><td>NULL</td></tr>
+  <tr><td>deprecated</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE</td>
-    <td>-</td>
-    <td>NULL</td>
-    <td>deprecated</td>
-  </tr>
-  <tr>
-    <td>WINHTTP_CALLBACK_STATUS_REDIRECT</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_REDIRECT</td>
     <td>LPWSTR</td>
-    <td>リダイレクト先の URL</td>
-    <td>WinHttpQueryHeaders でリダイレクト前のヘッダを読み取り可能</td>
   </tr>
+  <tr><td>リダイレクト先の URL</td></tr>
+  <tr><td>WinHttpQueryHeaders でリダイレクト前のヘッダを読み取り可能</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_REQUEST_ERROR</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_REQUEST_ERROR</td>
     <td>LPWINHTTP_ASYNC_RESULT</td>
-    <td>WINHTTP_ASYNC_RESULT (失敗した API とエラーコード)</td>
-    <td>-</td>
   </tr>
+  <tr><td>WINHTTP_ASYNC_RESULT (失敗した API とエラーコード)</td></tr>
+  <tr><td>-</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_REQUEST_SENT</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_REQUEST_SENT</td>
     <td>LPDWORD</td>
-    <td>送信したバイト数</td>
-    <td>deprecated</td>
   </tr>
+  <tr><td>送信したバイト数</td></tr>
+  <tr><td>deprecated</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_RESOLVING_NAME</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_RESOLVING_NAME</td>
     <td>LPWSTR</td>
-    <td>ホスト名</td>
-    <td>deprecated</td>
   </tr>
+  <tr><td>ホスト名</td></tr>
+  <tr><td>deprecated</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED</td>
     <td>LPDWORD</td>
-    <td>受信したバイト数</td>
-    <td>deprecated</td>
   </tr>
+  <tr><td>受信したバイト数</td></tr>
+  <tr><td>deprecated</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_SECURE_FAILURE</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_SECURE_FAILURE</td>
     <td>DWORD</td>
-    <td>WINHTTP_CALLBACK_STATUS_FLAG_XXX が格納</td>
+  </tr>
+  <tr><td>WINHTTP_CALLBACK_STATUS_FLAG_XXX が格納</td></tr>
+  <tr><td>-</td></tr>
+  <tr>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_SENDING_REQUEST</td>
     <td>-</td>
   </tr>
+  <tr><td>NULL</td></tr>
+  <tr><td>deprecated</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_SENDING_REQUEST</td>
-    <td>-</td>
-    <td>NULL</td>
-    <td>deprecated</td>
-  </tr>
-  <tr>
-    <td>WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE</td>
-    <td>-</td>
-    <td>NULL</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE</td>
     <td>-</td>
   </tr>
+  <tr><td>NULL</td></tr>
+  <tr><td>-</td></tr>
   <tr>
-    <td>WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE</td>
+    <td rowspan="3">WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE</td>
     <td>LPDWORD</td>
-    <td>送信したバイト数</td>
-    <td>-</td>
   </tr>
+  <tr><td>送信したバイト数</td></tr>
+  <tr><td>-</td></tr>
 </table>
 

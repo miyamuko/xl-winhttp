@@ -65,6 +65,8 @@
           pack-BOOL
           unpack-BOOL
 
+          unpack-WINHTTP_ASYNC_RESULT
+
           get-last-error
           global-free
           ))
@@ -252,6 +254,14 @@
 
 (defun unpack-BOOL (bool)
   (not (nullp bool)))
+
+
+(defun unpack-WINHTTP_ASYNC_RESULT (result)
+  (check-chunk result)
+  (values (unpack-flags (WINHTTP_ASYNC_RESULT-dwResult result)
+                        *async-result-type* :flags nil)
+          (WINHTTP_ASYNC_RESULT-dwError result)))
+
 
 (defun get-last-error (&optional error-code)
   (let* ((error-code (or error-code (GetLastError)))

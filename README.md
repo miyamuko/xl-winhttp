@@ -9,14 +9,15 @@
 ```lisp
 (require "xl-winhttp")
 
-(defparameter *winhttp-session* nil)
+(defparameter *winhttp-session* (make-hash-table :test #'equalp))
 
-(defun winhttp-session ()
+(defun winhttp-session (&rest args)
   ;; winhttp:open を実行すると WinHTTP 内でスレッドプールの初期化が行われるので
   ;; session は使いまわす
-  (or *winhttp-session*
-      (setf *winhttp-session*
-            (winhttp:open :user-agent "xl-winhttp/example"))))
+  (or (gethash args *winhttp-session*)
+      (setf (gethash args *winhttp-session*)
+            (apply #'winhttp:open args))))
+
 
 ;;
 ;; 同期バージョン
@@ -29,7 +30,7 @@
       (winhttp:crack-url url)
     ;; connection と request を作成
     ;; この時点では実際には接続されない
-    (winhttp:with-connect (conn (winhttp-session) host port)
+    (winhttp:with-connect (conn (winhttp-session :user-agent "xl-winhttp/example") host port)
       (winhttp:with-open-request (req conn "GET" (format nil "~A~A" (or path "") (or extra ""))
                                       :secure (string= scheme "https"))
         ;; Accept-Language ヘッダを設定
@@ -64,7 +65,7 @@
            ))))))
 
 ;;
-;; start-timer を利用したなんちゃって非同期バージョン
+;; 非同期バージョン
 ;;
 
 ;; 非同期 GET
@@ -74,99 +75,60 @@
       (winhttp:crack-url url)
     ;; connection と request を作成
     ;; この時点では実際には接続されない
-    (let* ((conn (winhttp:connect (winhttp-session) host port))
+    (let* ((sess (winhttp-session :user-agent "xl-winhttp/async-example" :async t))
+           (conn (winhttp:connect sess host port))
            (req (winhttp:open-request conn "GET" (format nil "~A~A" (or path "") (or extra ""))
                                       :accept "*/*"
                                       :secure (string= scheme "https"))))
-      ;; 非同期処理を開始
-      (dispatch-winhttp-async-worker 'send-request conn req callback))))
-
-(defun dispatch-winhttp-async-worker (state conn req callback)
-  (start-timer 0 #'(lambda ()
-                     (do-winhttp-async-worker state conn req callback))
-               t))
-
-(defun do-winhttp-async-worker (state conn req callback &optional error)
-  (handler-case
-      (let ((next-state (do-winhttp-async-worker1 state conn req callback)))
-        (when (and next-state (not (eq 'done next-state)))
-          (dispatch-winhttp-async-worker next-state conn req callback)))
-    (quit (c)
-      (do-winhttp-async-worker 'cancel conn req callback))
-    (error (c)
-      (do-winhttp-async-worker 'error conn req callback c))
-    ))
-
-(defun do-winhttp-async-worker1 (state conn req callback &optional error)
-  (case state
-    (send-request
-     ;; リクエスト送信
-     (winhttp:send-request req :headers `(:X-Yzzy-Version ,(software-version)))
-     'receive-response)
-    (receive-response
-     ;; レスポンスを待つ
-     (winhttp:receive-response req)
-     (funcall callback 'on-response req)
-     'read-data)
-    (read-data
-     ;; レスポンスボディを読み込む
-     (let ((n (winhttp:query-data-available req)))
-       (if (<= n 0)
-           'end-data
-         (multiple-value-bind (data n)
-             (winhttp:read-data req n)
-           (funcall callback 'on-read-data req data n)
-           'read-data))))
-    (end-data
-     ;; レスポンスボディの読み込み完了
-     (funcall callback 'on-end-data req)
-     'cleanup)
-    (error
-     ;; エラーが発生
-     (funcall callback 'on-error req error)
-     'cleanup)
-    (cancel
-     ;; Ctrl-g でキャンセル
-     (funcall callback 'on-cancel req)
-     'cleanup)
-    (cleanup
-     ;; connection と request ハンドルを閉じる
-     (winhttp:close-handle req)
-     (winhttp:close-handle conn)
-     'done)
-    (t
-     ;; バグってる
-     (msgbox "Error: ~S" state)
-     'cleanup)))
-
+      (winhttp:set-status-callback
+       req #'(lambda (&rest args)
+               (alexandria:destructuring-case args
+                 ;; リクエスト送信完了
+                 ((:send-request-complete req)
+                  (winhttp:receive-response req))
+                 ;; レスポンスヘッダ受信完了
+                 ((:headers-available req)
+                  (funcall callback :on-response req)
+                  (winhttp:query-data-available req))
+                 ;; レスポンスボディ受信チェック
+                 ((:data-available req n)
+                  (if (< 0 n)
+                      (winhttp:read-data req n)
+                    (winhttp:close-handle req)))
+                 ;; レスポンスボディ受信
+                 ((:read-complete req data n)
+                  (funcall callback :on-data req data n)
+                  (winhttp:query-data-available req))
+                 ;; レスポンスボディ受信完了
+                 ((:handle-closing req hinternet)
+                  (funcall callback :on-end req))
+                 ;; 送信エラー
+                 ((:request-error req error)
+                  (funcall callback :on-error req))
+                 ((otherwise req &rest params)
+                  (message "~S" (cons (car args) params)))
+                 )))
+      (winhttp:send-request req)
+      )))
 
 ;; 非同期ダウンロード
 (defun http-download-async (url localfile callback)
   (let ((output (open localfile :direction :output :encoding :binary))
         (content-length nil)
         (total 0))
-    (http-get-async url #'(lambda (state req &optional data n)
-                            (case state
-                              (on-response
+    (http-get-async url #'(lambda (&rest args)
+                            (alexandria:destructuring-case args
+                              ((:on-response req)
                                (setf content-length
                                      (winhttp:query-response-header
                                       req :content-length :type :number)))
-                              (on-read-data
+                              ((:on-data req data n)
                                (incf total n)
                                (princ data output)
                                (progress-message total content-length))
-                              (on-end-data
+                              ((:on-end req)
                                (close output)
                                (funcall callback url localfile))
-                              (on-cancel
-                               (close output)
-                               (message "Cancel"))
-                              (on-error
-                               (close output)
-                               (message "Error: ~A" data))
-                              (t
-                               (msgbox "Invalid state: ~A" state)
-                               (close output))
                               ))
                     )))
 
@@ -234,7 +196,6 @@ Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対�
 
 ## TODO
 
-* 非同期
 * リファレンス
 * reset-auto-proxy, create-proxy-resolver, get-proxy-for-url-ex
   - Windows 8 で追加された API への対応

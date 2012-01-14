@@ -284,6 +284,15 @@
     :security-channel-error     ,WINHTTP_CALLBACK_STATUS_FLAG_SECURITY_CHANNEL_ERROR
     ))
 
+;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384121.aspx
+(defvar *async-result-type*
+  `(:receive-response           ,API_RECEIVE_RESPONSE
+    :query-data-available       ,API_QUERY_DATA_AVAILABLE
+    :read-data                  ,API_READ_DATA
+    :write-data                 ,API_WRITE_DATA
+    :send-request               ,API_SEND_REQUEST
+    ))
+
 
 (defmacro expand-flags (plist &key (default 0))
   `(make-flag (list ,@(mapcar #'(lambda (k)
@@ -296,7 +305,9 @@
   (when (listp value)
     (setf value (remove-if #'null value)))
   (typecase value
-    (null default)
+    (null (if default
+              (make-flag default keyword-flag-plist :flags flags)
+            0))
     (integer value)
     (list
      (when (and (not flags)

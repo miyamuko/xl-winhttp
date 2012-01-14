@@ -47,14 +47,36 @@
   `(or function
        (and symbol (satisfies fboundp))))
 
+(deftype chunk ()
+  `(satisfies chunkp))
+
+(deftype bool ()
+  `(member t nil))
+
+(deftype pointer ()
+  `(and (integer 0 ,(expt 2 32))
+        (satisfies (lambda (v)
+                     (zerop (mod v 4))))
+        ))
+
 
 (defstruct hinternet
-  description
-  (created-on (get-universal-time))
-  handle
-  closed-p
-  async-p
-  parent
+  ; 接続先の情報などのデバッグ用の文字列
+  (description nil :type string :read-only t)
+  ; 作成時刻
+  (created-on (get-universal-time) :type integer :read-only t)
+  ; 非同期なら t
+  (async-p nil :type bool :read-only t)
+  ; ハンドルをクローズ済みなら t
+  (closed-p nil :type bool :read-only nil)
+  ; HINTERNET
+  (handle nil :type pointer :read-only t)
+  ; set-status-callback で設定するコールバック関数
+  (callback nil :type callable :read-only nil)
+  ; 任意の値を設定可能
+  (context nil :type nil :read-only nil)
+  ; 親の hinternt 構造体 (session の場合は nil)
+  (parent nil :type hinternet :read-only t)
   )
 (export-structure 'hinternet :name t :accessors t :predicate t)
 
@@ -75,10 +97,20 @@
      ))
 (setf (get 'define-hinternet-wrapper 'ed:lisp-indent-hook) 1)
 
+
+(defvar *read-buffer-size* 8192)
+(defvar *send-buffer-size* 8192)
+
 (define-hinternet-wrapper session)
 (define-hinternet-wrapper connection)
 (define-hinternet-wrapper request
-  secure-p)
+  ;; SSL 通信なら t
+  (secure-p nil :type bool :read-only t)
+  ;; 受信用バッファ
+  (read-buffer nil :type chunk :read-only nil)
+  ;; 送信用バッファ
+  (send-buffer nil :type chunk :read-only nil)
+  )
 
 
 (defmacro assert-BOOL (&body body)
