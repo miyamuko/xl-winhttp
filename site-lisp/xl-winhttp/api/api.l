@@ -441,9 +441,13 @@ entity body (if any)."
 (defun query-headers-LPWSTR (request info-level &name &index)
   (let ((bytes (%query-headers-buffer-length request info-level &name &index)))
     (when (< 0 bytes)
-      (%query-headers request info-level &name &index
-                      (make-WSTR-buffer (bytes->WSTR-length bytes)) bytes
-                      #'unpack-WSTR))))
+      (let ((wstr-len (bytes->WSTR-length bytes)))
+        (%query-headers request info-level &name &index
+                        (make-WSTR-buffer wstr-len)
+                        bytes
+                        #'(lambda (&b)
+                            (chomp-null (unpack-WSTR &b wstr-len)))
+                        )))))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384102.aspx
 ;; BOOL WINAPI WinHttpQueryHeaders(

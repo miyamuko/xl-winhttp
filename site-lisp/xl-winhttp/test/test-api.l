@@ -434,6 +434,15 @@
             (query-request-header request "X-Date" :index 1 :type :universal-time))
         (assert-equal '(3166365721 3166398121)
             (query-request-headers request "X-Date" :type :universal-time))
+
+        (let ((actual-headers (split-string (query-request-header request :raw-headers) #\NUL)))
+          (assert-true (member "X-String: foo" actual-headers :test #'string-equal))
+          (assert-true (member "X-String: bar" actual-headers :test #'string-equal))
+          (assert-true (member "X-Number: 123" actual-headers :test #'string-equal))
+          (assert-true (member "X-Number: 12345" actual-headers :test #'string-equal))
+          (assert-true (member "X-Date: Wed, 03 May 2000 18:02:01 GMT" actual-headers :test #'string-equal))
+          (assert-true (member "X-Date: Thu, 04 May 2000 03:02:01 GMT" actual-headers :test #'string-equal))
+          )
         )))
   )
 

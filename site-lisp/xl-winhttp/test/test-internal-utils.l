@@ -31,6 +31,7 @@
 (defpackage :xl-winhttp.test.utils
   (:use :lisp :editor
    :lisp-unit
+   :xl-winhttp.internal
    :xl-winhttp.test.helper
    )
   )
@@ -38,6 +39,27 @@
 (in-package :xl-winhttp.test.utils)
 
 (remove-all-tests :xl-winhttp.test.utils)
+
+(define-test xl-winhttp/chomp-null
+  (assert-equal nil
+      (chomp-null nil))
+  (assert-equal nil
+      (chomp-null 0))
+
+  (assert-equal ""
+      (chomp-null ""))
+  (assert-equal "aa"
+      (chomp-null "aa"))
+  (assert-equal ""
+      (chomp-null (format nil "~C" #\NUL)))
+
+  (assert-equal ""
+      (chomp-null (format nil "~C~C~C" #\NUL #\NUL #\NUL)))
+  (assert-equal "aa"
+      (chomp-null (format nil "aa~C" #\NUL)))
+  (assert-equal "aa"
+      (chomp-null (format nil "aa~C~C~C" #\NUL #\NUL #\NUL)))
+  )
 
 (define-test xl-winhttp/plist-keys
   (assert-equal nil

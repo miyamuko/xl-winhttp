@@ -32,9 +32,11 @@
 (export '(plist-keys
           plist-values
           format-headers
+          chomp-null
           ))
 
 (defconstant +CRLF+ (format nil "~C~C" (code-char #x0d) (code-char #x0a)))
+(defconstant +NULL+ (format nil "~C" #\NUL))
 
 (defun plist-keys (plist)
   (loop for (k v) on plist by #'cddr
@@ -82,6 +84,10 @@
                                  (car pair) (cdr pair)
                                  +CRLF+))
                      (to-alist header))))))
+
+(defun chomp-null (s)
+  (unless (nullp s)
+    (string-right-trim +NULL+ s)))
 
 
 (provide "xl-winhttp/internal/utils")
