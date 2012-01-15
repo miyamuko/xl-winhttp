@@ -63,16 +63,16 @@
 
 (define-test xl-winhttp/plist-keys
   (assert-equal nil
-      (winhttp.internal::plist-keys nil))
+      (plist-keys nil))
   (assert-equal '(:foo :bar :baz)
-      (winhttp.internal::plist-keys '(:foo 1 :bar 2 :baz 3)))
+      (plist-keys '(:foo 1 :bar 2 :baz 3)))
   )
 
 (define-test xl-winhttp/plist-values
   (assert-equal nil
-      (winhttp.internal::plist-values nil))
+      (plist-values nil))
   (assert-equal '(1 2 3)
-      (winhttp.internal::plist-values '(:foo 1 :bar 2 :baz 3)))
+      (plist-values '(:foo 1 :bar 2 :baz 3)))
   )
 
 (define-test xl-winhttp/dotp
@@ -108,21 +108,21 @@
 
 (define-test xl-winhttp/format-headers
   (assert-equal nil
-      (winhttp.internal::format-headers nil))
+      (format-headers nil))
   (assert-equal nil
-      (winhttp.internal::format-headers ""))
+      (format-headers ""))
   (assert-equal "User-Agent: foo"
-      (winhttp.internal::format-headers "User-Agent: foo"))
+      (format-headers "User-Agent: foo"))
 
   (assert-equal "User-Agent: foo\r\n"
-      (winhttp.internal::format-headers '("User-Agent" "foo")))
+      (format-headers '("User-Agent" "foo")))
   (assert-equal "User-Agent: foo\r\n"
-      (winhttp.internal::format-headers '((:User-Agent "foo"))))
+      (format-headers '((:User-Agent "foo"))))
   (assert-equal "User-Agent: foo\r\n"
-      (winhttp.internal::format-headers '((:User-Agent . :foo))))
+      (format-headers '((:User-Agent . :foo))))
 
   (assert-equal "User-Agent: foo\r\nX-Number: 1\r\nX-Number: 2\r\n"
-      (winhttp.internal::format-headers '(:User-Agent :foo :X-Number 1 :X-Number 2)))
+      (format-headers '(:User-Agent :foo :X-Number 1 :X-Number 2)))
   (assert-equal "User-Agent: foo\r\nX-Number: 1\r\nX-Number: 2\r\n"
-      (winhttp.internal::format-headers '((:User-Agent . :foo) (:X-Number 1) :X-Number 2)))
+      (format-headers '((:User-Agent . :foo) (:X-Number 1) :X-Number 2)))
   )
