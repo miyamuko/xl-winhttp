@@ -25,6 +25,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "xl-winhttp/internal/package")
+  (require "xl-winhttp/internal/debug")
   )
 
 (in-package :xl-winhttp.internal)
@@ -277,6 +278,7 @@
 
 (defun global-free (p)
   (unless (nullp p)
+    (debug "GlobalFree: ~8,'0X" p)
     (GlobalFree p)))
 
 

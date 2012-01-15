@@ -63,7 +63,7 @@ WinHttpStatusCallback(HINTERNET hInternet,
         info->dwStatusInformationLength = dwStatusInformationLength;
         info->bNeedGlobalFree = TRUE;
 
-        Debug(L"WinHttpStatusCallback: copy %p -> %p, %d bytes", lpvStatusInformation, copy, bytes);
+        Debug(L"GlobalAlloc: %p (copy %d bytes from %p)", copy,, bytes, lpvStatusInformation);
     }
     else
     {
