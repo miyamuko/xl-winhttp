@@ -1,6 +1,6 @@
 2012-01-15  MIYAMUKO Katsuyuki
 
-	* (async.l): 非同期用の処理を追加 (だいたい未完成)
+	* (async.l): 非同期用の処理を追加 (だいたい完成)
 
 2012-01-14  MIYAMUKO Katsuyuki
 
