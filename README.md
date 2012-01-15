@@ -180,9 +180,7 @@ xl-winhttp は [Windows HTTP Services](http://msdn.microsoft.com/en-us/library/w
   * バイナリファイルの取得
   * 文字エンコーディングを自動的に変換しないため、charset などが不適切でも文字化けしません
 
-Proxy や Basic/Digest 認証、SSL などは xml-http-request と同様に対応しています。
-
-なお、非同期通信はまだサポートしていません（サポート予定はあります）。
+Proxy や Basic/Digest 認証、SSL、非同期通信などは xml-http-request と同様に対応しています。
 
 
 ## INSTALL
