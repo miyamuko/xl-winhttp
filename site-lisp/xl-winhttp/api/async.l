@@ -86,9 +86,9 @@ Value: hinternet struct
             (handler-case
                 (apply fn event hinternet args)
               (quit (c)
-                (apply fn :callback-quit hinternet c))
+                (funcall fn :callback-quit hinternet c))
               (error (c)
-                (apply fn :callback-error hinternet c))
+                (funcall fn :callback-error hinternet c))
               ))
         (when (eq :handle-closing event)
          ;; see close-handle at api.l
