@@ -5,16 +5,12 @@ sources:
   include:
     - site-lisp/xl-winhttp/**/*.l
   exclude:
-    - site-lisp/xl-winhttp/**/tests/*.l
+    - site-lisp/xl-winhttp/**/test/*.l
 
 document:
-  - README.rdoc
+  - README.md
 
 files:
   include:
     - site-lisp/**/*.l
     - site-lisp/**/*.lc
-    - site-lisp/xl-winhttp/lib/*.dll
-    - site-lisp/xl-winhttp/src/**/*.*
-    - site-lisp/xl-winhttp/examples/**/*.*
-    - site-lisp/xl-winhttp/tests/*.*
