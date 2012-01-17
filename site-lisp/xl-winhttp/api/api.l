@@ -142,6 +142,14 @@ an HINTERNET connection handle to an HTTP session for that initial target."
   ;; and the Internet Engineering Task Force (IETF) Requests for Comments (RFCs) spell these
   ;; verbs using uppercase characters only.
   (setf verb (string-upcase (string verb)))
+
+  ;; RFC 2616
+  ;; Note that the absolute path cannot be empty; if none is present in the original URI,
+  ;; it MUST be given as "/" (the server root).
+  (when (or (not object-name)
+            (equal object-name ""))
+    (setf object-name "/"))
+
   (when (and accept (atom accept))
     (setf accept (list accept)))
   (multiple-value-bind (&accept chunks)
