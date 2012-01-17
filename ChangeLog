@@ -1,5 +1,7 @@
 2012-01-17  MIYAMUKO Katsuyuki
 
+	* xl-winhttp.api パッケージのニックネームに xl-winhttp を追加
+
 	* (open-request): RFC 2616 に従い、object-name が空の場合は
 	"/" を代わりに利用するようにした
 

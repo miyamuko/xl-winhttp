@@ -31,7 +31,7 @@
 
   (unless (find-package :xl-winhttp.api)
     (defpackage :xl-winhttp.api
-      (:nicknames :winhttp winhttp.api)
+      (:nicknames :winhttp :xl-winhttp winhttp.api)
       (:use
        :lisp
        :editor
