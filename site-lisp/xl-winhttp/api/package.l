@@ -51,6 +51,7 @@
        :typecase
        )
       (:shadowing-import-from :alexandria
+       :emptyp
        :ensure-car
        :ensure-list
        :symbolicate

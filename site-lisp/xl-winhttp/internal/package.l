@@ -50,6 +50,7 @@
        :typecase
        )
       (:shadowing-import-from :alexandria
+       :emptyp
        :format-symbol
        :iota
        )

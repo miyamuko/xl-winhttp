@@ -146,8 +146,7 @@ an HINTERNET connection handle to an HTTP session for that initial target."
   ;; RFC 2616
   ;; Note that the absolute path cannot be empty; if none is present in the original URI,
   ;; it MUST be given as "/" (the server root).
-  (when (or (not object-name)
-            (equal object-name ""))
+  (when (emptyp object-name)
     (setf object-name "/"))
 
   (when (and accept (atom accept))
@@ -587,7 +586,7 @@ entity body (if any)."
            ;; (make-WSTR "") は NULL 文字だけの chunk を返す (WSTR-length は 0)。
            ;; それを WinHttpCreateUrl に渡すとゴミが URL に設定されるので、
            ;; 空文字列の場合は chunk を作成しない。
-           (if (equal str "")
+           (if (emptyp str)
                NULL
              (winhttp.internal:make-WSTR str))))
     (let ((&components (make-URL_COMPONENTS))

@@ -74,7 +74,7 @@
   (etypecase header
     (null nil)
     (string
-     (if (string= header "")
+     (if (emptyp header)
          nil
        header))
     (list
