@@ -424,6 +424,8 @@ entity body (if any)."
   (check-type header (or integer string symbol))
   (check-type index integer)
   (check-type type (member :string :number :system-time :universal-time))
+  (when (symbolp header)
+    (setf header (make-keyword (string-downcase (string header)))))
   (multiple-value-bind (info-level name)
       (cond ((stringp header)
              (values WINHTTP_QUERY_CUSTOM

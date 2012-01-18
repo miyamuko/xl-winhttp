@@ -1,5 +1,8 @@
 2012-01-18  MIYAMUKO Katsuyuki
 
+	* (query-headers): header キーワードを大文字小文字の違いを
+	無視するようにした
+
 	* (open-request): verb が空なら GET として処理するようにした
 
 	* (dispatch-event1): :callback-error と :callback-quit イベントの

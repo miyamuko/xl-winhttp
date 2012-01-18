@@ -54,6 +54,7 @@
        :emptyp
        :ensure-car
        :ensure-list
+       :make-keyword
        :symbolicate
        :when-let
        :with-gensyms
