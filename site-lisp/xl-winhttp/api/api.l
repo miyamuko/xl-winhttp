@@ -141,7 +141,9 @@ an HINTERNET connection handle to an HTTP session for that initial target."
   ;; Note: This string should be all uppercase. Many servers treat HTTP verbs as case-sensitive,
   ;; and the Internet Engineering Task Force (IETF) Requests for Comments (RFCs) spell these
   ;; verbs using uppercase characters only.
-  (setf verb (string-upcase (string verb)))
+  (if (emptyp verb)
+      (setf verb "GET")
+    (setf verb (string-upcase (string verb))))
 
   ;; RFC 2616
   ;; Note that the absolute path cannot be empty; if none is present in the original URI,

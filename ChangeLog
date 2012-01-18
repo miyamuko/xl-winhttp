@@ -1,5 +1,7 @@
 2012-01-18  MIYAMUKO Katsuyuki
 
+	* (open-request): verb が空なら GET として処理するようにした
+
 	* (dispatch-event1): :callback-error と :callback-quit イベントの
 	呼び出しがエラーになっていたのを修正
 
