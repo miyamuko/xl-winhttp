@@ -405,21 +405,21 @@ entity body (if any)."
 
 (defun query-request-header (request header &key (type :string) (index 0))
   "Retrieves request header information associated with an HTTP request."
-  (query-headers request header :direction :request :type type :index index))
+  (query-headers request header :request-headers t :type type :index index))
 
 (defun query-request-headers (request header &key (type :string))
   "Retrieves all request header information associated with an HTTP request."
-  (query-headers request header :direction :request :type type :all t))
+  (query-headers request header :request-headers t :type type :list t))
 
 (defun query-response-header (request header &key (type :string) (index 0))
   "Retrieves response header information associated with an HTTP request."
-  (query-headers request header :direction :response :type type :index index))
+  (query-headers request header :request-headers nil :type type :index index))
 
 (defun query-response-headers (request header &key (type :string))
   "Retrieves all response header information associated with an HTTP request."
-  (query-headers request header :direction :response :type type :all t))
+  (query-headers request header :request-headers nil :type type :list t))
 
-(defun query-headers (request header &key direction all (type :string) (index 0))
+(defun query-headers (request header &key request-headers list (type :string) (index 0))
   (check-valid-handle request request)
   (check-type header (or integer string symbol))
   (check-type index integer)
@@ -438,9 +438,9 @@ entity body (if any)."
                            (:system-time WINHTTP_QUERY_FLAG_SYSTEMTIME)
                            (:universal-time WINHTTP_QUERY_FLAG_SYSTEMTIME)
                            (:string 0))
-                         (ecase direction
-                           (:request WINHTTP_QUERY_FLAG_REQUEST_HEADERS)
-                           (:response 0))))
+                         (if request-headers
+                             WINHTTP_QUERY_FLAG_REQUEST_HEADERS
+                           0)))
           (impl (ecase type
                   (:number #'query-headers-DWORD)
                   (:system-time #'query-headers-SYSTEMTIME)
@@ -450,10 +450,10 @@ entity body (if any)."
       (flet ((query (index)
                (let ((r (funcall impl request info-level name (make-DWORD index))))
                  ;; (query-response-header ... :type :system-time) ÇÃèÍçáÇÕëΩílÇ≈ï‘Ç∑
-                 (if (and r (listp r) (not all))
+                 (if (and r (listp r) (not list))
                      (values-list r)
                    r))))
-        (if all
+        (if list
             (loop for i from 0 below 100
                   for h = (query i)
                   while h
