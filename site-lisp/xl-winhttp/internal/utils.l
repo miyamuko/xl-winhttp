@@ -31,6 +31,7 @@
 
 (export '(plist-keys
           plist-values
+          format-verb
           format-headers
           chomp-null
           ))
@@ -69,6 +70,18 @@
         (t
          (cons (cons (caar lst) (cadar lst))
                (to-alist (cdr lst))))))
+
+(defun format-verb (verb)
+  ;; Note: This string should be all uppercase. Many servers treat HTTP verbs as case-sensitive,
+  ;; and the Internet Engineering Task Force (IETF) Requests for Comments (RFCs) spell these
+  ;; verbs using uppercase characters only.
+  (etypecase verb
+    (null "GET")
+    (symbol (string-upcase (string verb)))
+    (string
+     (if (emptyp verb)
+         "GET"
+       (string-upcase verb)))))
 
 (defun format-headers (header)
   (etypecase header

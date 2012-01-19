@@ -55,6 +55,7 @@
        :ensure-car
        :ensure-list
        :make-keyword
+       :string-designator
        :symbolicate
        :when-let
        :with-gensyms

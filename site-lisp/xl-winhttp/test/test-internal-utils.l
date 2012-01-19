@@ -126,3 +126,13 @@
   (assert-equal "User-Agent: foo\r\nX-Number: 1\r\nX-Number: 2\r\n"
       (format-headers '((:User-Agent . :foo) (:X-Number 1) :X-Number 2)))
   )
+
+(define-test xl-winhttp/format-verb
+  (assert-equal "T" (format-verb t))
+  (assert-equal "GET" (format-verb nil))
+  (assert-equal "GET" (format-verb ""))
+  (assert-equal "GET" (format-verb "GET"))
+  (assert-equal "GET" (format-verb "get"))
+  (assert-equal "PUT" (format-verb :put))
+  (assert-equal "POST" (format-verb 'post))
+  )
