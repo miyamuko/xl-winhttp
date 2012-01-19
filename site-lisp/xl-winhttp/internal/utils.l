@@ -34,6 +34,7 @@
           format-verb
           format-headers
           default-port
+          compose-url-path
           chomp-null
           ))
 
@@ -111,6 +112,24 @@
            ((string-equal scheme "https") INTERNET_DEFAULT_HTTPS_PORT)
            (t nil)))
     ))
+
+(defun compose-url-path (object-name)
+  ;; RFC 2616
+  ;; Note that the absolute path cannot be empty; if none is present in the original URI,
+  ;; it MUST be given as "/" (the server root).
+  (cond ((null object-name)
+         "/")
+        ((dotp object-name)
+         (compose-url-path (list (car object-name) (cdr object-name))))
+        ((listp object-name)
+         (compose-url-path (format nil "~{~A~}" (remove-if #'null object-name))))
+        ((stringp object-name)
+         (if (emptyp object-name)
+             "/"
+           object-name))
+        (t
+         (compose-url-path (format nil "~A" object-name)))
+        ))
 
 (defun chomp-null (s)
   (unless (nullp s)

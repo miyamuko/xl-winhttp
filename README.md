@@ -31,7 +31,7 @@
     ;; connection と request を作成
     ;; この時点では実際には接続されない
     (winhttp:with-connect (conn (winhttp-session :user-agent "xl-winhttp/example") host port)
-      (winhttp:with-open-request (req conn "GET" (format nil "~A~A" (or path "") (or extra ""))
+      (winhttp:with-open-request (req conn "GET" `(,path ,extra)
                                       :secure (string= scheme "https"))
         ;; Accept-Language ヘッダを設定
         (dolist (lang accept-language)
@@ -77,7 +77,7 @@
     ;; この時点では実際には接続されない
     (let* ((sess (winhttp-session :user-agent "xl-winhttp/async-example" :async t))
            (conn (winhttp:connect sess host port))
-           (req (winhttp:open-request conn "GET" (format nil "~A~A" (or path "") (or extra ""))
+           (req (winhttp:open-request conn "GET" `(,path ,extra)
                                       :accept "*/*"
                                       :secure (string= scheme "https"))))
       (winhttp:set-status-callback

@@ -1,5 +1,10 @@
 2012-01-19  MIYAMUKO Katsuyuki
 
+	* (open-request): object-name に list を指定可能とした
+	単純に結合するだけで文字エンコーディングの変換やエスケープは行わない
+	(winhttp:open-request c :GET '("/search" "?q=xyzzy%20emacs" "&num=" 30))
+	;=> #S(xl-winhttp.api:request description "GET /search?q=xyzzy%20emacs&num=30" ...)
+
 	* (add-request-headers): modifies の指定をキーワード引数とした
 
 	* (create-url): scheme に文字列を渡した場合に、chunk が GC されて

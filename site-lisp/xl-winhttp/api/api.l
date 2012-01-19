@@ -138,14 +138,10 @@ an HINTERNET connection handle to an HTTP session for that initial target."
   "Creates an HTTP request handle."
   (check-valid-handle connection connection)
   (check-type verb string-designator)
-  (check-type object-name string)
+  (check-type object-name (or string list))
 
   (setf verb (format-verb verb))
-  ;; RFC 2616
-  ;; Note that the absolute path cannot be empty; if none is present in the original URI,
-  ;; it MUST be given as "/" (the server root).
-  (when (emptyp object-name)
-    (setf object-name "/"))
+  (setf object-name (compose-url-path object-name))
   (when (and accept (atom accept))
     (setf accept (list accept)))
   (multiple-value-bind (&accept chunks)

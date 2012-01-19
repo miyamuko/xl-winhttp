@@ -154,3 +154,30 @@
   (assert-equal nil (default-port "ftp"))
   (assert-equal nil (default-port "ws"))
   )
+
+(define-test xl-winhttp/compose-url-path
+  (assert-equal "/"
+      (compose-url-path nil))
+  (assert-equal "123"
+      (compose-url-path 123))
+  (assert-equal "foo"
+      (compose-url-path :foo))
+  (assert-equal "/"
+      (compose-url-path ""))
+  (assert-equal "foo"
+      (compose-url-path "foo"))
+  (assert-equal "foo"
+      (compose-url-path '("foo")))
+  (assert-equal "/search?q=xyzzy"
+      (compose-url-path (cons "/search" "?q=xyzzy")))
+  (assert-equal "/"
+      (compose-url-path (cons nil nil)))
+  (assert-equal "/search"
+      (compose-url-path (cons "/search" nil)))
+  (assert-equal "/search"
+      (compose-url-path (cons nil "/search")))
+  (assert-equal "/"
+      (compose-url-path (list nil nil nil)))
+  (assert-equal "/show/user/1"
+      (compose-url-path (list "/" "show/" "user/" 1)))
+  )
