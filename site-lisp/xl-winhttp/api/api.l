@@ -581,7 +581,7 @@ entity body (if any)."
                           escape
                           reject-userpwd)
   "Creates a URL from component parts such as the host name and path."
-  (check-type scheme (or string null))
+  (check-type scheme (or scheme-designator null))
   (check-type username (or string null))
   (check-type password (or string null))
   (check-type hostname (or string null))
@@ -622,8 +622,8 @@ entity body (if any)."
          )
         (integer
          (setf (URL_COMPONENTS-nScheme &components) scheme))
-        (string
-         (let ((&scheme (make-WSTR scheme)))
+        (string-designator
+         (let ((&scheme (make-WSTR (string scheme))))
            (setf (URL_COMPONENTS-dwSchemeLength &components) (WSTR-length &scheme)
                  (URL_COMPONENTS-lpszScheme &components) &scheme
                  ))))

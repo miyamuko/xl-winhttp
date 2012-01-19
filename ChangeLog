@@ -1,5 +1,9 @@
 2012-01-19  MIYAMUKO Katsuyuki
 
+	* (create-url): scheme にシンボルを指定可能とした
+	(winhttp:create-url :https nil nil "www.google.co.jp" nil nil nil)
+	;=> "https://www.google.co.jp"
+
 	* (create-url): すべてのパラメータに nil を指定可能とした
 	(winhttp:create-url nil nil nil nil nil nil nil)
 	;=> "http://"

@@ -30,6 +30,12 @@
 
 (in-package :xl-winhttp.api)
 
+(deftype scheme-designator ()
+  `(or string-designator
+       (member ,INTERNET_SCHEME_HTTP
+               ,INTERNET_SCHEME_HTTPS)
+       ))
+
 (deftype port-number ()
   `(integer 0 ,INTERNET_MAX_PORT_NUMBER_VALUE))
 

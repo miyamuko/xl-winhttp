@@ -106,6 +106,16 @@
   (assert-equal "https://127.0.0.1/index.html"
       (create-url INTERNET_SCHEME_HTTPS nil nil "127.0.0.1" INTERNET_DEFAULT_HTTPS_PORT "/index.html" nil))
 
+  (assert-equal "http://127.0.0.1/index.html"
+      (create-url :http nil nil "127.0.0.1" nil "/index.html" nil))
+  (assert-equal "https://127.0.0.1/index.html"
+      (create-url :https nil nil "127.0.0.1" nil "/index.html" nil))
+
+  (assert-equal "http://127.0.0.1:81/index.html"
+      (create-url 'http nil nil "127.0.0.1" 81 "/index.html" nil))
+  (assert-equal "https://127.0.0.1:444/index.html"
+      (create-url 'https nil nil "127.0.0.1" 444 "/index.html" nil))
+
   ;; escape
   (assert-equal "http://www.google.co.jp/search?q=%20!%22%23$%25&'()"
       (create-url "http" nil nil "www.google.co.jp" 80 "/search" "?q= !\"#$%&'()" :escape t))
