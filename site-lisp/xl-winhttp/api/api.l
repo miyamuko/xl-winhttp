@@ -601,7 +601,8 @@ entity body (if any)."
           (&password (make-WSTR password))
           (&hostname (make-WSTR hostname))
           (&url-path (make-WSTR url-path))
-          (&extra-info (make-WSTR extra-info)))
+          (&extra-info (make-WSTR extra-info))
+          (&scheme nil))
       (si:clear-chunk &components)
       (setf (URL_COMPONENTS-dwStructSize &components) (c:c-struct-size-of URL_COMPONENTS)
             (URL_COMPONENTS-lpszUserName &components) &username
@@ -623,10 +624,10 @@ entity body (if any)."
         (integer
          (setf (URL_COMPONENTS-nScheme &components) scheme))
         (string-designator
-         (let ((&scheme (make-WSTR (string scheme))))
-           (setf (URL_COMPONENTS-dwSchemeLength &components) (WSTR-length &scheme)
-                 (URL_COMPONENTS-lpszScheme &components) &scheme
-                 ))))
+         (setf &scheme (make-WSTR (string scheme)))
+         (setf (URL_COMPONENTS-dwSchemeLength &components) (WSTR-length &scheme)
+               (URL_COMPONENTS-lpszScheme &components) &scheme
+               )))
       (setf flags (expand-flags *create-url-flags*))
       (let ((&len (make-DWORD)))
         (WinHttpCreateUrl &components flags NULL &len)

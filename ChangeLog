@@ -1,5 +1,8 @@
 2012-01-19  MIYAMUKO Katsuyuki
 
+	* (create-url): scheme に文字列を渡した場合に、chunk が GC されて
+	結果にゴミが入る場合があったのを修正
+
 	* (create-url): scheme にシンボルを指定可能とした
 	(winhttp:create-url :https nil nil "www.google.co.jp" nil nil nil)
 	;=> "https://www.google.co.jp"
