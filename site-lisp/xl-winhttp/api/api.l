@@ -273,7 +273,14 @@ entity body (if any)."
 ;;   __in  DWORD dwHeadersLength,
 ;;   __in  DWORD dwModifiers
 ;; );
-(defun add-request-headers (request headers &optional (modifiers :add))
+(defun add-request-headers (request headers &key
+                                    ;; *add-request-flags*
+                                    add
+                                    add-if-new
+                                    coalesce
+                                    coalesce-with-comma
+                                    coalesce-with-semicolon
+                                    replace)
   "Adds one or more HTTP request headers to the HTTP request handle."
   (check-valid-handle request request)
   (let ((&headers (make-WSTR (format-headers headers))))
@@ -281,7 +288,9 @@ entity body (if any)."
      (WinHttpAddRequestHeaders (request-handle request)
                                &headers
                                (WSTR-length &headers)
-                               (make-flag modifiers *add-request-flags*)))))
+                               (expand-flags *add-request-flags*
+                                             :default :add)
+                               ))))
 
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384112.aspx

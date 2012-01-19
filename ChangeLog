@@ -1,5 +1,7 @@
 2012-01-19  MIYAMUKO Katsuyuki
 
+	* (add-request-headers): modifies の指定をキーワード引数とした
+
 	* (create-url): scheme に文字列を渡した場合に、chunk が GC されて
 	結果にゴミが入る場合があったのを修正
 

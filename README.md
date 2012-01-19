@@ -35,7 +35,7 @@
                                       :secure (string= scheme "https"))
         ;; Accept-Language ヘッダを設定
         (dolist (lang accept-language)
-          (winhttp:add-request-headers req `(:Accept-Language ,lang) :coalesce-with-comma))
+          (winhttp:add-request-headers req `(:Accept-Language ,lang) :coalesce-with-comma t))
         ;; リクエスト送信
         (winhttp:send-request req :headers `(:X-Yzzy-Version ,(software-version)))
         ;; レスポンスを待つ
