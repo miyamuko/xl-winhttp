@@ -27,6 +27,7 @@
 
 (require "xl-winhttp/internal/utils")
 (require "xl-winhttp/internal/interop")
+(require "xl-winhttp/internal/interop-c-struct")
 (require "xl-winhttp/internal/debug")
 (require "xl-winhttp/internal/flags")
 (require "xl-winhttp/internal/options")

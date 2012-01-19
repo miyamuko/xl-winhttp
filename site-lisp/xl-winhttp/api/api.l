@@ -83,7 +83,7 @@
 ;;   __in      LPCWSTR pwszProxyBypass,
 ;;   __in      DWORD dwFlags
 ;; );
-(defun open (&key user-agent proxy-name proxy-bypass (access-type :default-proxy)
+(defun open (&key user-agent proxy-name proxy-bypass access-type
                   ;; *open-flags*
                   async)
   "Initializes, for an application, the use of WinHTTP functions and returns a WinHTTP-session handle."
@@ -686,7 +686,7 @@ This function reports the URL of the PAC file, but it does not download the file
     (si:clear-chunk &proxy-info)
     (assert-BOOL
      (WinHttpGetDefaultProxyConfiguration &proxy-info))
-    (unpack-proxy-info &proxy-info)))
+    (unpack-WINHTTP_PROXY_INFO &proxy-info)))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384096.aspx
 ;; BOOL WINAPI WinHttpGetIEProxyConfigForCurrentUser(
@@ -742,7 +742,7 @@ This function reports the URL of the PAC file, but it does not download the file
                             &url
                             &auto-proxy-opts
                             &proxy-info))
-    (unpack-proxy-info &proxy-info)))
+    (unpack-WINHTTP_PROXY_INFO &proxy-info)))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/hh405356.aspx
 ;; DWORD WINHTTPAPI WinHttpGetProxyForUrlEx(
@@ -774,22 +774,12 @@ This function reports the URL of the PAC file, but it does not download the file
 ;; BOOL WINAPI WinHttpSetDefaultProxyConfiguration(
 ;;   __in  WINHTTP_PROXY_INFO *pProxyInfo
 ;; );
-(defun set-default-proxy-configuration (&key proxy-name proxy-bypass (access-type :default-proxy))
+(defun set-default-proxy-configuration (&key proxy-name proxy-bypass access-type)
   "Sets the default WinHTTP proxy configuration in the registry."
-  (let ((&proxy-info (make-WINHTTP_PROXY_INFO))
-        (&proxy-name (make-WSTR proxy-name :default WINHTTP_NO_PROXY_NAME))
-        (&proxy-bypass (make-WSTR proxy-bypass :default WINHTTP_NO_PROXY_BYPASS)))
-    (unless access-type
-      (setf access-type (if (equal &proxy-name WINHTTP_NO_PROXY_NAME)
-                            ;; MSDN にはプロキシを指定しない場合は、WINHTTP_ACCESS_TYPE_DEFAULT_PROXY
-                            ;; を指定しろと書いてあるが NO_PROXY じゃないとエラーになる
-                            WINHTTP_ACCESS_TYPE_NO_PROXY
-                          WINHTTP_ACCESS_TYPE_NAMED_PROXY)))
-    (si:clear-chunk &proxy-info)
-    (setf (WINHTTP_PROXY_INFO-lpszProxy &proxy-info) &proxy-name
-          (WINHTTP_PROXY_INFO-lpszProxyBypass &proxy-info) &proxy-bypass
-          (WINHTTP_PROXY_INFO-dwAccessType &proxy-info) (make-flag access-type *access-type* :flags nil)
-          )
+  (multiple-value-bind (&proxy-info &proxy-name &proxy-bypass)
+      (pack-WINHTTP_PROXY_INFO :proxy-name proxy-name
+                               :proxy-bypass proxy-bypass
+                               :access-type access-type)
     (assert-BOOL
      (WinHttpSetDefaultProxyConfiguration &proxy-info))))
 
@@ -1019,15 +1009,6 @@ This function reports the URL of the PAC file, but it does not download the file
                             0)
   (dispatch-event-later)
   )
-
-
-;;; private
-
-(defun unpack-proxy-info (proxy-info)
-  (values (unpack-WSTR-pointer (WINHTTP_PROXY_INFO-lpszProxy proxy-info) nil :free t)
-          (unpack-WSTR-pointer (WINHTTP_PROXY_INFO-lpszProxyBypass proxy-info) nil :free t)
-          (unpack-flags (WINHTTP_PROXY_INFO-dwAccessType proxy-info) *access-type* :flags nil)
-          ))
 
 
 (provide "xl-winhttp/api/api")
