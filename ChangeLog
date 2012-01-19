@@ -1,5 +1,7 @@
 2012-01-19  MIYAMUKO Katsuyuki
 
+	* (query-headers): export.
+
 	* (get-proxy-for-url): フラグは引数に応じて自動的に設定するようにした
 	;; proxy.pac 指定
 	;; :config-url t は省略可能

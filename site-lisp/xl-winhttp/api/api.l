@@ -46,6 +46,7 @@
           read-data
           query-auth-schemes
           query-data-available
+          query-headers
 
           crack-url
           create-url
@@ -400,6 +401,7 @@ entity body (if any)."
       (unpack-DWORD &num-of-bytes-available))))
 
 (defun query-headers (request header &key request-headers list (type :string) (index 0))
+  "Retrieves header information associated with an HTTP request."
   (check-valid-handle request request)
   (check-type header (or integer string symbol))
   (check-type index integer)
