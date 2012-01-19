@@ -31,6 +31,7 @@
 (defpackage :xl-winhttp.test.utils
   (:use :lisp :editor
    :lisp-unit
+   :xl-winhttp.ffi
    :xl-winhttp.internal
    :xl-winhttp.test.helper
    )
@@ -135,4 +136,21 @@
   (assert-equal "GET" (format-verb "get"))
   (assert-equal "PUT" (format-verb :put))
   (assert-equal "POST" (format-verb 'post))
+  )
+
+(define-test xl-winhttp/default-port
+  (assert-equal 80 (default-port nil))
+  (assert-equal 80 (default-port INTERNET_SCHEME_HTTP))
+  (assert-equal 443 (default-port INTERNET_SCHEME_HTTPS))
+  (assert-equal 80 (default-port "http"))
+  (assert-equal 443 (default-port "https"))
+  (assert-equal 80 (default-port "HTTP"))
+  (assert-equal 443 (default-port "HTTPS"))
+  (assert-equal 80 (default-port :http))
+  (assert-equal 443 (default-port :https))
+  (assert-equal 80 (default-port 'http))
+  (assert-equal 443 (default-port 'https))
+
+  (assert-equal nil (default-port "ftp"))
+  (assert-equal nil (default-port "ws"))
   )

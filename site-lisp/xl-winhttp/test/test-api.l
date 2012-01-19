@@ -82,13 +82,16 @@
   )
 
 (define-test xl-winhttp/api/create-url
+  (assert-equal "http://"
+      (create-url nil nil nil nil nil nil nil))
+  (assert-equal "http://www.yahoo.co.jp"
+      (create-url nil nil nil "www.yahoo.co.jp" nil nil nil))
+
   (assert-equal "http://www.yahoo.co.jp"
       (create-url "http" nil nil "www.yahoo.co.jp" 80 nil nil))
   (assert-equal "http://www.yahoo.co.jp"
       (create-url "http" "" "" "www.yahoo.co.jp" 80 "" ""))
 
-  (assert-equal "http://www.yahoo.co.jp"
-      (create-url "http" 0 0 "www.yahoo.co.jp" 80 0 0))
   (assert-equal "http://foo:bar@www.yahoo.co.jp:8080"
       (create-url "http" "foo" "bar" "www.yahoo.co.jp" 8080 nil nil))
   (assert-equal "http://www.google.co.jp/search?q=xyzzy"

@@ -1,3 +1,9 @@
+2012-01-19  MIYAMUKO Katsuyuki
+
+	* (create-url): すべてのパラメータに nil を指定可能とした
+	(winhttp:create-url nil nil nil nil nil nil nil)
+	;=> "http://"
+
 2012-01-18  MIYAMUKO Katsuyuki
 
 	* (query-headers): header キーワードを大文字小文字の違いを

@@ -33,6 +33,7 @@
           plist-values
           format-verb
           format-headers
+          default-port
           chomp-null
           ))
 
@@ -97,6 +98,19 @@
                                  (car pair) (cdr pair)
                                  +CRLF+))
                      (to-alist header))))))
+
+(defun default-port (scheme)
+  (etypecase scheme
+    (null INTERNET_DEFAULT_HTTP_PORT)
+    (integer
+     (cond ((= scheme INTERNET_SCHEME_HTTP) INTERNET_DEFAULT_HTTP_PORT)
+           ((= scheme INTERNET_SCHEME_HTTPS) INTERNET_DEFAULT_HTTPS_PORT)
+           (t nil)))
+    ((or string symbol)
+     (cond ((string-equal scheme "http") INTERNET_DEFAULT_HTTP_PORT)
+           ((string-equal scheme "https") INTERNET_DEFAULT_HTTPS_PORT)
+           (t nil)))
+    ))
 
 (defun chomp-null (s)
   (unless (nullp s)

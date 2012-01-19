@@ -581,6 +581,14 @@ entity body (if any)."
                           escape
                           reject-userpwd)
   "Creates a URL from component parts such as the host name and path."
+  (check-type scheme (or string null))
+  (check-type username (or string null))
+  (check-type password (or string null))
+  (check-type hostname (or string null))
+  (check-type port (or port-number null))
+  (check-type url-path (or string null))
+  (check-type extra-info (or string null))
+
   (flet ((make-WSTR (str)
            ;; (make-WSTR "") ÇÕ NULL ï∂éöÇæÇØÇÃ chunk Çï‘Ç∑ (WSTR-length ÇÕ 0)ÅB
            ;; ÇªÇÍÇ WinHttpCreateUrl Ç…ìnÇ∑Ç∆ÉSÉ~Ç™ URL Ç…ê›íËÇ≥ÇÍÇÈÇÃÇ≈ÅA
@@ -606,9 +614,12 @@ entity body (if any)."
             (URL_COMPONENTS-dwUrlPathLength &components) (WSTR-length &url-path)
             (URL_COMPONENTS-lpszExtraInfo &components) &extra-info
             (URL_COMPONENTS-dwExtraInfoLength &components) (WSTR-length &extra-info)
-            (URL_COMPONENTS-nPort &components) port
+            (URL_COMPONENTS-nPort &components) (or port (default-port scheme) INTERNET_DEFAULT_PORT)
             )
       (etypecase scheme
+        (null
+         ;; nop
+         )
         (integer
          (setf (URL_COMPONENTS-nScheme &components) scheme))
         (string
