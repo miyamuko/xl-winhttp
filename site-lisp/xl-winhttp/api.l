@@ -28,6 +28,7 @@
 (require "xl-winhttp/api/types")
 (require "xl-winhttp/api/conditions")
 (require "xl-winhttp/api/api")
+(require "xl-winhttp/api/wrapper")
 (require "xl-winhttp/api/async")
 (require "xl-winhttp/api/macros")
 (require "xl-winhttp/api/version")

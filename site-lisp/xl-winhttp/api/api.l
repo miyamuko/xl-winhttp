@@ -46,10 +46,6 @@
           read-data
           query-auth-schemes
           query-data-available
-          query-request-header
-          query-request-headers
-          query-response-header
-          query-response-headers
 
           crack-url
           create-url
@@ -402,22 +398,6 @@ entity body (if any)."
     (if (request-async-p request)
         t
       (unpack-DWORD &num-of-bytes-available))))
-
-(defun query-request-header (request header &key (type :string) (index 0))
-  "Retrieves request header information associated with an HTTP request."
-  (query-headers request header :request-headers t :type type :index index))
-
-(defun query-request-headers (request header &key (type :string))
-  "Retrieves all request header information associated with an HTTP request."
-  (query-headers request header :request-headers t :type type :list t))
-
-(defun query-response-header (request header &key (type :string) (index 0))
-  "Retrieves response header information associated with an HTTP request."
-  (query-headers request header :request-headers nil :type type :index index))
-
-(defun query-response-headers (request header &key (type :string))
-  "Retrieves all response header information associated with an HTTP request."
-  (query-headers request header :request-headers nil :type type :list t))
 
 (defun query-headers (request header &key request-headers list (type :string) (index 0))
   (check-valid-handle request request)
