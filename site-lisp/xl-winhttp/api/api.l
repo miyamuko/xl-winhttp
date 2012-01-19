@@ -725,7 +725,11 @@ This function reports the URL of the PAC file, but it does not download the file
   "Retrieves the proxy data for the specified URL."
   (check-type session session)
   (check-type url string)
-  (check-type auto-config-url string)
+  (check-type auto-config-url (or string null))
+  (when auto-config-url
+    (setf config-url t))
+  (when (or dhcp dns_a)
+    (setf auto-detect t))
   (let ((&auto-proxy-opts (make-WINHTTP_AUTOPROXY_OPTIONS))
         (&proxy-info (make-WINHTTP_PROXY_INFO))
         (&url (make-WSTR url))

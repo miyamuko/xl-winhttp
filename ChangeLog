@@ -1,5 +1,13 @@
 2012-01-19  MIYAMUKO Katsuyuki
 
+	* (get-proxy-for-url): フラグは引数に応じて自動的に設定するようにした
+	;; proxy.pac 指定
+	;; :config-url t は省略可能
+	(get-proxy-for-url session url :auto-config-url proxy-pac-url :config-url t)
+	;; proxy 自動検出
+	;; :auto-detect t は省略可能
+	(get-proxy-for-url session url :dhcp t :dns_a t :auto-detect t)
+
 	* (set-option, query-option): WINHTTP_PROXY_INFO 型のオプションをサポート
 
 	* (open-request): object-name に list を指定可能とした
