@@ -840,15 +840,15 @@ This function reports the URL of the PAC file, but it does not download the file
                          0))
 
 
-(defun set-option (hinternet option value)
+(defun set-option (hinternet option &rest args)
   "Sets an Internet option."
-  (dispatch-option-handler :set-option hinternet option value))
+  (dispatch-option-handler :set-option hinternet option args))
 
 (defun query-option (hinternet option)
   "Queries an Internet option on the specified handle."
   (dispatch-option-handler :query-option hinternet option))
 
-(defun dispatch-option-handler (operation hinternet option &rest args)
+(defun dispatch-option-handler (operation hinternet option &optional args)
   (let ((option (find-option option)))
     (check-option operation hinternet option)
     (let ((impl (intern (format nil "~A-~A~@[-~A~]"
@@ -888,6 +888,11 @@ This function reports the URL of the PAC file, but it does not download the file
   (let ((&value (make-WSTR value)))
     (%set-option hinternet-handle option &value (WSTR-length &value))))
 
+(defun set-option-WINHTTP_PROXY_INFO (hinternet-handle option &rest args)
+  (multiple-value-bind (&proxy-info &proxy-name &proxy-bypass)
+      (apply 'pack-WINHTTP_PROXY_INFO args)
+    (%set-option hinternet-handle option &proxy-info (si:chunk-size &proxy-info))))
+
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384114.aspx
 ;; BOOL WINAPI WinHttpSetOption(
 ;;   __in  HINTERNET hInternet,
@@ -909,7 +914,6 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   LPVOID
 ;;   WINHTTP_CREDS
 ;;   WINHTTP_CREDS_EX
-;;   WINHTTP_PROXY_INFO
 
 
 ;;; query-option handler
@@ -937,6 +941,13 @@ This function reports the URL of the PAC file, but it does not download the file
       (%query-option hinternet-handle option
                      (make-WSTR-buffer (bytes->WSTR-length bytes)) bytes
                      #'unpack-WSTR))))
+
+(defun query-option-WINHTTP_PROXY_INFO (hinternet-handle option)
+  (let ((&proxy-info (make-WINHTTP_PROXY_INFO)))
+    (si:clear-chunk &proxy-info)
+    (%query-option hinternet-handle option
+                   &proxy-info (si:chunk-size &proxy-info)
+                   #'unpack-WINHTTP_PROXY_INFO)))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384103.aspx
 ;; BOOL WINAPI WinHttpQueryOption(
@@ -968,7 +979,6 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   LPVOID
 ;;   SecPkgContext_IssuerListInfoEx*
 ;;   WINHTTP_CERTIFICATE_INFO
-;;   WINHTTP_PROXY_INFO
 
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384115.aspx
