@@ -34,6 +34,9 @@
           query-request-headers
           query-response-header
           query-response-headers
+
+          time-to-universal-time
+          time-from-universal-time
           ))
 
 (defun query-request-header (request header &key (type :string) (index 0))
@@ -51,6 +54,21 @@
 (defun query-response-headers (request header &key (type :string))
   "Retrieves all response header information associated with an HTTP request."
   (query-headers request header :request-headers nil :type type :list t))
+
+
+(defun time-from-universal-time (universal-time)
+  "Formats a universal-time according to the HTTP version 1.0 specification."
+  (check-type universal-time integer)
+  (multiple-value-bind (second minute hour date month year day-of-week daylight-p zone)
+      (decode-universal-time universal-time 0)
+    (time-from-system-time second minute hour date month year)))
+
+(defun time-to-universal-time (time)
+  "Takes an HTTP time/date string and converts it to a universal-time."
+  (check-type time string)
+  (multiple-value-bind (second minute hour date month year day-of-week)
+      (time-to-system-time time)
+    (encode-universal-time second minute hour date month year 0)))
 
 
 (provide "xl-winhttp/api/wrapper")

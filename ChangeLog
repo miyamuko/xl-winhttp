@@ -1,5 +1,16 @@
 2012-01-19  MIYAMUKO Katsuyuki
 
+	* (time-from-system-time, time-to-system-time): 戻り値と引数の形式をまた変更
+	decoded time 形式はやっぱやめて、パースした値をそのまま返すようにした
+	(winhttp:time-to-system-time "Thu, 04 May 2000 03:02:01 GMT")
+	1
+	2
+	3
+	4
+	5
+	2000
+	4
+
 	* (query-headers): export.
 
 	* (get-proxy-for-url): フラグは引数に応じて自動的に設定するようにした

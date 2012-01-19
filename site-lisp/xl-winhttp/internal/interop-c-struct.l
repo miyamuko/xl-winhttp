@@ -32,6 +32,8 @@
 (export '(unpack-WINHTTP_ASYNC_RESULT
           pack-WINHTTP_PROXY_INFO
           unpack-WINHTTP_PROXY_INFO
+          pack-SYSTEMTIME
+          unpack-SYSTEMTIME
           ))
 
 (defun unpack-WINHTTP_ASYNC_RESULT (result)
@@ -63,6 +65,29 @@
           (unpack-flags (WINHTTP_PROXY_INFO-dwAccessType proxy-info) *access-type* :flags nil)
           ))
 
+(defun pack-SYSTEMTIME (second minute hour date month year)
+  (let ((&systime (make-SYSTEMTIME)))
+    (si:clear-chunk &systime)
+    (setf (SYSTEMTIME-wYear &systime) year
+          (SYSTEMTIME-wMonth &systime) month
+          (SYSTEMTIME-wDay &systime) date
+          (SYSTEMTIME-wHour &systime) hour
+          (SYSTEMTIME-wMinute &systime) minute
+          (SYSTEMTIME-wSecond &systime) second
+          )
+    &systime))
+
+(defun unpack-SYSTEMTIME (&systime)
+  (values (SYSTEMTIME-wSecond &systime)
+          (SYSTEMTIME-wMinute &systime)
+          (SYSTEMTIME-wHour &systime)
+          (SYSTEMTIME-wDay &systime)
+          (SYSTEMTIME-wMonth &systime)
+          (SYSTEMTIME-wYear &systime)
+          (SYSTEMTIME-wDayOfWeek &systime)))
+
+(defun SYSTEMTIME->universal-time (&systime)
+  )
 
 (provide "xl-winhttp/internal/interop-c-struct")
 

@@ -62,9 +62,7 @@
           set-default-proxy-configuration
 
           time-from-system-time
-          time-from-universal-time
           time-to-system-time
-          time-to-universal-time
 
           set-option
           query-option
@@ -454,10 +452,12 @@ entity body (if any)."
   (%query-headers request info-level &name &index
                   (make-SYSTEMTIME) (c:c-struct-size-of SYSTEMTIME)
                   #'(lambda (&systime)
-                      (let ((u (SYSTEMTIME->universal-time &systime)))
+                      (multiple-value-bind (second minute hour date month year day-of-week)
+                          (unpack-SYSTEMTIME &systime)
                         (if universal-time
-                            u
-                          (multiple-value-list (decode-universal-time u)))))))
+                            (encode-universal-time second minute hour date month year 0)
+                          (list second minute hour date month year day-of-week))))
+                  ))
 
 (defun query-headers-LPWSTR (request info-level &name &index)
   (let ((bytes (%query-headers-buffer-length request info-level &name &index)))
@@ -775,55 +775,26 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   __in   const SYSTEMTIME *pst,
 ;;   __out  LPWSTR pwszTime
 ;; );
-(defun time-from-system-time (second minute hour day month year &optional time-zone)
-  "Formats a decoded time according to the HTTP version 1.0 specification."
-  (time-from-universal-time (encode-universal-time second minute hour day month year time-zone)))
-
-(defun time-from-universal-time (universal-time)
-  "Formats a universal-time according to the HTTP version 1.0 specification."
-  (check-type universal-time integer)
-  (multiple-value-bind (second minute hour date month year day-of-week daylight-p zone)
-      (decode-universal-time universal-time 0)
-    (let ((&systime (make-SYSTEMTIME))
-          (&time (make-WSTR-buffer (bytes->WSTR-length WINHTTP_TIME_FORMAT_BUFSIZE))))
-      (si:clear-chunk &systime)
-      (setf (SYSTEMTIME-wYear &systime) year
-            (SYSTEMTIME-wMonth &systime) month
-            (SYSTEMTIME-wDay &systime) date
-            (SYSTEMTIME-wHour &systime) hour
-            (SYSTEMTIME-wMinute &systime) minute
-            (SYSTEMTIME-wSecond &systime) second
-            )
-      (assert-BOOL
-       (WinHttpTimeFromSystemTime &systime &time))
-      (unpack-WSTR &time))))
+(defun time-from-system-time (second minute hour date month year)
+  "Formats a system time according to the HTTP version 1.0 specification."
+  (let ((&systime (pack-SYSTEMTIME second minute hour date month year))
+        (&time (make-WSTR-buffer (bytes->WSTR-length WINHTTP_TIME_FORMAT_BUFSIZE))))
+    (assert-BOOL
+     (WinHttpTimeFromSystemTime &systime &time))
+    (unpack-WSTR &time)))
 
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384118.aspx
 ;; BOOL WINAPI WinHttpTimeToSystemTime(
 ;;   __in   LPCWSTR pwszTime,
 ;;   __out  SYSTEMTIME *pst
 ;; );
-(defun time-to-system-time (time &optional time-zone)
-  "Takes an HTTP time/date string and converts it to a decoded time."
-  (decode-universal-time (time-to-universal-time time) time-zone))
-
-(defun time-to-universal-time (time)
-  "Takes an HTTP time/date string and converts it to a universal-time."
-  (check-type time string)
+(defun time-to-system-time (time)
+  "Takes an HTTP time/date string and converts it to a system time."
   (let ((&systime (make-SYSTEMTIME)))
     (si:clear-chunk &systime)
     (assert-BOOL
      (WinHttpTimeToSystemTime (make-WSTR time) &systime))
-    (SYSTEMTIME->universal-time &systime)))
-
-(defun SYSTEMTIME->universal-time (&systime)
-  (encode-universal-time (SYSTEMTIME-wSecond &systime)
-                         (SYSTEMTIME-wMinute &systime)
-                         (SYSTEMTIME-wHour &systime)
-                         (SYSTEMTIME-wDay &systime)
-                         (SYSTEMTIME-wMonth &systime)
-                         (SYSTEMTIME-wYear &systime)
-                         0))
+    (unpack-SYSTEMTIME &systime)))
 
 
 (defun set-option (hinternet option &rest args)
