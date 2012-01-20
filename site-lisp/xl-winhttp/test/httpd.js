@@ -15,6 +15,7 @@ app.configure(function(){
   app.use(express.methodOverride());
   app.use(app.router);
   app.use(express.static(__dirname + '/public'));
+  app.use(express.bodyParser({uploadDir: __dirname + '/uploads'}));
 });
 
 app.configure('development', function(){
@@ -28,7 +29,17 @@ app.configure('production', function(){
 
 // Routes
 
+app.get('/get', function(req, res) {
+    console.log("get");
+    res.writeHead(200, {
+        "Content_type": "text/plain",
+    });
+    res.write("Hello " + req.param("name"));
+    res.end();
+});
+
 app.get('/chunked', function(req, res) {
+    console.log("chunked");
     var send_chunk = function(res, n) {
         setTimeout(function() {
             var chunk = "chunk data " + n + "\n";
@@ -50,6 +61,25 @@ app.get('/chunked', function(req, res) {
         });
         send_chunk(res, 10);
     }, 2 * 1000);
+});
+
+app.post("/post", function(req, res, next) {
+    console.log("post");
+    console.log(req.body);
+    res.writeHead(200, {
+        "Content_type": "text/plain",
+    });
+    res.end("OK");
+});
+
+app.post("/upload", function(req, res, next) {
+    console.log("upload");
+    console.log(req.body);
+    console.log(req.files);
+    res.writeHead(200, {
+        "Content_type": "text/plain",
+    });
+    res.end("OK");
 });
 
 app.listen(3000);
