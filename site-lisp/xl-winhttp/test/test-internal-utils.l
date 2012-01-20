@@ -126,6 +126,17 @@
       (format-headers '(:User-Agent :foo :X-Number 1 :X-Number 2)))
   (assert-equal "User-Agent: foo\r\nX-Number: 1\r\nX-Number: 2\r\n"
       (format-headers '((:User-Agent . :foo) (:X-Number 1) :X-Number 2)))
+
+  (assert-equal nil
+      (format-headers (cons nil nil)))
+  (assert-equal "User-Agent: \r\n"
+      (format-headers (cons "User-Agent" nil)))
+  (assert-equal "User-Agent: \r\n"
+      (format-headers (cons "User-Agent" "")))
+  (assert-equal "User-Agent: \r\n"
+      (format-headers (list "User-Agent" nil)))
+  (assert-equal "User-Agent: \r\n"
+      (format-headers (list "User-Agent" "")))
   )
 
 (define-test xl-winhttp/format-verb

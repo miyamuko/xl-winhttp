@@ -30,7 +30,9 @@
 
 (in-package :xl-winhttp.api)
 
-(export '(query-request-header
+(export '(add-request-header
+
+          query-request-header
           query-request-headers
           query-response-header
           query-response-headers
@@ -38,6 +40,24 @@
           time-to-universal-time
           time-from-universal-time
           ))
+
+(defun add-request-header (request header value &key
+                                   ;; *add-request-flags*
+                                   add
+                                   add-if-new
+                                   coalesce
+                                   coalesce-with-comma
+                                   coalesce-with-semicolon
+                                   replace)
+  "Adds one HTTP request header to the HTTP request handle."
+  (add-request-headers request (cons header value)
+                       :add add
+                       :add-if-new add-if-new
+                       :coalesce coalesce
+                       :coalesce-with-comma coalesce-with-comma
+                       :coalesce-with-semicolon coalesce-with-semicolon
+                       :replace replace
+                       ))
 
 (defun query-request-header (request header &key (type :string) (index 0))
   "Retrieves request header information associated with an HTTP request."

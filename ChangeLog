@@ -1,3 +1,7 @@
+2012-01-20  MIYAMUKO Katsuyuki
+
+	* (add-request-header): ヘッダをひとつだけ追加する便利 API を追加
+
 2012-01-19  MIYAMUKO Katsuyuki
 
 	* (time-from-system-time, time-to-system-time): 戻り値と引数の形式をまた変更
