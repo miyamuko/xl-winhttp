@@ -552,6 +552,7 @@ entity body (if any)."
             (URL_COMPONENTS-nPort &components)
             (unpack-WSTR &url-path)
             (unpack-WSTR &extra-info)
+            (= (URL_COMPONENTS-nScheme &components) INTERNET_SCHEME_HTTPS)
             )
     ))
 
@@ -562,7 +563,7 @@ entity body (if any)."
 ;;   __out    LPWSTR pwszUrl,
 ;;   __inout  LPDWORD lpdwUrlLength
 ;; );
-(defun create-url (scheme username password hostname port url-path extra-info
+(defun create-url (scheme username password hostname port url-path extra-info secure-p
                           &key
                           ;; *create-url-flags*
                           escape
@@ -602,7 +603,8 @@ entity body (if any)."
             (URL_COMPONENTS-dwUrlPathLength &components) (WSTR-length &url-path)
             (URL_COMPONENTS-lpszExtraInfo &components) &extra-info
             (URL_COMPONENTS-dwExtraInfoLength &components) (WSTR-length &extra-info)
-            (URL_COMPONENTS-nPort &components) (or port (default-port scheme) INTERNET_DEFAULT_PORT)
+            (URL_COMPONENTS-nPort &components) (or port (default-port scheme secure-p) INTERNET_DEFAULT_PORT)
+            (URL_COMPONENTS-nScheme &components) (if secure-p INTERNET_SCHEME_HTTPS INTERNET_SCHEME_HTTP)
             )
       (etypecase scheme
         (null

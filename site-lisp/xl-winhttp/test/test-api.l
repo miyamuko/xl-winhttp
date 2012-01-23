@@ -83,45 +83,57 @@
 
 (define-test xl-winhttp/api/create-url
   (assert-equal "http://"
-      (create-url nil nil nil nil nil nil nil))
+      (create-url nil nil nil nil nil nil nil nil))
   (assert-equal "http://www.yahoo.co.jp"
-      (create-url nil nil nil "www.yahoo.co.jp" nil nil nil))
+      (create-url nil nil nil "www.yahoo.co.jp" nil nil nil nil))
 
   (assert-equal "http://www.yahoo.co.jp"
-      (create-url "http" nil nil "www.yahoo.co.jp" 80 nil nil))
+      (create-url "http" nil nil "www.yahoo.co.jp" 80 nil nil nil))
   (assert-equal "http://www.yahoo.co.jp"
-      (create-url "http" "" "" "www.yahoo.co.jp" 80 "" ""))
+      (create-url "http" "" "" "www.yahoo.co.jp" 80 "" "" nil))
 
   (assert-equal "http://foo:bar@www.yahoo.co.jp:8080"
-      (create-url "http" "foo" "bar" "www.yahoo.co.jp" 8080 nil nil))
+      (create-url "http" "foo" "bar" "www.yahoo.co.jp" 8080 nil nil nil))
   (assert-equal "http://www.google.co.jp/search?q=xyzzy"
-      (create-url "http" nil nil "www.google.co.jp" 80 "/search" "?q=xyzzy"))
+      (create-url "http" nil nil "www.google.co.jp" 80 "/search" "?q=xyzzy" nil))
   (assert-equal "https://127.0.0.1/index.html"
-      (create-url "https" nil nil "127.0.0.1" 443 "/index.html" nil))
+      (create-url "https" nil nil "127.0.0.1" 443 "/index.html" nil nil))
   (assert-equal "https://127.0.0.1:444/index.html"
-      (create-url "https" nil nil "127.0.0.1" 444 "/index.html" nil))
+      (create-url "https" nil nil "127.0.0.1" 444 "/index.html" nil nil))
 
   (assert-equal "http://127.0.0.1/index.html"
-      (create-url INTERNET_SCHEME_HTTP nil nil "127.0.0.1" INTERNET_DEFAULT_HTTP_PORT "/index.html" nil))
+      (create-url INTERNET_SCHEME_HTTP nil nil "127.0.0.1" INTERNET_DEFAULT_HTTP_PORT "/index.html" nil nil))
   (assert-equal "https://127.0.0.1/index.html"
-      (create-url INTERNET_SCHEME_HTTPS nil nil "127.0.0.1" INTERNET_DEFAULT_HTTPS_PORT "/index.html" nil))
+      (create-url INTERNET_SCHEME_HTTPS nil nil "127.0.0.1" INTERNET_DEFAULT_HTTPS_PORT "/index.html" nil nil))
 
   (assert-equal "http://127.0.0.1/index.html"
-      (create-url :http nil nil "127.0.0.1" nil "/index.html" nil))
+      (create-url :http nil nil "127.0.0.1" nil "/index.html" nil nil))
   (assert-equal "https://127.0.0.1/index.html"
-      (create-url :https nil nil "127.0.0.1" nil "/index.html" nil))
+      (create-url :https nil nil "127.0.0.1" nil "/index.html" nil nil))
 
   (assert-equal "http://127.0.0.1:81/index.html"
-      (create-url 'http nil nil "127.0.0.1" 81 "/index.html" nil))
+      (create-url 'http nil nil "127.0.0.1" 81 "/index.html" nil nil))
   (assert-equal "https://127.0.0.1:444/index.html"
-      (create-url 'https nil nil "127.0.0.1" 444 "/index.html" nil))
+      (create-url 'https nil nil "127.0.0.1" 444 "/index.html" nil nil))
+
+  ;; secure-p
+  (assert-equal "https://"
+      (create-url nil nil nil nil nil nil nil t))
+  (assert-equal "https://www.yahoo.co.jp"
+      (create-url nil nil nil "www.yahoo.co.jp" nil nil nil t))
+  (assert-equal "http://www.yahoo.co.jp"
+      (create-url "http" nil nil "www.yahoo.co.jp" nil nil nil t))
+  (assert-equal "https://www.yahoo.co.jp"
+      (create-url "https" nil nil "www.yahoo.co.jp" nil nil nil t))
+  (assert-equal "https://www.yahoo.co.jp:444"
+      (create-url "https" nil nil "www.yahoo.co.jp" 444 nil nil t))
 
   ;; escape
   (assert-equal "http://www.google.co.jp/search?q=%20!%22%23$%25&'()"
-      (create-url "http" nil nil "www.google.co.jp" 80 "/search" "?q= !\"#$%&'()" :escape t))
+      (create-url "http" nil nil "www.google.co.jp" 80 "/search" "?q= !\"#$%&'()" nil :escape t))
   ;; reject-userpwd
   (assert-equal "http://www.yahoo.co.jp:8080"
-      (create-url "http" "foo" "bar" "www.yahoo.co.jp" 8080 nil nil :reject-userpwd t))
+      (create-url "http" "foo" "bar" "www.yahoo.co.jp" 8080 nil nil nil :reject-userpwd t))
   )
 
 

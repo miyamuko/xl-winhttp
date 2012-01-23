@@ -25,14 +25,14 @@
 
 ;; 同期 GET
 (defun http-get (url &key (accept-language '("ja" "en-US;q=0.8" "en;q=0.6")))
-  (multiple-value-bind (scheme user pass host port path extra)
+  (multiple-value-bind (scheme user pass host port path extra secure-p)
       ;; URL を分割
       (winhttp:crack-url url)
     ;; connection と request を作成
     ;; この時点では実際には接続されない
     (winhttp:with-connect (conn (winhttp-session :user-agent "xl-winhttp/example") host port)
       (winhttp:with-open-request (req conn "GET" `(,path ,extra)
-                                      :secure (string= scheme "https"))
+                                      :secure secure-p)
         ;; Accept-Language ヘッダを設定
         (dolist (lang accept-language)
           (winhttp:add-request-header req :Accept-Language lang :coalesce-with-comma t))
@@ -70,7 +70,7 @@
 
 ;; 非同期 GET
 (defun http-get-async (url callback)
-  (multiple-value-bind (scheme user pass host port path extra)
+  (multiple-value-bind (scheme user pass host port path extra secure-p)
       ;; URL を分割
       (winhttp:crack-url url)
     ;; connection と request を作成
@@ -79,7 +79,7 @@
            (conn (winhttp:connect sess host port))
            (req (winhttp:open-request conn "GET" `(,path ,extra)
                                       :accept "*/*"
-                                      :secure (string= scheme "https"))))
+                                      :secure secure-p)))
       (winhttp:set-status-callback
        req #'(lambda (&rest args)
                (alexandria:destructuring-case args
