@@ -1,3 +1,7 @@
+2012-01-23  MIYAMUKO Katsuyuki
+
+	* (+default-read-buffer-size+, +default-write-buffer-size+): 定数を追加
+
 2012-01-20  MIYAMUKO Katsuyuki
 
 	* (add-request-header): ヘッダをひとつだけ追加する便利 API を追加

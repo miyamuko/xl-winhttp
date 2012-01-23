@@ -104,9 +104,6 @@
 (setf (get 'define-hinternet-wrapper 'ed:lisp-indent-hook) 1)
 
 
-(defvar *read-buffer-size* 8192)
-(defvar *send-buffer-size* 8192)
-
 (define-hinternet-wrapper session)
 (define-hinternet-wrapper connection)
 (define-hinternet-wrapper request

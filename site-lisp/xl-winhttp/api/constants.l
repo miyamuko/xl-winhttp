@@ -1,4 +1,4 @@
-; -*- mode: lisp; package: user; encoding: shift_jis -*-
+; -*- mode: lisp; package: xl-winhttp.api; encoding: shift_jis -*-
 
 ;; Copyright (c) 2012 MIYAMUKO Katsuyuki.
 ;;
@@ -23,17 +23,20 @@
 
 ;;; Code:
 
-(in-package :user)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (require "xl-winhttp/api/package")
+  )
 
-(require "xl-winhttp/api/types")
-(require "xl-winhttp/api/conditions")
-(require "xl-winhttp/api/constants")
-(require "xl-winhttp/api/api")
-(require "xl-winhttp/api/wrapper")
-(require "xl-winhttp/api/async")
-(require "xl-winhttp/api/macros")
-(require "xl-winhttp/api/version")
+(in-package :xl-winhttp.api)
 
-(provide "xl-winhttp/api")
+(export '(+default-read-buffer-size+
+          +default-write-buffer-size+
+          ))
+
+(defconstant +default-read-buffer-size+ 8192)
+(defconstant +default-write-buffer-size+ 8192)
+
+
+(provide "xl-winhttp/api/constants")
 
 ;;; End
