@@ -29,16 +29,40 @@ app.configure('production', function(){
 
 // Routes
 
-app.get('/get', function(req, res) {
-    console.log("get");
-    res.writeHead(200, {
-        "Content_type": "text/plain",
-    });
-    res.write("Hello " + req.param("name"));
-    res.end();
+app.all('/snoop', function(req, res) {
+    var status = req.param("status") || 200;
+    console.log("snoop " + status);
+    var r = {
+        method: req.method,
+        headers: req.headers,
+        query: req.query,
+        body: req.body,
+    };
+    console.log(r);
+    res.json(r, null, status);
 });
 
-app.get('/chunked', function(req, res) {
+app.all("/timeout", function(req, res, next) {
+    var dt = req.param("t") || 30;
+    console.log("timeout " + dt);
+    setTimeout(function () {
+        res.json({ "delay": dt });
+    }, dt * 1000);
+});
+
+app.all('/redirect', function(req, res) {
+    var to = req.param("url") || "/snoop";
+    var status = req.param("status") || "302";
+    console.log("redirect %s -> %s", status, to);
+    res.redirect(to, status);
+});
+
+app.all("/disconnect", function(req, res, next) {
+    console.log("disconnect");
+    res.destroy();
+});
+
+app.all('/chunked', function(req, res) {
     console.log("chunked");
     var send_chunk = function(res, n) {
         setTimeout(function() {
@@ -56,28 +80,19 @@ app.get('/chunked', function(req, res) {
 
     setTimeout(function() {
         res.writeHead(200, {
-            'Content_type': 'text/plain',
+            'Content-Type': 'text/plain',
             'Transfer-Encoding': 'chunked',
         });
         send_chunk(res, 10);
     }, 2 * 1000);
 });
 
-app.post("/post", function(req, res, next) {
-    console.log("post");
-    console.log(req.body);
-    res.writeHead(200, {
-        "Content_type": "text/plain",
-    });
-    res.end("OK");
-});
-
-app.post("/upload", function(req, res, next) {
+app.all("/upload", function(req, res, next) {
     console.log("upload");
     console.log(req.body);
     console.log(req.files);
     res.writeHead(200, {
-        "Content_type": "text/plain",
+        "Content-Type": "text/plain",
     });
     res.end("OK");
 });
