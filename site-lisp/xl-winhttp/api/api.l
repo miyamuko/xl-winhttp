@@ -852,6 +852,11 @@ This function reports the URL of the PAC file, but it does not download the file
       (apply 'pack-WINHTTP_PROXY_INFO args)
     (%set-option hinternet-handle option &proxy-info (si:chunk-size &proxy-info))))
 
+(defun set-option-HTTP_VERSION_INFO (hinternet-handle option value)
+  (check-type value (or integer float))
+  (let ((&value (pack-HTTP_VERSION_INFO value)))
+    (%set-option hinternet-handle option &value (si:chunk-size &value))))
+
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384114.aspx
 ;; BOOL WINAPI WinHttpSetOption(
 ;;   __in  HINTERNET hInternet,
@@ -866,10 +871,8 @@ This function reports the URL of the PAC file, but it does not download the file
    (WinHttpSetOption hinternet-handle (option-const option) &buffer buffer-length)))
 
 ;; Not implemented option types.
-;;   BOOL
 ;;   CERT_CONTEXT
 ;;   DWORD_PTR
-;;   HTTP_VERSION_INFO
 ;;   LPVOID
 ;;   WINHTTP_CREDS
 ;;   WINHTTP_CREDS_EX
@@ -908,6 +911,13 @@ This function reports the URL of the PAC file, but it does not download the file
                    &proxy-info (si:chunk-size &proxy-info)
                    #'unpack-WINHTTP_PROXY_INFO)))
 
+(defun query-option-HTTP_VERSION_INFO (hinternet-handle option)
+  (let ((&version (make-HTTP_VERSION_INFO)))
+    (si:clear-chunk &version)
+    (%query-option hinternet-handle option
+                   &version (si:chunk-size &version)
+                   #'unpack-HTTP_VERSION_INFO)))
+
 ;; http://msdn.microsoft.com/en-us/library/windows/desktop/aa384103.aspx
 ;; BOOL WINAPI WinHttpQueryOption(
 ;;   __in     HINTERNET hInternet,
@@ -934,7 +944,6 @@ This function reports the URL of the PAC file, but it does not download the file
 ;;   CERT_CONTEXT
 ;;   DWORD_PTR
 ;;   HINTERNET
-;;   HTTP_VERSION_INFO
 ;;   LPVOID
 ;;   SecPkgContext_IssuerListInfoEx*
 ;;   WINHTTP_CERTIFICATE_INFO

@@ -198,7 +198,7 @@ Proxy や Basic/Digest 認証、SSL、非同期通信などは xml-http-request 
 * reset-auto-proxy, create-proxy-resolver, get-proxy-for-url-ex
   - Windows 8 で追加された API への対応
 * set-option, query-option
-  - DWORD, WSTR, BOOL, WINHTTP_PROXY_INFO 型以外のオプションに対応
+  - DWORD, WSTR, BOOL, WINHTTP_PROXY_INFO, HTTP_VERSION_INFO 型以外のオプションに対応
 
 
 ## KNOWN BUGS

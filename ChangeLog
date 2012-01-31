@@ -1,3 +1,10 @@
+2012-01-31  MIYAMUKO Katsuyuki
+
+	* (set-option, query-option): HTTP_VERSION_INFO 型のオプションをサポート
+	- リクエスト時の HTTP バージョンを指定することができる
+	- ただし、プロセス全体に対する設定となる
+	(winhttp:set-option nil :http-version 1.0)
+
 2012-01-23  MIYAMUKO Katsuyuki
 
 	* (crack-url, craete-url): https かどうかのフラグも扱うようにした

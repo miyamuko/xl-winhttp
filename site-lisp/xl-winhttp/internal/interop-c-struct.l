@@ -34,6 +34,8 @@
           unpack-WINHTTP_PROXY_INFO
           pack-SYSTEMTIME
           unpack-SYSTEMTIME
+          pack-HTTP_VERSION_INFO
+          unpack-HTTP_VERSION_INFO
           ))
 
 (defun unpack-WINHTTP_ASYNC_RESULT (result)
@@ -85,6 +87,21 @@
           (SYSTEMTIME-wMonth &systime)
           (SYSTEMTIME-wYear &systime)
           (SYSTEMTIME-wDayOfWeek &systime)))
+
+(defun pack-HTTP_VERSION_INFO (version)
+  (multiple-value-bind (q r)
+      (floor version)
+    (let ((&version (make-HTTP_VERSION_INFO)))
+      (si:clear-chunk &version)
+      (setf (HTTP_VERSION_INFO-dwMajorVersion &version) q
+            (HTTP_VERSION_INFO-dwMinorVersion &version) (* r 10)
+            )
+      &version)))
+
+(defun unpack-HTTP_VERSION_INFO (&version)
+  (float
+   (+ (HTTP_VERSION_INFO-dwMajorVersion &version)
+      (/ (HTTP_VERSION_INFO-dwMinorVersion &version) 10))))
 
 
 (provide "xl-winhttp/internal/interop-c-struct")
