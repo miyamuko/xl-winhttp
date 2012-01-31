@@ -86,8 +86,6 @@
           (SYSTEMTIME-wYear &systime)
           (SYSTEMTIME-wDayOfWeek &systime)))
 
-(defun SYSTEMTIME->universal-time (&systime)
-  )
 
 (provide "xl-winhttp/internal/interop-c-struct")
 
