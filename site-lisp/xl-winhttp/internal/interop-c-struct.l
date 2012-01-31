@@ -99,9 +99,9 @@
       &version)))
 
 (defun unpack-HTTP_VERSION_INFO (&version)
-  (float
-   (+ (HTTP_VERSION_INFO-dwMajorVersion &version)
-      (/ (HTTP_VERSION_INFO-dwMinorVersion &version) 10))))
+  (+ (HTTP_VERSION_INFO-dwMajorVersion &version)
+     (/ (HTTP_VERSION_INFO-dwMinorVersion &version) 10.0)
+     ))
 
 
 (provide "xl-winhttp/internal/interop-c-struct")
