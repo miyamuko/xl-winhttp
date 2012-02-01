@@ -63,10 +63,15 @@ app.all("/disconnect", function(req, res, next) {
 });
 
 app.all('/chunked', function(req, res) {
-    console.log("chunked");
+    var status = req.param("status") || "200";
+    console.log("chunked %s", status);
     var send_chunk = function(res, n) {
         setTimeout(function() {
-            var chunk = "chunk data " + n + "\n";
+            var chunk = "chunk data " + n;
+            if (n % 2 == 0)
+                chunk += "\n";
+            if (n % 4 == 0)
+                chunk += chunk;
             if (n == 0) {
                 console.log("End chunk");
                 res.end(chunk);
@@ -79,7 +84,7 @@ app.all('/chunked', function(req, res) {
     };
 
     setTimeout(function() {
-        res.writeHead(200, {
+        res.writeHead(status, {
             'Content-Type': 'text/plain',
             'Transfer-Encoding': 'chunked',
         });
