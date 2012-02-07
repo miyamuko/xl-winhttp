@@ -1,3 +1,7 @@
+2012-02-07  MIYAMUKO Katsuyuki
+
+	* デバッグログを改善
+
 2012-01-31  MIYAMUKO Katsuyuki
 
 	* (set-option, query-option): HTTP_VERSION_INFO 型のオプションをサポート

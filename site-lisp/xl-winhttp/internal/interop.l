@@ -279,7 +279,7 @@
 
 (defun global-free (p)
   (unless (nullp p)
-    (debug "GlobalFree: ~8,'0X" p)
+    (trace "GlobalFree: ~:@(~8,'0X~)" p)
     (GlobalFree p)))
 
 

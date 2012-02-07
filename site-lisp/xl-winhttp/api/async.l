@@ -79,6 +79,10 @@ Value: hinternet struct
   (when-let (cb (take-callback-info))
     (multiple-value-bind (event hinternet args)
         (apply #'unpack-callback-info cb)
+      ;; trace log
+      (if (eql event :read-complete)
+          (trace "Event: ~A (<snip> ~A): ~S" event (cadr args) hinternet)
+        (trace "Event: ~A ~S: ~S" event args hinternet))
       (unless hinternet
         (error (format nil "Unmanaged HINTERNET event received: ~S" cb)))
       (unwind-protect
@@ -139,14 +143,15 @@ Value: hinternet struct
            (LPWINHTTP_ASYNC_RESULT ()
              (multiple-value-bind (type error-code)
                  (unpack-WINHTTP_ASYNC_RESULT (make-WINHTTP_ASYNC_RESULT nil info))
-               (list type
-                     (create-winhttp-condition (ecase type
-                                                 (:receive-response 'WinHttpReceiveResponse)
-                                                 (:query-data-available 'WinHttpQueryDataAvailable)
-                                                 (:read-data 'WinHttpReadData)
-                                                 (:write-data 'WinHttpWriteData)
-                                                 (:send-request 'WinHttpSendRequest))
-                                               error-code))))
+               (let ((err (create-winhttp-condition (ecase type
+                                                      (:receive-response 'WinHttpReceiveResponse)
+                                                      (:query-data-available 'WinHttpQueryDataAvailable)
+                                                      (:read-data 'WinHttpReadData)
+                                                      (:write-data 'WinHttpWriteData)
+                                                      (:send-request 'WinHttpSendRequest))
+                                                    error-code)))
+                 (warn err)
+                 (list type err))))
            (SECURE_FAILURE ()
              (unpack-flags info *secure-failure-infomation-type*))
            )

@@ -30,26 +30,54 @@
 (in-package :xl-winhttp.internal)
 
 (export '(toggle-debug
+          enable-debug
+
+          info
           debug
+          trace
           ))
 
 (defvar *debug-prefix* "xl-winhttp:")
 (defvar *debug-enabled-p* nil)
+(defvar *debug-level* :debug)
+
+(defconstant +debug-levels+ '(:info :debug :trace))
+
 
 (defun toggle-debug (&optional (arg nil sv))
   (interactive)
-  (setf *debug-enabled-p* (if sv
-                              arg
-                            (not *debug-enabled-p*)))
-  (ToggleDebugOutput (pack-BOOL *debug-enabled-p*))
-  (message "Debug: ~:[Off~;On~]" *debug-enabled-p*))
+  (enable-debug (if sv arg (not *debug-enabled-p*))))
+
+(defun enable-debug (enable)
+  (interactive)
+  (cond ((member enable +debug-levels+)
+         (setf *debug-level* enable))
+        (enable
+         (setf *debug-level* :debug)))
+  (setf *debug-enabled-p* enable)
+  (ToggleDebugOutput (pack-BOOL (debug-level-enabled-p :trace)))
+  (message "Debug: ~:[Off~;On~]" enable))
+
+
+(defun info (fmt &rest args)
+  (debug-output :info args))
 
 (defun debug (fmt &rest args)
-  (when *debug-enabled-p*
+  (debug-output :debug fmt args))
+
+(defun trace (fmt &rest args)
+  (debug-output :trace fmt args))
+
+(defun debug-output (level fmt args)
+  (when (debug-level-enabled-p level)
     (let* ((msg (apply 'format nil fmt args))
            (log (format nil "[~4,'0D] ~A ~A"
                         (GetCurrentThreadId) *debug-prefix* msg)))
       (OutputDebugString (si:make-string-chunk log)))))
+
+(defun debug-level-enabled-p (level)
+  (<= (position level +debug-levels+)
+      (position *debug-level* +debug-levels+)))
 
 
 (provide "xl-winhttp/internal/debug")

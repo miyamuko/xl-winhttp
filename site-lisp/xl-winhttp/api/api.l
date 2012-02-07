@@ -166,6 +166,7 @@ an HINTERNET connection handle to an HTTP session for that initial target."
   ;; close しているかどうかのチェックはしないので check-valid-handle は呼ばない
   (check-type hinternet hinternet)
   (unless (hinternet-closed-p hinternet)
+    (debug "Close HINTERNET: ~S" hinternet)
     (setf (hinternet-closed-p hinternet) t)
     (assert-BOOL
      (WinHttpCloseHandle (hinternet-handle hinternet)))
