@@ -150,7 +150,7 @@ Value: hinternet struct
                                                       (:write-data 'WinHttpWriteData)
                                                       (:send-request 'WinHttpSendRequest))
                                                     error-code)))
-                 (warn "~A" err)
+                 (warn "WINHTTP_ASYNC_RESULT: ~A" err)
                  (list type err))))
            (SECURE_FAILURE ()
              (unpack-flags info *secure-failure-infomation-type*))
