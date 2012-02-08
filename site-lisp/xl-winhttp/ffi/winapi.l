@@ -31,7 +31,9 @@
 
 (c:*define NULL 0)
 
+(c:*define-c-type (c:void *) LPWSTR)
 (c:*define-c-type (c:void *) LPCWSTR)
+(c:*define-c-type (c:void *) LPCTSTR)
 (c:*define-c-type (c:void *) LPCVOID)
 (c:*define-c-type (DWORD *) LPDWORD)
 ;; 64bit –¢‘Î‰ž
@@ -46,6 +48,11 @@
   (WORD wMinute)
   (WORD wSecond)
   (WORD wMilliseconds)
+  )
+
+(c:*define-c-struct FILETIME
+  (DWORD dwLowDateTime)
+  (DWORD dwHighDateTime)
   )
 
 (c:*define-dll-entry
