@@ -1,3 +1,8 @@
+2012-02-08  MIYAMUKO Katsuyuki
+
+	* (dispatch-event, *event-dispatch-time-slice*): イベントを連続して処理する時間を
+	最大 0.1 秒までに制限した
+
 2012-02-07  MIYAMUKO Katsuyuki
 
 	* デバッグログを改善

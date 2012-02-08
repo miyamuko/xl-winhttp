@@ -60,6 +60,7 @@ Value: hinternet struct
 ;;; ƒCƒxƒ“ƒgˆ—
 
 (defparameter *event-dispatch-interval* 0.1)
+(defparameter *event-dispatch-time-slice* 0.1)
 
 (defun dispatch-event-later (&optional (interval *event-dispatch-interval*))
   (when (async-hinternet-available-p)
@@ -67,12 +68,15 @@ Value: hinternet struct
 
 (defun dispatch-event ()
   (when (async-hinternet-available-p)
-    (while (callback-info-available-p)
-      (handler-case
-          (dispatch-event1)
-        (error (c)
-          (debug "Error in dispatcher: ~A" c)
-          (message  "Error in dispatcher: ~A" c))))
+    (let ((start (get-internal-real-time)))
+      (while (and (callback-info-available-p)
+                  (< (/ (- (get-internal-real-time) start) 1000.0)
+                     *event-dispatch-time-slice*))
+        (handler-case
+            (dispatch-event1)
+          (error (c)
+            (debug "Error in dispatcher: ~A" c)
+            (message  "Error in dispatcher: ~A" c)))))
     (dispatch-event-later)))
 
 (defun dispatch-event1 ()
