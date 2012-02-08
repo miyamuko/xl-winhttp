@@ -1,7 +1,7 @@
 # xl-winhttp - Windows HTTP Services for xyzzy Lisp
 
 * Home URL: <http://miyamuko.s56.xrea.com/xyzzy/xl-winhttp/intro.htm>
-* Version: 0.0.1
+* Version: 1.0.0
 
 
 ## SYNOPSIS

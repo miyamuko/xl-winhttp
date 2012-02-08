@@ -1,5 +1,5 @@
 package: xl-winhttp
-version: 0.0.1
+version: 1.0.0
 
 sources:
   include:
@@ -15,6 +15,7 @@ depends:
   - ansi-loop
   - ansify
   - setf-values
+  - api
 
 files:
   include:

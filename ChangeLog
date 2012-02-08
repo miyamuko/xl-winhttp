@@ -1,5 +1,7 @@
 2012-02-08  MIYAMUKO Katsuyuki
 
+	* xl-winhttp 1.0.0 released!
+
 	* (dispatch-event, *event-dispatch-time-slice*): イベントを連続して処理する時間を
 	最大 0.1 秒までに制限した
 

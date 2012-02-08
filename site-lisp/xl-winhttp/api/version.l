@@ -32,7 +32,7 @@
 (export '(xl-winhttp-version
           ))
 
-(defconstant +xl-winhttp-version+ "0.0.1")
+(defconstant +xl-winhttp-version+ "1.0.0")
 
 (defun xl-winhttp-version ()
   +xl-winhttp-version+)
